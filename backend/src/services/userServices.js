@@ -107,9 +107,9 @@ exports.resetPasswordService = async (email) => {
   findUserHaveEmail.resetPasswordExpires = resetPasswordExpires;
   await findUserHaveEmail.save();
 
+  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
   // tạo url để gửi mã đặt lại mật khẩu
-  const resetUrl =
-    "http://localhost:5173/reset-password-confirm?token=" + randomToken;
+  const resetUrl = `${frontendUrl}/reset-password-confirm?token=${randomToken}`;
 
   try {
     sendEmail({
