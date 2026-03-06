@@ -59,7 +59,7 @@ function ForgotPassword() {
                           type="email"
                           aria-invalid={fieldState.invalid}
                           placeholder="name@gmail.com"
-                          className="focus-visible:ring-0 focus-visible:border-yellow-500 focus-visible:ring-offset-0 shadow-none"
+                          className="!ring-0 focus-visible:border-yellow-500"
                         />
                         {fieldState.invalid && (
                           <div className="text-sm font-medium text-red-500 mt-1">
@@ -78,7 +78,7 @@ function ForgotPassword() {
 
                   <Button
                     type="submit"
-                    className="w-full !bg-yellow-500 text-white hover:!bg-yellow-600 transition-colors h-10 !border-0 !ring-0 !outline-none focus:!ring-0 focus:!outline-none focus-visible:!ring-0 focus-visible:!outline-none"
+                    className="w-full !bg-yellow-500 text-white hover:!bg-yellow-600 transition-colors h-10 !border-0 !ring-0 !outline-none"
                     disabled={isLoading}
                   >
                     {isLoading ? "Đang xử lý" : "Gửi yêu cầu"}

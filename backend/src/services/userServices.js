@@ -34,7 +34,7 @@ exports.registerService = async (username, password, email, avatar) => {
   const user = new User({ username, password, email, avatar });
   const newUser = await user.save();
 
-  return newUser;
+  return { newUser };
 };
 
 exports.loginService = async (username, email, password) => {

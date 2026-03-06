@@ -44,7 +44,7 @@ function useForgotPassword() {
         error.response?.data?.message ||
           "Gửi email thất bại. Vui lòng thử lại!",
       );
-      toast.error("Email không tồn tại!");
+      toast.error(error.message);
     } finally {
       setIsLoading(false);
     }

@@ -92,11 +92,11 @@ function Register() {
                         defaultCountry="VN"
                         international={true}
                         withCountryCallingCode={true}
-                        className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus-within:ring-0 focus-within:border-yellow-500 shadow-none"
+                        className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus-within:ring-0 focus-within:border-yellow-500"
                       />
                       <Button
                         type="button"
-                        className="w-full !bg-yellow-500 text-white hover:!bg-yellow-600 transition-colors h-10 !border-0 !ring-0 !outline-none focus:!ring-0 focus:!outline-none focus-visible:!ring-0 focus-visible:!outline-none"
+                        className="w-full !bg-yellow-500 text-white hover:!bg-yellow-600 transition-colors h-10 !border-0 !ring-0 !outline-none"
                         // onClick: Truyền phoneNumber vào hàm handleSendOtp
                         onClick={() => handleSendOtp(phoneNumber)}
                       >
@@ -110,11 +110,11 @@ function Register() {
                         placeholder="Nhập mã OTP..."
                         value={otpCode}
                         onChange={(e) => setOtpCode(e.target.value)} // Cập nhật state OTP
-                        className="focus-visible:ring-0 focus-visible:border-yellow-500 focus-visible:ring-offset-0 shadow-none"
+                        className="!ring-0 focus-visible:border-yellow-500"
                       />
                       <Button
                         type="button"
-                        className="w-full !bg-yellow-500 text-white hover:!bg-yellow-600 transition-colors h-10 !border-0 !ring-0 !outline-none focus:!ring-0 focus:!outline-none focus-visible:!ring-0 focus-visible:!outline-none"
+                        className="w-full !bg-yellow-500 text-white hover:!bg-yellow-600 transition-colors h-10 !border-0 !ring-0 !outline-none"
                         onClick={() => handleVerifyOtp()} // Bấm nút thì gọi hàm xác nhận
                       >
                         Xác nhận mã OTP
@@ -124,7 +124,7 @@ function Register() {
 
                   <Button
                     type="button"
-                    className="w-full !bg-white text-gray-500 hover:!bg-blue-50 transition-colors h-10 border !border-gray-300 !ring-0 !outline-none focus:!ring-0 focus:!outline-none focus-visible:!ring-0 focus-visible:!outline-none font-medium"
+                    className="w-full !bg-white text-gray-500 hover:!bg-blue-50 transition-colors h-10 border !border-gray-300 !ring-0 !outline-none font-medium"
                     onClick={() => {
                       setIsPhoneMode(false);
                     }}
@@ -152,7 +152,7 @@ function Register() {
                           id={field.name}
                           aria-invalid={fieldState.invalid}
                           placeholder="username"
-                          className="focus-visible:ring-0 focus-visible:border-yellow-500 focus-visible:ring-offset-0 shadow-none"
+                          className="!ring-0 focus-visible:border-yellow-500"
                         />
                         {fieldState.invalid && (
                           <div className="text-sm font-medium text-red-500 mt-1">
@@ -175,7 +175,7 @@ function Register() {
                           type="email"
                           aria-invalid={fieldState.invalid}
                           placeholder="name@gmail.com"
-                          className="focus-visible:ring-0 focus-visible:border-yellow-500 focus-visible:ring-offset-0 shadow-none"
+                          className="!ring-0 focus-visible:border-yellow-500"
                         />
                         {fieldState.invalid && (
                           <div className="text-sm font-medium text-red-500 mt-1">
@@ -198,7 +198,7 @@ function Register() {
                           type="password"
                           aria-invalid={fieldState.invalid}
                           placeholder="••••••••"
-                          className="focus-visible:ring-0 focus-visible:border-yellow-500 focus-visible:ring-offset-0 shadow-none"
+                          className="!ring-0 focus-visible:border-yellow-500"
                         />
                         {fieldState.invalid && (
                           <div className="text-sm font-medium text-red-500 mt-1">
@@ -221,7 +221,7 @@ function Register() {
                           type="password"
                           aria-invalid={fieldState.invalid}
                           placeholder="••••••••"
-                          className="focus-visible:ring-0 focus-visible:border-yellow-500 focus-visible:ring-offset-0 shadow-none"
+                          className="!ring-0 focus-visible:border-yellow-500"
                         />
                         {fieldState.invalid && (
                           <div className="text-sm font-medium text-red-500 mt-1">
@@ -239,7 +239,7 @@ function Register() {
 
                   <Button
                     type="submit"
-                    className="w-full !bg-yellow-500 text-white hover:!bg-yellow-600 transition-colors h-10 !border-0 !ring-0 !outline-none focus:!ring-0 focus:!outline-none focus-visible:!ring-0 focus-visible:!outline-none"
+                    className="w-full !bg-yellow-500 text-white hover:!bg-yellow-600 transition-colors h-10 !border-0 !ring-0 !outline-none"
                     disabled={isLoading}
                   >
                     {isLoading ? "Đang xử lý" : "Đăng ký"}
@@ -260,7 +260,7 @@ function Register() {
                     <Button
                       type="button"
                       onClick={() => handleGoogleLogin()}
-                      className="w-full flex items-center justify-center gap-2 !bg-white text-gray-500 hover:!bg-blue-50 transition-colors h-10 border !border-gray-300 !ring-0 !outline-none focus:!ring-0 focus:!outline-none focus-visible:!ring-0 focus-visible:!outline-none"
+                      className="w-full flex items-center justify-center gap-2 !bg-white text-gray-500 hover:!bg-blue-50 transition-colors h-10 border !border-gray-300 !ring-0 !outline-none"
                     >
                       <svg viewBox="0 0 24 24" className="w-5 h-5">
                         <path
@@ -294,7 +294,7 @@ function Register() {
                         <Button
                           type="button"
                           onClick={onClick}
-                          className="w-full !bg-white text-gray-500 hover:!bg-blue-50 transition-colors h-10 border !border-gray-300 !ring-0 !outline-none focus:!ring-0 focus:!outline-none focus-visible:!ring-0 focus-visible:!outline-none"
+                          className="w-full !bg-white text-gray-500 hover:!bg-blue-50 transition-colors h-10 border !border-gray-300 !ring-0 !outline-none"
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -313,7 +313,7 @@ function Register() {
 
                   <Button
                     type="button"
-                    className="w-full !bg-white text-gray-500 hover:!bg-blue-50 transition-colors h-10 border !border-gray-300 !ring-0 !outline-none focus:!ring-0 focus:!outline-none focus-visible:!ring-0 focus-visible:!outline-none"
+                    className="w-full !bg-white text-gray-500 hover:!bg-blue-50 transition-colors h-10 border !border-gray-300 !ring-0 !outline-none"
                     onClick={() => {
                       setIsPhoneMode(true);
                     }}
