@@ -12,7 +12,7 @@ import Header from "./components/layout/Header";
 function App() {
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Toaster position="top-right" reverseOrder={false} />
         <Header />
 

@@ -12,12 +12,11 @@ function useLoginGoogle() {
     try {
       // Lấy mã token từ kết quả Google trả về
       const payload = {
-        token: result.credential,
+        token: result.access_token,
       };
 
       const response = await API.post("/user/google-login", payload);
 
-      // 3. Xử lý thành công y như lúc đăng nhập bình thường
       toast.success("Đăng nhập Google thành công!");
 
       login(response.data);

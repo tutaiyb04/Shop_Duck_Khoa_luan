@@ -155,19 +155,27 @@ exports.updatePasswordService = async (token, newPassword) => {
   return true;
 };
 
-exports.loginWithGoogleService = async (googleToken) => {
+exports.loginWithGoogleService = async (accessToken) => {
   // cấp cho google cái máy quét bằng clientID lấy từ Google Cloud Console
   const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
   try {
-    // lấy ra idToken và mã ứng dụng
-    const ticket = await client.verifyIdToken({
-      idToken: googleToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
+    // Gọi API Google
+    const response = await fetch(
+      "https://www.googleapis.com/oauth2/v3/userinfo",
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      },
+    );
 
-    // Lấy thông tin User
-    const payload = ticket.getPayload();
+    const payload = await response.json();
+
+    if (payload.error) {
+      throw new Error("Token Google không hợp lệ hoặc đã hết hạn!");
+    }
+
     const { email, name, picture, sub } = payload;
 
     let user = await User.findOne({ email });
@@ -175,21 +183,18 @@ exports.loginWithGoogleService = async (googleToken) => {
     // Nếu là khách hàng cũ (đã từng đăng ký và có tài khoản)
     if (user) {
       if (!user.googleId) {
-        user.googleId = sub;
-        await user.save();
+        await User.updateOne({ _id: user._id }, { $set: { googleId: sub } });
       }
     }
     // Nếu là khách hàng mới (chưa đăng ký bao giờ)
     else {
-      user = new User({
-        // Gán vào biến user luôn để lát dùng chung
+      user = await User.create({
         username: name,
         email: email,
         avatar: picture,
         authType: "google",
         googleId: sub,
       });
-      await user.save();
     }
 
     const payloadJwt = {
