@@ -1,27 +1,52 @@
-const nodemailer = require("nodemailer");
+const dotenv = require("dotenv");
+dotenv.config();
 
 async function sendEmail(options) {
-  const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true, // Sử dụng SSL cho cổng 465
-    auth: {
-      user: process.env.GOOGLE_USER,
-      pass: process.env.GOOGLE_PASS,
-    },
-    // thông số thời gian
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-  });
+  const apiKey = process.env.BREVO_API_KEY;
+  const senderEmail = process.env.GOOGLE_USER; // Email bạn đã xác thực trên Brevo (Senders)
 
-  const mailOptions = {
-    from: `Hệ thống Duck Shop <${process.env.GOOGLE_USER}>`,
-    to: options.email,
+  console.log("Kiểm tra API Key:", apiKey);
+  console.log("Kiểm tra Sender Email:", senderEmail);
+
+  // Cấu hình dữ liệu gửi đi theo chuẩn API của Brevo
+  const emailData = {
+    sender: {
+      name: "Hệ thống Duck Shop",
+      email: senderEmail,
+    },
+    to: [
+      {
+        email: options.email,
+      },
+    ],
     subject: options.subject,
-    html: options.html,
+    htmlContent: options.html,
   };
 
-  await transporter.sendMail(mailOptions);
+  try {
+    // Gọi API của Brevo qua giao thức HTTPS (Cổng 443 - không bị Render chặn)
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "api-key": apiKey,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(emailData),
+    });
+
+    if (!response.ok) {
+      const errorDetails = await response.json();
+      console.log("Lỗi từ hệ thống Brevo: ", errorDetails);
+      throw new Error("Không thể gửi email qua Brevo API");
+    }
+
+    console.log(`Gửi email thành công tới: ${options.email}`);
+    return true;
+  } catch (error) {
+    console.log("Lỗi catch được khi gửi mail: ", error);
+    throw new Error("Lỗi khi gửi email");
+  }
 }
 
 module.exports = sendEmail;
