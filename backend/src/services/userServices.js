@@ -2,7 +2,6 @@ const dotenv = require("dotenv");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const { OAuth2Client } = require("google-auth-library");
 
 const User = require("../model/User");
 const sendEmail = require("../helper/sendEmail");
@@ -156,9 +155,6 @@ exports.updatePasswordService = async (token, newPassword) => {
 };
 
 exports.loginWithGoogleService = async (accessToken) => {
-  // cấp cho google cái máy quét bằng clientID lấy từ Google Cloud Console
-  const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
   try {
     // Gọi API Google
     const response = await fetch(

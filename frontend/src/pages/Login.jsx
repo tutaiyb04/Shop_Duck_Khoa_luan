@@ -32,7 +32,6 @@ function Login() {
 
   const handleGoogleLogin = useGoogleLogin({
     onSuccess: onGoogleSuccess,
-    onError: () => console.log("Đăng nhập Google thất bại"),
   });
 
   const { onSuccess: onFacebookSuccess } = useLoginFacebook();

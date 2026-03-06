@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const API = axios.create({
-  baseURL: "http://localhost:3000/",
+  baseURL: "https://shop-duck-api.onrender.com",
 });
 
 // tự động đính kèm Token vào Header nếu có
