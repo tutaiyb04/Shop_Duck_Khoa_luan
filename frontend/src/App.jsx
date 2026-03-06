@@ -1,5 +1,5 @@
 import { Toaster } from "react-hot-toast";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route, HashRouter } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
 import Home from "./pages/Home";
@@ -12,7 +12,7 @@ import Header from "./components/layout/Header";
 function App() {
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-      <BrowserRouter basename={import.meta.env.BASE_URL}>
+      <HashRouter basename={import.meta.env.BASE_URL}>
         <Toaster position="top-right" reverseOrder={false} />
         <Header />
 
@@ -34,7 +34,7 @@ function App() {
             <Route path="/reset-password-confirm" element={<ResetPassword />} />
           </Routes>
         </main>
-      </BrowserRouter>
+      </HashRouter>
     </GoogleOAuthProvider>
   );
 }
