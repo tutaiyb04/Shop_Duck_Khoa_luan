@@ -112,7 +112,7 @@ exports.resetPasswordService = async (email) => {
   const resetUrl = `${frontendUrl}/reset-password-confirm?token=${randomToken}`;
 
   try {
-    sendEmail({
+    await sendEmail({
       email: findUserHaveEmail.email,
       subject: "Yêu cầu đặt lại mật khẩu",
       html: `

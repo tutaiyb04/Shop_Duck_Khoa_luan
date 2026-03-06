@@ -10,7 +10,7 @@ async function sendEmail(options) {
   });
 
   const mailOptions = {
-    from: "Hệ thống Duck Shop",
+    from: `Hệ thống Duck Shop <${process.env.GOOGLE_USER}>`,
     to: options.email,
     subject: options.subject,
     html: options.html,
