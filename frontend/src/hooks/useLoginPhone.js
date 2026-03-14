@@ -60,7 +60,7 @@ function useLoginPhone() {
 
       login(respone.data);
       navigation("/");
-      toast.success("Đăng nhập thành công");
+      toast.success("Đăng nhập bằng số điện thoại thành công");
     } catch (error) {
       console.log("Lỗi catch được: ", error);
       toast.error("Đăng nhập thất bại");

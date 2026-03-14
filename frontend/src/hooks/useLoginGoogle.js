@@ -17,7 +17,7 @@ function useLoginGoogle() {
 
       const response = await API.post("/user/google-login", payload);
 
-      toast.success("Đăng nhập Google thành công!");
+      toast.success("Đăng nhập Google thành công");
 
       login(response.data);
       navigate("/");

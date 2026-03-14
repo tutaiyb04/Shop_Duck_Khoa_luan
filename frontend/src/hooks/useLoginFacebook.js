@@ -19,7 +19,7 @@ function useLoginFacebook() {
       login(res.data);
       navigate("/");
 
-      toast.success("Đăng nhập Facebook thành công!");
+      toast.success("Đăng nhập Facebook thành công");
     } catch (error) {
       console.log("Lỗi đăng nhập Facebook: ", error);
       toast.error("Đăng nhập thất bại!");

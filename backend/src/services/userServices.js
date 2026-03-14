@@ -304,3 +304,39 @@ exports.loginWithPhoneService = async (phone) => {
     throw new Error("Xác thực số điện thoại thất bại");
   }
 };
+
+exports.updateProfileService = async (
+  userId,
+  username,
+  phone,
+  address,
+  file,
+) => {
+  try {
+    // Khởi tạo object chứa dữ liệu cần cập nhật
+    const updateData = {};
+    if (username) updateData.username = username;
+    if (phone) updateData.phone = phone;
+
+    if (address) {
+      updateData["buyerProfile.shippingAddresses"] = [address];
+    }
+
+    // nếu người dùng upload ảnh mới, lấy link URL từ Cloudinary
+    if (file && file.path) {
+      updateData.avatar = file.path;
+    }
+
+    // Cập nhật vào DB
+    const updateUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: updateData },
+      { returnDocument: "after", runValidators: true },
+    );
+
+    return { updateUser };
+  } catch (error) {
+    console.log("Lỗi catch được: ", error);
+    throw new Error("Cập nhật trang cá nhân thất bại");
+  }
+};
