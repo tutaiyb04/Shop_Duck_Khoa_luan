@@ -16,12 +16,20 @@ const protect = async (req, res, next) => {
 
       // Giải mã token
       const decoded = jwt.verify(token, secretKey);
-      console.log(decoded);
+
+      const userId = decoded.id || decoded._id;
 
       // Tìm user trong DB và lưu thông tin user vào đối tượng req
-      req.user = await User.findById(decoded.id);
+      req.user = await User.findById(userId).select("-password");
 
-      next();
+      // Kiểm tra xem User còn tồn tại trong DB không
+      if (!req.user) {
+        return res
+          .status(401)
+          .json({ message: "Tài khoản này không còn tồn tại trong hệ thống!" });
+      }
+
+      return next();
     } catch (error) {
       res
         .status(401)

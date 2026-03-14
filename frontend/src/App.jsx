@@ -8,6 +8,7 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Header from "./components/layout/Header";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -32,6 +33,9 @@ function App() {
 
             {/* ResetPassword Page */}
             <Route path="/reset-password-confirm" element={<ResetPassword />} />
+
+            {/* Profile Page */}
+            <Route path="/profile" element={<Profile />} />
           </Routes>
         </main>
       </BrowserRouter>

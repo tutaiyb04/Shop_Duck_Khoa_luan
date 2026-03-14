@@ -29,6 +29,7 @@ exports.login = async (req, res) => {
       username,
       email,
       password,
+      file,
     );
 
     res.status(200).json({
@@ -135,5 +136,64 @@ exports.phoneLogin = async (req, res) => {
 };
 
 exports.getProfile = (req, res) => {
-  res.send("Thông tin tài khoản");
+  try {
+    const user = req.user;
+
+    res.status(200).json({
+      message: "Lấy thông tin thành công",
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        phone: user.phone,
+        avatar: user.avatar,
+        address: user.buyerProfile?.shippingAddresses[0] || "",
+        role: user.role,
+        sellerProfile: user.sellerProfile, // Có thể trả về thêm nếu cần hiển thị
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi khi gọi getProfile: ", error);
+    res.status(500).json({ message: "Lỗi server", error: error.message });
+  }
+};
+
+exports.updateProfile = async (req, res) => {
+  try {
+    // Kiểm tra an toàn biến req.user từ middleware
+    if (!req.user) {
+      return res.status(401).json({ message: "Lỗi xác thực Token!" });
+    }
+
+    // lấy req.user đã đc giải mã từ middleware protect
+    const userId = req.user._id || req.user.id;
+    const { username, phone, address } = req.body;
+
+    // Lấy file ảnh Multer đã xử lý
+    const file = req.file;
+
+    const { updateUser } = await userService.updateProfileService(
+      userId,
+      username,
+      phone,
+      address,
+      file,
+    );
+
+    res.status(200).json({
+      message: "Cập nhật hồ sơ thành công",
+      user: {
+        id: updateUser._id,
+        username: updateUser.username,
+        email: updateUser.email,
+        phone: updateUser.phone,
+        avatar: updateUser.avatar,
+        address: updateUser.buyerProfile?.shippingAddresses[0] || "",
+        role: updateUser.role,
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi khi updateProfile: ", error);
+    res.status(500).json({ message: "Lỗi server", error: error.message });
+  }
 };
