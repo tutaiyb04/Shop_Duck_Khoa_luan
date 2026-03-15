@@ -17,7 +17,7 @@ function App() {
         <Toaster position="top-right" reverseOrder={false} />
         <Header />
 
-        <main className="w-full min-h-screen overflow-x-hidden">
+        <main className="w-full min-h-screen overflow-x-hidden bg-amber-50">
           <Routes>
             {/* Home Page */}
             <Route path="/" element={<Home />} />
