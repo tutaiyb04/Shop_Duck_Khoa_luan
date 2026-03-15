@@ -268,8 +268,21 @@ exports.loginWithFacebookService = async (facebookToken) => {
 
 exports.loginWithPhoneService = async (phone) => {
   try {
+    // Format chuẩn số điện thoại (ví dụ chuyển 034... thành +8434...)
+    let formattedPhone = phone.trim().replace(/\s/g, "");
+    if (!formattedPhone.startsWith("+")) {
+      if (formattedPhone.startsWith("0")) {
+        formattedPhone = "+84" + formattedPhone.slice(1);
+      } else {
+        formattedPhone = "+" + formattedPhone;
+      }
+    }
+
     // tìm user theo phone
-    let user = await User.findOne({ phone });
+    let user = await User.findOne({
+      phone: formattedPhone,
+      authType: "phone",
+    });
 
     if (!user) {
       const cleanPhone = phone.replace("+", "");
@@ -310,6 +323,7 @@ exports.updateProfileService = async (
   username,
   phone,
   address,
+  description,
   file,
 ) => {
   try {
@@ -318,7 +332,11 @@ exports.updateProfileService = async (
     if (username) updateData.username = username;
     if (phone) updateData.phone = phone;
 
-    if (address) {
+    if (description !== undefined) {
+      updateData["sellerProfile.description"] = description;
+    }
+
+    if (address !== undefined) {
       updateData["buyerProfile.shippingAddresses"] = [address];
     }
 
@@ -337,6 +355,6 @@ exports.updateProfileService = async (
     return { updateUser };
   } catch (error) {
     console.log("Lỗi catch được: ", error);
-    throw new Error("Cập nhật trang cá nhân thất bại");
+    throw new Error("Tên hiển thị đã tồn tại");
   }
 };

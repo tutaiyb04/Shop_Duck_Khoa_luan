@@ -117,6 +117,12 @@ exports.phoneLogin = async (req, res) => {
   try {
     const { phone } = req.body;
 
+    if (!phone) {
+      return res
+        .status(400)
+        .json({ message: "Số điện thoại không được để trống" });
+    }
+
     const { user, phoneToken: phoneToken } =
       await userService.loginWithPhoneService(phone);
 
@@ -148,13 +154,14 @@ exports.getProfile = (req, res) => {
         phone: user.phone,
         avatar: user.avatar,
         address: user.buyerProfile?.shippingAddresses[0] || "",
+        description: user.sellerProfile?.description,
         role: user.role,
         sellerProfile: user.sellerProfile, // Có thể trả về thêm nếu cần hiển thị
       },
     });
   } catch (error) {
     console.error("Lỗi khi gọi getProfile: ", error);
-    res.status(500).json({ message: "Lỗi server", error: error.message });
+    res.status(500).json({ message: error.message || "Lỗi server" });
   }
 };
 
@@ -162,12 +169,12 @@ exports.updateProfile = async (req, res) => {
   try {
     // Kiểm tra an toàn biến req.user từ middleware
     if (!req.user) {
-      return res.status(401).json({ message: "Lỗi xác thực Token!" });
+      return res.status(401).json({ message: "Vui lòng đăng nhập" });
     }
 
     // lấy req.user đã đc giải mã từ middleware protect
     const userId = req.user._id || req.user.id;
-    const { username, phone, address } = req.body;
+    const { username, phone, address, description } = req.body;
 
     // Lấy file ảnh Multer đã xử lý
     const file = req.file;
@@ -177,6 +184,7 @@ exports.updateProfile = async (req, res) => {
       username,
       phone,
       address,
+      description,
       file,
     );
 
@@ -194,6 +202,6 @@ exports.updateProfile = async (req, res) => {
     });
   } catch (error) {
     console.error("Lỗi khi updateProfile: ", error);
-    res.status(500).json({ message: "Lỗi server", error: error.message });
+    res.status(500).json({ message: error.message || "Lỗi server" });
   }
 };

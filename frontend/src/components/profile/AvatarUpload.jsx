@@ -2,7 +2,7 @@ import toast from "react-hot-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Input } from "../ui/input";
 
-function AvatarUpload({ user, previewImage, onFileSelect }) {
+function AvatarUpload({ user, previewImage, onFileSelect, className }) {
   // Hàm xử lý khi người dùng chọn ảnh
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -17,8 +17,8 @@ function AvatarUpload({ user, previewImage, onFileSelect }) {
   };
 
   return (
-    <div className="flex flex-col items-center space-y-4 mb-6">
-      <Avatar className="h-24 w-24">
+    <div className={className}>
+      <Avatar className="h-40 w-40 object-cover">
         <AvatarImage src={previewImage} />
         <AvatarFallback>
           {user.username?.charAt(0).toUpperCase()}

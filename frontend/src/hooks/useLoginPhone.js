@@ -46,14 +46,17 @@ function useLoginPhone() {
     }
   };
 
-  const handleVerifyOtp = async () => {
+  const handleVerifyOtp = async (inputPhone) => {
     try {
       // kiểm tra xem mã otp nhập vào có đúng vs otp đã gửi cho người dùng
       const result = await confirmResult.confirm(otpCode);
 
+      // Ưu tiên lấy số điện thoại người dùng đã nhập, nếu không có mới dùng của Firebase
+      const phoneToSend = inputPhone || result.user.phoneNumber;
+
       // lấy số điện thoại từ UserCredential
       const payload = {
-        phone: result.user.phoneNumber,
+        phone: phoneToSend,
       };
 
       const respone = await API.post("user/phone-login", payload);

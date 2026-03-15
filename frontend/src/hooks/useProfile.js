@@ -12,6 +12,7 @@ const profileSchema = z.object({
     .min(3, { message: "Tên hiển thị phải có ít nhất 3 ký tự" }),
   phone: z.string().optional(),
   address: z.string().optional(),
+  description: z.string().optional(),
 });
 function useProfile() {
   const { user, login } = useContext(AuthContext);
@@ -22,7 +23,7 @@ function useProfile() {
 
   const form = useForm({
     resolver: zodResolver(profileSchema),
-    defaultValues: { username: "", phone: "", address: "" },
+    defaultValues: { username: "", phone: "", address: "", description: "" },
   });
 
   // Sử dụng useEffect để gọi API ngay khi vào trang
@@ -37,6 +38,7 @@ function useProfile() {
           username: freshUser.username || "",
           phone: freshUser.phone || "",
           address: freshUser.address || "",
+          description: freshUser.description || "",
         });
         setPreviewImage(freshUser.avatar);
 
@@ -68,6 +70,9 @@ function useProfile() {
       formData.append("username", values.username);
       if (values.phone) formData.append("phone", values.phone);
       if (values.address) formData.append("address", values.address);
+      if (values.description !== undefined) {
+        formData.append("description", values.description);
+      }
 
       // Nếu có chọn ảnh mới thì đính kèm vào với key là 'avatar'
       if (selectedImage) {
