@@ -9,6 +9,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Header from "./components/layout/Header";
 import Profile from "./pages/Profile";
+import Orders from './pages/Orders';
 
 function App() {
   return (
@@ -36,6 +37,9 @@ function App() {
 
             {/* Profile Page */}
             <Route path="/profile" element={<Profile />} />
+
+            {/* Quản lý đơn hàng (ĐÂY NÈ BẠN) */}
+            <Route path="/orders" element={<Orders />} />
           </Routes>
         </main>
       </BrowserRouter>
