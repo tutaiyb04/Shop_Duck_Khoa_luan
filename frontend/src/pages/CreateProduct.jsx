@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { X, Plus, Image as ImageIcon } from "lucide-react"; // Import icon đẹp mắt từ lucide-react (có sẵn khi cài shadcn)
+import { useNavigate } from "react-router-dom";
 
 // Import các component của shadcn/ui
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ const productSchema = z.object({
   title: z.string().min(10, { message: "Tên sản phẩm phải có ít nhất 10 ký tự" }),
   categoryId: z.string().min(1, { message: "Vui lòng chọn danh mục" }),
   price: z.coerce.number().min(1000, { message: "Giá bán phải lớn hơn 1.000đ" }),
+  quantity: z.coerce.number().min(1, { message: "Số lượng ít nhất là 1" }),
   condition: z.string().min(1, { message: "Vui lòng chọn tình trạng" }),
   description: z.string().min(20, { message: "Mô tả chi tiết ít nhất 20 ký tự" }),
   shippingInfo: z.string().min(1, { message: "Vui lòng nhập thông tin vận chuyển" }),
@@ -45,7 +47,7 @@ const productSchema = z.object({
 
 function CreateProduct() {
   // --- [PHẦN MỚI] BƯỚC 2: LOGIC XỬ LÝ ẢNH ---
-
+  const navigate = useNavigate();
   // 1. State lưu trữ mảng các file ảnh và link preview nháp
   // Mỗi item trong mảng sẽ có cấu trúc: { file: FileObject, preview: "blob:..." }
   const [images, setImages] = useState([]);
@@ -125,6 +127,7 @@ function CreateProduct() {
       title: "",
       categoryId: "",
       price: "",
+      quantity: 1,
       condition: "",
       description: "",
       shippingInfo: "",
@@ -149,6 +152,7 @@ function CreateProduct() {
       formData.append("name", data.title); 
       formData.append("category", data.categoryId);
       formData.append("price", data.price);
+      formData.append("quantity", data.quantity);
       formData.append("condition", data.condition);
       formData.append("description", data.description);
       formData.append("shippingInfo", data.shippingInfo);
@@ -171,7 +175,7 @@ function CreateProduct() {
       toast.success("Đăng bán sản phẩm thành công!");
       
       // TODO: Có thể dùng useNavigate của react-router-dom để chuyển hướng về trang chủ hoặc trang quản lý tin
-      // navigate('/my-products');
+      navigate('/');
 
     } catch (error) {
       console.error("Lỗi đăng bán:", error);
@@ -337,7 +341,20 @@ function CreateProduct() {
               </FormItem>
             )}
           />
-
+            {/* SỐ LƯỢNG */}
+          <FormField
+            control={form.control}
+            name="quantity"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Số lượng <span className="text-red-500">*</span></FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder="VD: 1" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           {/* MÔ TẢ */}
           <FormField
             control={form.control}
