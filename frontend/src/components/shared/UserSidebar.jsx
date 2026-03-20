@@ -2,7 +2,7 @@ import { useContext } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 
 import { AuthContext } from "@/context/AuthContext";
-import { ClipboardList, User } from "lucide-react";
+import { ClipboardList, User, PlusCircle } from "lucide-react";
 import UserAvatar from "./UserAvatar";
 
 function UserSidebar() {
