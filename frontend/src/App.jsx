@@ -9,7 +9,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Header from "./components/layout/Header";
 import Profile from "./pages/Profile";
-import Orders from './pages/Orders';
+import Orders from './components/Orders/Orders';
 
 function App() {
   return (

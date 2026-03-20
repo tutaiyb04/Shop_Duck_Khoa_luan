@@ -13,6 +13,7 @@ function UserSidebar() {
   const navItems = [
     { path: "/profile", label: "Thông tin cá nhân", icon: User },
     { path: "/orders", label: "Đơn mua", icon: ClipboardList },
+    { path: "/sell", label: "Đăng tin bán", icon: PlusCircle },
   ];
 
   return (

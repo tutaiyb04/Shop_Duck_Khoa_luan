@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import ReviewModal from '../components/Profile/ReviewModal'; // Nhớ check lại đường dẫn này
+import ReviewModal from './ReviewModal'; // Nhớ check lại đường dẫn này
 
 const Orders = () => {
   const [activeTab, setActiveTab] = useState('Tất cả');
