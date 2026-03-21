@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import ReviewModal from './ReviewModal'; // Nhớ check lại đường dẫn này
 import UserSidebar from "@/components/shared/UserSidebar";
+import ReviewModal from '@/components/order/ReviewModal';
 
 const Orders = () => {
   const [activeTab, setActiveTab] = useState('Tất cả');
@@ -30,7 +30,7 @@ const Orders = () => {
           <h1 className="text-2xl font-bold mb-6 text-gray-800">Đơn hàng của tôi</h1>
           
           {/* Thanh Tabs */}
-          <div className="flex space-x-4 border-b border-gray-200 mb-6 overflow-x-auto">
+          <div className="flex space-x-4 mb-6 overflow-x-auto">
             {tabs.map(tab => (
               <button
                 key={tab}
