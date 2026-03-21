@@ -2,7 +2,7 @@ import { useContext } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 
 import { AuthContext } from "@/context/AuthContext";
-import { ClipboardList, User } from "lucide-react";
+import { ClipboardList, User, PlusCircle } from "lucide-react";
 import UserAvatar from "./UserAvatar";
 
 function UserSidebar() {
@@ -13,6 +13,7 @@ function UserSidebar() {
   const navItems = [
     { path: "/profile", label: "Thông tin cá nhân", icon: User },
     { path: "/orders", label: "Đơn mua", icon: ClipboardList },
+    { path: "/sell", label: "Đăng tin bán", icon: PlusCircle },
   ];
 
   return (
