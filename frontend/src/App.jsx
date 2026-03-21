@@ -10,6 +10,8 @@ import ResetPassword from "./pages/ResetPassword";
 import Header from "./components/layout/Header";
 import Profile from "./pages/Profile";
 import CreateProduct from "./pages/CreateProduct"; 
+import Orders from "./components/order/Orders";
+
 function App() {
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
@@ -39,6 +41,9 @@ function App() {
 
             {/* Trang Đăng bán sản phẩm (MỚI THÊM) */}
             <Route path="/sell" element={<CreateProduct />} />
+
+            {/* Quản lý đơn hàng (ĐÂY NÈ BẠN) */}
+            <Route path="/orders" element={<Orders />} />
           </Routes>
         </main>
       </BrowserRouter>
