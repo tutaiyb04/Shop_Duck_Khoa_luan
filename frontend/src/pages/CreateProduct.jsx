@@ -165,7 +165,7 @@ function CreateProduct() {
 
       // 4. Gửi túi dữ liệu này lên Backend
       // Lưu ý: Sửa "/api/products" thành đúng đường dẫn API đăng bán của Backend nhóm bạn nhé
-      const response = await API.post("/api/products", formData, {
+      const response = await API.post("/products/create-product", formData, {
         headers: {
           "Content-Type": "multipart/form-data", // Bắt buộc phải có dòng này khi gửi file
         },
