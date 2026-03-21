@@ -9,6 +9,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Header from "./components/layout/Header";
 import Profile from "./pages/Profile";
+import CreateProduct from "./pages/CreateProduct"; 
 import Orders from "./components/order/Orders";
 
 function App() {
@@ -37,6 +38,9 @@ function App() {
 
             {/* Profile Page */}
             <Route path="/profile" element={<Profile />} />
+
+            {/* Trang Đăng bán sản phẩm (MỚI THÊM) */}
+            <Route path="/sell" element={<CreateProduct />} />
 
             {/* Quản lý đơn hàng (ĐÂY NÈ BẠN) */}
             <Route path="/orders" element={<Orders />} />
