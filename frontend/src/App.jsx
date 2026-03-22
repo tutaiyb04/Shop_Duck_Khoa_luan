@@ -9,8 +9,8 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Header from "./components/layout/Header";
 import Profile from "./pages/Profile";
-import CreateProduct from "./pages/CreateProduct"; 
-import Orders from "./components/order/Orders";
+import CreateProduct from "./pages/CreateProduct";
+import Orders from "./pages/Orders";
 
 function App() {
   return (
