@@ -9,7 +9,7 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Controller } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import useForgotPassword from "@/hooks/useForgotPassword";
+import useForgotPassword from "@/hooks/userHooks/useForgotPassword";
 import { NavLink } from "react-router-dom";
 import logoImage from "@/assets/logo3.png";
 

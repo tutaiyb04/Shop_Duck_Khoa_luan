@@ -5,7 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import useProfile from "@/hooks/useProfile";
+import useProfile from "@/hooks/userHooks/useProfile";
 import UserSidebar from "@/components/shared/UserSidebar";
 import ProfileForm from "@/components/profile/ProfileForm";
 
