@@ -9,10 +9,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-import useLogin from "@/hooks/useLogin";
-import useLoginGoogle from "@/hooks/useLoginGoogle";
-import useLoginFacebook from "@/hooks/useLoginFacebook";
-import useLoginPhone from "@/hooks/useLoginPhone";
+import useLogin from "@/hooks/userHooks/useLogin";
+import useLoginGoogle from "@/hooks/userHooks/useLoginGoogle";
+import useLoginFacebook from "@/hooks/userHooks/useLoginFacebook";
+import useLoginPhone from "@/hooks/userHooks/useLoginPhone";
 import logoImage from "@/assets/logo3.png";
 import LoginForm from "@/components/auth/LoginForm";
 import SocialForm from "@/components/auth/SocialForm";
