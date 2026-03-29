@@ -19,7 +19,6 @@ function useProfile() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null); // Lưu trữ file ảnh được chọn
   const [previewImage, setPreviewImage] = useState(null); // Hiển thị ảnh tạm thời
-  const [isLoadingData, setIsLoadingData] = useState(true);
 
   const form = useForm({
     resolver: zodResolver(profileSchema),
@@ -48,7 +47,7 @@ function useProfile() {
         console.error("Lỗi khi tải thông tin:", error);
         toast.error("Không thể tải thông tin cá nhân!");
       } finally {
-        setIsLoadingData(false);
+        setIsLoading(false);
       }
     };
 
@@ -100,7 +99,6 @@ function useProfile() {
     user,
     form,
     isLoading,
-    isLoadingData,
     previewImage,
     handleImageSelect,
     onSubmit,

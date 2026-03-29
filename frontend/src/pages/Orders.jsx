@@ -22,7 +22,7 @@ const Orders = () => {
   } = useOrder();
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 mt-10 mb-20">
+    <div className="container mx-auto px-4 py-20 max-w-6xl">
       <div className="flex flex-col md:flex-row gap-6">
         {/* CỘT TRÁI: GỌI SIDEBAR */}
         <UserSidebar />
