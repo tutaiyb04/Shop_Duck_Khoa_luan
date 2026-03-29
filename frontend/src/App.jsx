@@ -39,10 +39,10 @@ function App() {
             {/* Profile Page */}
             <Route path="/profile" element={<Profile />} />
 
-            {/* Trang Đăng bán sản phẩm (MỚI THÊM) */}
+            {/* Trang Đăng bán sản phẩm */}
             <Route path="/sell" element={<CreateProduct />} />
 
-            {/* Quản lý đơn hàng (ĐÂY NÈ BẠN) */}
+            {/* Quản lý đơn hàng */}
             <Route path="/orders" element={<Orders />} />
           </Routes>
         </main>

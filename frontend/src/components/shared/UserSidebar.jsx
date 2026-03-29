@@ -12,7 +12,7 @@ function UserSidebar() {
   // Danh sách các trang trong khu vực quản lý
   const navItems = [
     { path: "/profile", label: "Thông tin cá nhân", icon: User },
-    { path: "/orders", label: "Đơn mua", icon: ClipboardList },
+    { path: "/orders", label: "Đơn hàng của tôi", icon: ClipboardList },
     { path: "/sell", label: "Đăng tin bán", icon: PlusCircle },
   ];
 
