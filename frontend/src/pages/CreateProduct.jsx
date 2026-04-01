@@ -11,16 +11,32 @@ function CreateProduct() {
     imageError,
     fileInputRef,
     isSubmitting,
+    isLoadingData,
     handleFileChange,
     removeImage,
     onSubmit,
     MAX_IMAGES,
     MAX_FILE_SIZE_MB,
+    categories = [],
+    conditions = ["Mới", "Như mới", "Tốt", "Trung bình", "Kém"],
+    shippingMethods = [
+      "Giao hàng toàn quốc",
+      "Giao dịch trực tiếp",
+      "Thỏa thuận",
+    ],
   } = useCreateProduct();
+
+  if (isLoadingData) {
+    return (
+      <div className="text-center mt-20 text-gray-500">
+        Đang chuẩn bị biểu mẫu...
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-sm border mt-10 mb-20">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">
+      <h2 className="text-3xl font-bold mb-8 text-gray-800">
         Đăng tin bán sản phẩm mới
       </h2>
 
@@ -38,6 +54,9 @@ function CreateProduct() {
         form={form}
         onSubmit={onSubmit}
         isSubmitting={isSubmitting}
+        categories={categories}
+        conditions={conditions}
+        shippingMethods={shippingMethods}
       />
     </div>
   );

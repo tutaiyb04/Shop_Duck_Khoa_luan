@@ -12,21 +12,23 @@ function ImageUploader({
   maxFileSizeMB,
 }) {
   return (
-    <div className="mb-8 p-6 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
+    <div className="mb-8 p-6 border-2 border-gray-200 rounded-xl bg-gray-50/50">
       <div className="flex items-center justify-between mb-4">
-        <label className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-          <ImageIcon className="w-5 h-5 text-amber-500" />
+        <label className="text-xl font-bold text-gray-800 flex items-center gap-2">
+          <ImageIcon className="w-6 h-6 text-amber-500" />
           Hình ảnh sản phẩm <span className="text-red-500">*</span>
         </label>
-        <span className="text-sm text-gray-500">
+        <span className="text-sm font-medium text-gray-500 bg-white px-3 py-1 rounded-full border-2">
           ({images.length} / {maxImages} ảnh) - Tối đa {maxFileSizeMB}MB/ảnh
         </span>
       </div>
 
       {/* Hiển thị lỗi liên quan đến ảnh (nếu có) */}
       {imageError && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertDescription>{imageError}</AlertDescription>
+        <Alert variant="destructive" className="mb-6">
+          <AlertDescription className="font-medium">
+            {imageError}
+          </AlertDescription>
         </Alert>
       )}
 
@@ -37,10 +39,10 @@ function ImageUploader({
           <button
             type="button"
             onClick={() => fileInputRef.current.click()}
-            className="group aspect-square flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-white hover:border-amber-400 hover:bg-amber-50/50 transition-all text-gray-500 hover:text-amber-600"
+            className="group aspect-square flex flex-col items-center justify-center gap-2 rounded-lg border-2 !border-gray-300 !bg-white hover:!border-amber-400 hover:!bg-amber-50/50 transition-all text-gray-500 hover:text-amber-600"
           >
             <Plus className="w-8 h-8 " />
-            <span className="text-xs font-medium">Thêm ảnh</span>
+            <span className="text-sm font-bold">Thêm ảnh</span>
           </button>
         )}
 
@@ -48,7 +50,7 @@ function ImageUploader({
         {images.map((image, index) => (
           <div
             key={index}
-            className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 bg-white group shadow-sm"
+            className="relative aspect-square rounded-xl overflow-hidden border border-gray-200 bg-white group shadow-sm"
           >
             <img
               src={image.preview}
@@ -59,7 +61,7 @@ function ImageUploader({
             <button
               type="button"
               onClick={() => removeImage(index)}
-              className="absolute top-1 right-1 p-1 bg-black/50 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80"
+              className="absolute top-2 right-2 flex items-center justify-center !bg-black/50 rounded-full text-white opacity-0 group-hover:opacity-100 hover:scale-110 !transition-all !outline-none !border-none "
             >
               <X className="w-4 h-4" />
             </button>

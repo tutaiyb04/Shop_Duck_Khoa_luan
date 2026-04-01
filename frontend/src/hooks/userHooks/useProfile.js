@@ -19,6 +19,7 @@ function useProfile() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null); // Lưu trữ file ảnh được chọn
   const [previewImage, setPreviewImage] = useState(null); // Hiển thị ảnh tạm thời
+  const [isLoadingData, setIsLoadingData] = useState(true);
 
   const form = useForm({
     resolver: zodResolver(profileSchema),
@@ -47,7 +48,7 @@ function useProfile() {
         console.error("Lỗi khi tải thông tin:", error);
         toast.error("Không thể tải thông tin cá nhân!");
       } finally {
-        setIsLoading(false);
+        setIsLoadingData(false);
       }
     };
 
@@ -78,7 +79,6 @@ function useProfile() {
         formData.append("avatar", selectedImage);
       }
 
-      // gọi API với header cho formData
       const response = await API.put("user/update-profile", formData);
 
       toast.success("Cập nhật thành công");
@@ -99,6 +99,7 @@ function useProfile() {
     user,
     form,
     isLoading,
+    isLoadingData,
     previewImage,
     handleImageSelect,
     onSubmit,

@@ -10,8 +10,22 @@ import UserSidebar from "@/components/shared/UserSidebar";
 import ProfileForm from "@/components/profile/ProfileForm";
 
 function Profile() {
-  const { user, form, isLoading, previewImage, handleImageSelect, onSubmit } =
-    useProfile();
+  const {
+    user,
+    form,
+    isLoading,
+    isLoadingData,
+    previewImage,
+    handleImageSelect,
+    onSubmit,
+  } = useProfile();
+
+  if (isLoadingData)
+    return (
+      <div className="text-center mt-20 text-gray-500">
+        Đang tải dữ liệu hồ sơ...
+      </div>
+    );
 
   return (
     <div className="container mx-auto px-4 py-20 max-w-6xl">

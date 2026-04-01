@@ -1,44 +1,40 @@
 // controllers/ProductController.js
 const Product = require("../model/Product");
+const { productService } = require("../services/productService");
+
+exports.getAllProducts = async (req, res) => {
+  try {
+    // Chỉ lấy sản phẩm "active", dùng populate để lấy name & avatar từ User (người bán)
+    const products = await productService.getAllProductsService();
+
+    res.status(200).json({
+      message: "Lấy danh sách sản phẩm thành công",
+      products: products,
+    });
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách sản phẩm: ", error);
+    res.status(500).json({ message: "Lỗi server khi tải sản phẩm." });
+  }
+};
 
 exports.createProduct = async (req, res) => {
   try {
     // 1. Kiểm tra xác thực (đã có req.user từ middleware protect)
     if (!req.user) {
-      return res.status(401).json({ message: "Vui lòng đăng nhập để đăng bán!" });
+      return res
+        .status(401)
+        .json({ message: "Vui lòng đăng nhập để đăng bán!" });
     }
 
     const sellerId = req.user._id || req.user.id;
-    const { name, category, price, condition, description, shippingInfo } = req.body;
+    const productData = req.body;
+    const files = req.files;
 
-    // 2. Lấy danh sách link ảnh đã được Cloudinary xử lý
-    // Khi dùng upload.array, multer sẽ lưu thông tin các file vào req.files
-    const imageUrls = [];
-    if (req.files && req.files.length > 0) {
-      for (const file of req.files) {
-        imageUrls.push(file.path); // file.path chính là đường dẫn URL của ảnh trên Cloudinary
-      }
-    }
-
-    // Kiểm tra phải có ít nhất 1 ảnh
-    if (imageUrls.length === 0) {
-      return res.status(400).json({ message: "Vui lòng tải lên ít nhất 1 hình ảnh sản phẩm." });
-    }
-
-    // 3. Tạo mới sản phẩm
-    const newProduct = new Product({
-      name,
-      category,
-      price: Number(price), // Đảm bảo lưu dưới dạng số
-      condition,
-      description,
-      shippingInfo,
-      images: imageUrls,
-      sellerId: sellerId,
-    });
-
-    // 4. Lưu vào Database
-    await newProduct.save();
+    const newProduct = await productService.createProductService(
+      sellerId,
+      productData,
+      files,
+    );
 
     res.status(201).json({
       message: "Đăng tin bán thành công!",
@@ -46,6 +42,8 @@ exports.createProduct = async (req, res) => {
     });
   } catch (error) {
     console.error("Lỗi khi tạo sản phẩm: ", error);
-    res.status(500).json({ message: error.message || "Lỗi server khi đăng tin." });
+    res
+      .status(500)
+      .json({ message: error.message || "Lỗi server khi đăng tin." });
   }
 };

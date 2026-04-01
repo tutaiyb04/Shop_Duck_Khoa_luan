@@ -11,5 +11,6 @@ router.post(
   upload.array("images", 5), // Bắt tối đa 5 file ảnh có key là 'images'
   productController.createProduct,
 );
+router.get("/", productController.getAllProducts);
 
 module.exports = router;
