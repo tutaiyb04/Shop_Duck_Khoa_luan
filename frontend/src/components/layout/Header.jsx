@@ -11,6 +11,7 @@ import {
   LogOut,
   ShoppingCart,
   ChevronDown,
+  CirclePlus,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -123,6 +124,19 @@ export default function Header() {
                     <UserCircle className="mr-2 h-4 w-4" />
                     <span>Thông tin cá nhân</span>
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+
+                  <h2 className="ml-2 font-bold">Bán hàng</h2>
+                  <DropdownMenuItem
+                    onClick={() => navigate("/sell")}
+                    className="cursor-pointer"
+                  >
+                    <CirclePlus className="mr-2 h-4 w-4" />
+                    <span>Thêm đơn hàng</span>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator />
+                  <h2 className="ml-2 font-bold">Mua hàng</h2>
                   <DropdownMenuItem
                     onClick={() => navigate("/orders")}
                     className="cursor-pointer"

@@ -1,6 +1,6 @@
 import * as z from "zod";
 import toast from "react-hot-toast";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,8 +32,27 @@ export function useCreateProduct() {
   const [images, setImages] = useState([]);
   const [imageError, setImageError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
 
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        setIsLoadingData(true);
+        const res = await API.get("/categories");
+        setCategories(res.data); // Lưu mảng danh mục vào state
+      } catch (error) {
+        console.error("Lỗi lấy danh mục:", error);
+        toast.error("Không thể tải dữ liệu danh mục!");
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    fetchInitialData();
+  }, []);
 
   const form = useForm({
     resolver: zodResolver(productSchema),
@@ -136,6 +155,8 @@ export function useCreateProduct() {
     images,
     imageError,
     fileInputRef,
+    categories,
+    isLoadingData,
     isSubmitting,
     handleFileChange,
     removeImage,

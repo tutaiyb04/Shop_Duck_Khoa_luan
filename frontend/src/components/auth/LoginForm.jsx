@@ -43,7 +43,7 @@ function LoginForm({ form, onSubmit, isLoading, error }) {
               type="password"
               aria-invalid={fieldState.invalid}
               placeholder="••••••••"
-              className="!ring-0 focus-visible:border-yellow-500 "
+              className="!ring-0 focus-visible:border-yellow-500"
             />
             {fieldState.invalid && (
               <div className="text-sm font-medium text-red-500 mt-1">

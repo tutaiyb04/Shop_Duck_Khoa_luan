@@ -1,15 +1,15 @@
 import UserSidebar from "@/components/shared/UserSidebar";
 import ReviewModal from "@/components/order/ReviewModal";
 import OrderTab from "@/components/order/OrderTab";
-import { useOrder } from "@/hooks/orderHooks/useOrder";
 import OrderTable from "@/components/order/OrderTable";
+import { useOrder } from "@/hooks/orderHooks/useOrderList";
+import { useReviewModal } from "@/hooks/reviewHooks/useReviewModal";
 
 const Orders = () => {
+  const { activeTab, setActiveTab, tabs, filteredOrders, isLoadingData } =
+    useOrder();
+
   const {
-    activeTab,
-    setActiveTab,
-    tabs,
-    filteredOrders,
     isReviewModalOpen,
     rating,
     setRating,
@@ -19,7 +19,15 @@ const Orders = () => {
     openReviewModal,
     closeReviewModal,
     submitReview,
-  } = useOrder();
+  } = useReviewModal();
+
+  if (isLoadingData) {
+    return (
+      <div className="text-center mt-20 text-gray-500">
+        Đang tải danh sách đơn hàng...
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-20 max-w-6xl">
