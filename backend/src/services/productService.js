@@ -2,14 +2,17 @@ const Product = require("../model/Product");
 
 exports.getAllProductsService = async () => {
   try {
-    const products = await Product.find({ status: "active" })
+    const products = await Product.find({ status: "AVAILABLE" })
       .populate("sellerId", "username avatar")
+      .populate("category", "name")
       .sort({ createdAt: -1 });
+
+    console.log("products", products);
 
     return products;
   } catch (error) {
     console.error("Lỗi tại getAllProductsService: ", error);
-    throw new Error("Lỗi khi lấy danh sách sản phẩm từ cơ sở dữ liệu");
+    throw new Error("Không thể lấy danh sách sản phẩm từ cơ sở dữ liệu");
   }
 };
 

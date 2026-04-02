@@ -5,7 +5,7 @@ import OrderTable from "@/components/order/OrderTable";
 import { useOrder } from "@/hooks/orderHooks/useOrderList";
 import { useReviewModal } from "@/hooks/reviewHooks/useReviewModal";
 
-const Orders = () => {
+function Orders() {
   const { activeTab, setActiveTab, tabs, filteredOrders, isLoadingData } =
     useOrder();
 
@@ -65,6 +65,6 @@ const Orders = () => {
       />
     </div>
   );
-};
+}
 
 export default Orders;
