@@ -1,6 +1,4 @@
-// controllers/ProductController.js
-const Product = require("../model/Product");
-const { productService } = require("../services/productService");
+const productService = require("../services/productService");
 
 exports.getAllProducts = async (req, res) => {
   try {

@@ -3,14 +3,14 @@ import { Routes, Route, BrowserRouter } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
 import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
 import Header from "./components/layout/Header";
 import Profile from "./pages/Profile";
-import CreateProduct from "./pages/CreateProduct";
-import Orders from "./pages/Orders";
+import CreateProduct from "./pages/products/CreateProduct";
+import Orders from "./pages/products/Orders";
 
 function App() {
   return (
