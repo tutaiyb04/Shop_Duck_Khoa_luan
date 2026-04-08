@@ -3,15 +3,17 @@ const productService = require("../services/productService");
 exports.getAllProducts = async (req, res) => {
   try {
     // Chỉ lấy sản phẩm "active", dùng populate để lấy name & avatar từ User (người bán)
-    const products = await productService.getAllProductsService();
+    const { products } = await productService.getAllProductsService();
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Lấy danh sách sản phẩm thành công",
-      products: products,
+      products,
     });
   } catch (error) {
     console.error("Lỗi khi lấy danh sách sản phẩm: ", error);
-    res.status(500).json({ message: "Lỗi server khi tải sản phẩm." });
+    return res.status(500).json({
+      message: error.message || "Lỗi server khi lấy danh sách sản phẩm",
+    });
   }
 };
 
@@ -21,27 +23,27 @@ exports.createProduct = async (req, res) => {
     if (!req.user) {
       return res
         .status(401)
-        .json({ message: "Vui lòng đăng nhập để đăng bán!" });
+        .json({ message: "Vui lòng đăng nhập để đăng bán" });
     }
 
     const sellerId = req.user._id || req.user.id;
     const productData = req.body;
     const files = req.files;
 
-    const newProduct = await productService.createProductService(
+    const { newProduct } = await productService.createProductService(
       sellerId,
       productData,
       files,
     );
 
-    res.status(201).json({
-      message: "Đăng tin bán thành công!",
+    return res.status(201).json({
+      message: "Đăng tin bán thành công",
       product: newProduct,
     });
   } catch (error) {
     console.error("Lỗi khi tạo sản phẩm: ", error);
-    res
+    return res
       .status(500)
-      .json({ message: error.message || "Lỗi server khi đăng tin." });
+      .json({ message: error.message || "Lỗi server khi đăng tin" });
   }
 };

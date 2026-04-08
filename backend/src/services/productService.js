@@ -7,12 +7,10 @@ exports.getAllProductsService = async () => {
       .populate("category", "name")
       .sort({ createdAt: -1 });
 
-    console.log("products", products);
-
-    return products;
+    return { products };
   } catch (error) {
     console.error("Lỗi tại getAllProductsService: ", error);
-    throw new Error("Không thể lấy danh sách sản phẩm từ cơ sở dữ liệu");
+    throw new Error("Không thể lấy danh sách sản phẩm");
   }
 };
 
@@ -49,7 +47,7 @@ exports.createProductService = async (sellerId, productData, files) => {
     // Lưu vào Database
     await newProduct.save();
 
-    return newProduct;
+    return { newProduct };
   } catch (error) {
     console.error("Lỗi tại createProductService: ", error);
     throw error; // Ném lỗi ra để Controller bắt đư
