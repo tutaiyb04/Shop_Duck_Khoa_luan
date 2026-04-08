@@ -42,7 +42,7 @@ export function useCreateProduct() {
       try {
         setIsLoadingData(true);
         const res = await API.get("/categories");
-        setCategories(res.data); // Lưu mảng danh mục vào state
+        setCategories(res.data.categories || res.data); // Lưu mảng danh mục vào state
       } catch (error) {
         console.error("Lỗi lấy danh mục:", error);
         toast.error("Không thể tải dữ liệu danh mục!");

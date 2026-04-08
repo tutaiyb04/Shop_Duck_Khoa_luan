@@ -49,8 +49,16 @@ function useLogin() {
       const response = await API.post("user/login", payload);
 
       login(response.data);
-      navigate("/");
-      toast.success("Đăng nhập thành công");
+
+      const userRole = response.data?.user?.role || response.data?.role;
+
+      if (userRole === "admin") {
+        toast.success("Xin chào Quản trị viên!");
+        navigate("/admin/categories"); // Đẩy vào trang quản trị
+      } else {
+        toast.success("Đăng nhập thành công");
+        navigate("/"); // Đẩy khách hàng ra trang chủ
+      }
     } catch (error) {
       console.error("Chi tiết lỗi catch được:", error);
       setError(
