@@ -39,6 +39,7 @@ exports.login = async (req, res) => {
         id: findUser._id,
         username: findUser.username,
         email: findUser.email,
+        role: findUser.role,
       },
     });
   } catch (error) {
@@ -215,7 +216,7 @@ exports.createSuperAdmin = async (req, res) => {
         .json({ message: "Tài khoản Super Admin đã tồn tại!" });
     }
 
-    // 2. Khởi tạo tài khoản Admin  
+    // 2. Khởi tạo tài khoản Admin
     const newAdmin = new User({
       username: "superadmin",
       email: "tutai241104@duckshop.com",

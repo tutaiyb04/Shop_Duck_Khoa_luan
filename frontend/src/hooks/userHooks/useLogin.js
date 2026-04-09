@@ -50,15 +50,8 @@ function useLogin() {
 
       login(response.data);
 
-      const userRole = response.data?.user?.role || response.data?.role;
-
-      if (userRole === "admin") {
-        toast.success("Xin chào Quản trị viên!");
-        navigate("/admin/categories"); // Đẩy vào trang quản trị
-      } else {
-        toast.success("Đăng nhập thành công");
-        navigate("/"); // Đẩy khách hàng ra trang chủ
-      }
+      navigate("/");
+      toast.success("Đăng nhập thành công");
     } catch (error) {
       console.error("Chi tiết lỗi catch được:", error);
       setError(
