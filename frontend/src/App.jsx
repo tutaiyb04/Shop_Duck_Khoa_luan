@@ -11,8 +11,6 @@ import Header from "./components/layout/Header";
 import Profile from "./pages/Profile";
 import CreateProduct from "./pages/products/CreateProduct";
 import Orders from "./pages/products/Orders";
-import AdminLayout from "./components/layout/AdminLayout";
-import AdminCategories from "./pages/admin/AdminCategories";
 
 function App() {
   return (
@@ -46,12 +44,6 @@ function App() {
 
             {/* Quản lý đơn hàng */}
             <Route path="/orders" element={<Orders />} />
-
-            {/* THÊM PHÂN HỆ ROUTE DÀNH CHO ADMIN */}
-            <Route path="/admin" element={<AdminLayout />}>
-              {/* URL: /admin/categories */}
-              <Route path="categories" element={<AdminCategories />} />
-            </Route>
           </Routes>
         </main>
       </BrowserRouter>

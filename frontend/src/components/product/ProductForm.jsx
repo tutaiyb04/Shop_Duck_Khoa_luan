@@ -68,12 +68,11 @@ function ProductForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {Array.isArray(categories) &&
-                      categories.map((cat) => (
-                        <SelectItem key={cat._id} value={cat._id}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
+                    {categories.map((cat) => (
+                      <SelectItem key={cat._id} value={cat._id}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
