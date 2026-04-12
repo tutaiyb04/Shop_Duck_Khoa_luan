@@ -32,8 +32,28 @@ const productSchema = new mongoose.Schema(
       enum: ["AVAILABLE", "PENDING"],
       default: "AVAILABLE",
     },
+    attributes: {
+      type: Map,
+      of: String,
+    },
+    location: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point",
+      },
+      coordinates: {
+        type: [Number], // Định dạng bắt buộc: [Kinh độ (Longitude), Vĩ độ (Latitude)]
+      },
+    },
   },
-  { timestamps: true }, // Tự động tạo createdAt, updatedAt
+  { timestamps: true },
 );
+
+// Đánh chỉ mục (Index) 2dsphere cho trường location để tối ưu tốc độ tìm kiếm quanh đây
+productSchema.index({ location: "2dsphere" });
+
+productSchema.index({ category: 1, status: 1 }); // Lọc sản phẩm theo danh mục cực nhanh
+productSchema.index({ sellerId: 1 }); // Load trang cá nhân của người bán nhanh hơn
 
 module.exports = mongoose.model("Product", productSchema);

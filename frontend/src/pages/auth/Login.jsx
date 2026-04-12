@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useGoogleLogin } from "@react-oauth/google";
 import { NavLink } from "react-router-dom";
 import {
@@ -11,17 +10,11 @@ import {
 
 import useLogin from "@/hooks/userHooks/useLogin";
 import useLoginGoogle from "@/hooks/userHooks/useLoginGoogle";
-import useLoginFacebook from "@/hooks/userHooks/useLoginFacebook";
-import useLoginPhone from "@/hooks/userHooks/useLoginPhone";
 import logoImage from "@/assets/logo3.png";
 import LoginForm from "@/components/auth/LoginForm";
 import SocialForm from "@/components/auth/SocialForm";
-import PhoneAuthForm from "@/components/auth/PhoneAuthForm";
 
 function Login() {
-  const [isPhoneMode, setIsPhoneMode] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState("");
-
   const { error, isLoading, form, onSubmit } = useLogin();
 
   const { onSuccess: onGoogleSuccess } = useLoginGoogle();
@@ -29,11 +22,6 @@ function Login() {
   const handleGoogleLogin = useGoogleLogin({
     onSuccess: onGoogleSuccess,
   });
-
-  const { onSuccess: onFacebookSuccess } = useLoginFacebook();
-
-  const { isOtpSent, otpCode, setOtpCode, handleSendOtp, handleVerifyOtp } =
-    useLoginPhone();
 
   return (
     <div className="w-full min-h-screen bg-amber-50 flex items-center justify-center py-10 lg:py-0">
@@ -78,36 +66,15 @@ function Login() {
             </CardHeader>
 
             <CardContent>
-              {isPhoneMode ? (
-                // Tái sử dụng form Đăng nhập bằng số điện thoại
-                <PhoneAuthForm
-                  isOtpSent={isOtpSent}
-                  phoneNumber={phoneNumber}
-                  setPhoneNumber={setPhoneNumber}
-                  handleSendOtp={handleSendOtp}
-                  otpCode={otpCode}
-                  setOtpCode={setOtpCode}
-                  handleVerifyOtp={handleVerifyOtp}
-                  setIsPhoneMode={setIsPhoneMode}
-                />
-              ) : (
-                <>
-                  {/* Form Đăng nhập Email/Username */}
-                  <LoginForm
-                    form={form}
-                    onSubmit={onSubmit}
-                    isLoading={isLoading}
-                    error={error}
-                  />
+              {/* Form Đăng nhập Email/Username */}
+              <LoginForm
+                form={form}
+                onSubmit={onSubmit}
+                isLoading={isLoading}
+                error={error}
+              />
 
-                  {/* Tái sử dụng các nút mạng xã hội */}
-                  <SocialForm
-                    handleGoogleLogin={handleGoogleLogin}
-                    onFacebookSuccess={onFacebookSuccess}
-                    setIsPhoneMode={setIsPhoneMode}
-                  />
-                </>
-              )}
+              <SocialForm handleGoogleLogin={handleGoogleLogin} />
             </CardContent>
 
             <NavLink

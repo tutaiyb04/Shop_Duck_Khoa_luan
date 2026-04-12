@@ -1,6 +1,5 @@
 import { useGoogleLogin } from "@react-oauth/google";
 import { NavLink } from "react-router-dom";
-import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -11,16 +10,11 @@ import {
 
 import useRegister from "@/hooks/userHooks/useRegister";
 import useLoginGoogle from "@/hooks/userHooks/useLoginGoogle";
-import useLoginFacebook from "@/hooks/userHooks/useLoginFacebook";
-import useLoginPhone from "@/hooks/userHooks/useLoginPhone";
 import logoImage from "@/assets/logo3.png";
 import RegisterForm from "@/components/auth/RegisterForm";
 import SocialForm from "@/components/auth/SocialForm";
-import PhoneAuthForm from "@/components/auth/PhoneAuthForm";
 
 function Register() {
-  const [isPhoneMode, setIsPhoneMode] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState("");
   const { form, error, isLoading, onSubmit } = useRegister();
 
   const { onSuccess: onGoogleSuccess } = useLoginGoogle();
@@ -29,10 +23,6 @@ function Register() {
     onSuccess: onGoogleSuccess,
     onError: () => console.log("Đăng nhập Google thất bại"),
   });
-
-  const { onSuccess: onFacebookSuccess } = useLoginFacebook();
-  const { isOtpSent, otpCode, setOtpCode, handleSendOtp, handleVerifyOtp } =
-    useLoginPhone();
 
   return (
     <div className="w-full min-h-screen bg-amber-50 flex items-center justify-center py-10 lg:py-0">
@@ -77,36 +67,16 @@ function Register() {
             </CardHeader>
 
             <CardContent>
-              {isPhoneMode ? (
-                // Form Đăng nhập bằng số điện thoại
-                <PhoneAuthForm
-                  isOtpSent={isOtpSent}
-                  phoneNumber={phoneNumber}
-                  setPhoneNumber={setPhoneNumber}
-                  handleSendOtp={handleSendOtp}
-                  otpCode={otpCode}
-                  setOtpCode={setOtpCode}
-                  handleVerifyOtp={handleVerifyOtp}
-                  setIsPhoneMode={setIsPhoneMode}
-                />
-              ) : (
-                <>
-                  {/* Form Đăng ký Email/Mật khẩu */}
-                  <RegisterForm
-                    form={form}
-                    onSubmit={onSubmit}
-                    isLoading={isLoading}
-                    error={error}
-                  />
+              {/* Form Đăng ký Email/Mật khẩu */}
+              <RegisterForm
+                form={form}
+                onSubmit={onSubmit}
+                isLoading={isLoading}
+                error={error}
+              />
 
-                  {/* Nút đăng nhập Google, Facebook, Chuyển sang Phone */}
-                  <SocialForm
-                    handleGoogleLogin={handleGoogleLogin}
-                    onFacebookSuccess={onFacebookSuccess}
-                    setIsPhoneMode={setIsPhoneMode}
-                  />
-                </>
-              )}
+              {/* Nút đăng nhập Google */}
+              <SocialForm handleGoogleLogin={handleGoogleLogin} />
             </CardContent>
 
             <NavLink
