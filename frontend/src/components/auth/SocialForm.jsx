@@ -1,7 +1,7 @@
 import FacebookLogin from "@greatsumini/react-facebook-login";
 import { Button } from "@/components/ui/button";
 
-function SocialForm({ handleGoogleLogin, onFacebookSuccess, setIsPhoneMode }) {
+function SocialForm({ handleGoogleLogin }) {
   return (
     <div className="space-y-3 mt-6">
       <div className="relative mb-6">
@@ -37,44 +37,6 @@ function SocialForm({ handleGoogleLogin, onFacebookSuccess, setIsPhoneMode }) {
           />
         </svg>
         Tiếp tục bằng Google
-      </Button>
-
-      <FacebookLogin
-        appId={import.meta.env.VITE_FACEBOOK_APP_ID}
-        fields="name, email, picture"
-        onSuccess={onFacebookSuccess}
-        onFail={(error) => {
-          console.log("Lỗi: ", error);
-        }}
-        render={({ onClick }) => (
-          <Button
-            type="button"
-            onClick={onClick}
-            className="w-full !bg-white text-gray-500 hover:!bg-blue-50 transition-colors h-10 border !border-gray-300 !ring-0 !outline-none"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-              className="mr-2"
-            >
-              <path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z" />
-            </svg>
-            Tiếp tục bằng Facebook
-          </Button>
-        )}
-      />
-
-      <Button
-        type="button"
-        className="w-full !bg-white text-gray-500 hover:!bg-blue-50 transition-colors h-10 border !border-gray-300 !ring-0 !outline-none"
-        onClick={() => {
-          setIsPhoneMode(true);
-        }}
-      >
-        Tiếp tục với số điện thoại
       </Button>
     </div>
   );

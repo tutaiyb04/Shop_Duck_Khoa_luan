@@ -18,14 +18,10 @@ const userSchema = new Schema(
     },
     authType: {
       type: String,
-      enum: ["local", "google", "facebook", "phone"],
+      enum: ["local", "google"],
       default: "local",
     },
     googleId: {
-      type: String,
-      default: null,
-    },
-    facebookId: {
       type: String,
       default: null,
     },

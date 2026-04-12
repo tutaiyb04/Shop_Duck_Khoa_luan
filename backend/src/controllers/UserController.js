@@ -96,52 +96,6 @@ exports.googleLogin = async (req, res) => {
   }
 };
 
-exports.facebookLogin = async (req, res) => {
-  try {
-    const { token } = req.body;
-
-    const { user, fbToken: fbToken } =
-      await userService.loginWithFacebookService(token);
-
-    res.status(200).json({
-      message: "Đăng nhập Facebook thành công !",
-      user: user,
-      token: fbToken,
-    });
-  } catch (error) {
-    console.log("Lỗi khi gọi facebookLogin: ", error);
-    res.status(400).json({ message: error.message || "Lỗi hệ thống" });
-  }
-};
-
-exports.phoneLogin = async (req, res) => {
-  try {
-    const { phone } = req.body;
-
-    if (!phone) {
-      return res
-        .status(400)
-        .json({ message: "Số điện thoại không được để trống" });
-    }
-
-    const { user, phoneToken: phoneToken } =
-      await userService.loginWithPhoneService(phone);
-
-    if (!phone) {
-      return res.status(404).json({ message: "Số điện thoại không tồn tại" });
-    }
-
-    res.status(200).json({
-      message: "Đăng nhập bằng số điện thoại thành công !",
-      user: user,
-      token: phoneToken,
-    });
-  } catch (error) {
-    console.log("Lỗi khi gọi phoneLogin: ", error);
-    res.status(400).json({ message: error.message || "Lỗi hệ thống" });
-  }
-};
-
 exports.getProfile = (req, res) => {
   try {
     const user = req.user;

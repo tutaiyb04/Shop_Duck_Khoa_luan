@@ -7,8 +7,6 @@ const { upload } = require("../config/cloudinary");
 const router = express.Router();
 
 router.post("/seed-admin", userController.createSuperAdmin);
-router.post("/phone-login", userController.phoneLogin);
-router.post("/facebook-login", userController.facebookLogin);
 router.post("/google-login", userController.googleLogin);
 router.post("/reset-password", userController.resetPassword);
 router.post("/forgot-password", userController.forgotPassword);
