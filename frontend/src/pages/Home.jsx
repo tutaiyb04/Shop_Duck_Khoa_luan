@@ -5,7 +5,6 @@ import ProductCard from "@/components/product/ProductCard";
 function Home() {
   const { products, isLoading } = useGetProduct();
 
-  console.log("products", products);
 
   return (
     <div className="min-h-screen bg-amber-50 w-full pb-20">

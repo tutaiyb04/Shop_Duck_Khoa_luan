@@ -12,7 +12,6 @@ export function useGetProduct() {
 
       const response = await API.get("/products");
       setProducts(response.data.products);
-      console.log("response", response);
     } catch (error) {
       console.log("Lỗi tải sản phẩm: ", error);
       toast.error("Lỗi khi tải sản phẩm");
