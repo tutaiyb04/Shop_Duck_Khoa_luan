@@ -11,39 +11,55 @@ import Header from "./components/layout/Header";
 import Profile from "./pages/Profile";
 import CreateProduct from "./pages/products/CreateProduct";
 import Orders from "./pages/products/Orders";
+import AdminLayout from "./components/admin/AdminLayout";
+import CategoryManagement from "./pages/admin/CategoryManagement";
+import ClientLayout from "./components/layout/ClientLayout";
+import AdminProfile from "./pages/admin/AdminProfile";
 
 function App() {
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Toaster position="top-right" reverseOrder={false} />
-        <Header />
 
         <main className="w-full min-h-screen overflow-x-hidden bg-amber-50">
           <Routes>
-            {/* Home Page */}
-            <Route path="/" element={<Home />} />
+            <Route element={<ClientLayout />}>
+              {/* Home Page */}
+              <Route path="/" element={<Home />} />
 
-            {/* Login Page */}
-            <Route path="/login" element={<Login />} />
+              {/* Login Page */}
+              <Route path="/login" element={<Login />} />
 
-            {/* Register Page */}
-            <Route path="/register" element={<Register />} />
+              {/* Register Page */}
+              <Route path="/register" element={<Register />} />
 
-            {/* ForgotPassword Page */}
-            <Route path="/reset-password" element={<ForgotPassword />} />
+              {/* ForgotPassword Page */}
+              <Route path="/reset-password" element={<ForgotPassword />} />
 
-            {/* ResetPassword Page */}
-            <Route path="/reset-password-confirm" element={<ResetPassword />} />
+              {/* ResetPassword Page */}
+              <Route
+                path="/reset-password-confirm"
+                element={<ResetPassword />}
+              />
 
-            {/* Profile Page */}
-            <Route path="/profile" element={<Profile />} />
+              {/* Profile Page */}
+              <Route path="/profile" element={<Profile />} />
 
-            {/* Trang Đăng bán sản phẩm */}
-            <Route path="/sell" element={<CreateProduct />} />
+              {/* Trang Đăng bán sản phẩm */}
+              <Route path="/sell" element={<CreateProduct />} />
 
-            {/* Quản lý đơn hàng */}
-            <Route path="/orders" element={<Orders />} />
+              {/* Quản lý đơn hàng */}
+              <Route path="/orders" element={<Orders />} />
+            </Route>
+
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route path="categories" element={<CategoryManagement />} />
+
+              <Route path="dashboard" element={<div>Trang tổng quan</div>} />
+
+              <Route path="profile" element={<AdminProfile />} />
+            </Route>
           </Routes>
         </main>
       </BrowserRouter>

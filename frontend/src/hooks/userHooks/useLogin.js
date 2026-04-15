@@ -50,7 +50,13 @@ function useLogin() {
 
       login(response.data);
 
-      navigate("/");
+      const userRole = response.data.user.role;
+
+      if (userRole === "admin") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/");
+      }
       toast.success("Đăng nhập thành công");
     } catch (error) {
       console.error("Chi tiết lỗi catch được:", error);

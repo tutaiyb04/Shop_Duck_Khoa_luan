@@ -4,11 +4,27 @@ const CategoryController = require("../controllers/CategoryController");
 const { isAdmin, protect } = require("../middleware/authMiddleware");
 
 router.get("/", CategoryController.getPublicCategories);
-router.get("/admin/all", isAdmin, CategoryController.getAdminCategories);
-router.post("/create-category", isAdmin, CategoryController.createCategory);
-router.put("/update-category/:id", isAdmin, CategoryController.updateCategory);
+router.get(
+  "/admin/all",
+  protect,
+  isAdmin,
+  CategoryController.getAdminCategories,
+);
+router.post(
+  "/create-category",
+  protect,
+  isAdmin,
+  CategoryController.createCategory,
+);
+router.put(
+  "/update-category/:id",
+  protect,
+  isAdmin,
+  CategoryController.updateCategory,
+);
 router.delete(
   "/delete-category/:id",
+  protect,
   isAdmin,
   CategoryController.deleteCategory,
 );

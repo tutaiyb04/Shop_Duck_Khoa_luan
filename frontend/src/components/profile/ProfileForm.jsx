@@ -33,6 +33,7 @@ function ProfileForm({
               {...field}
               id={field.name}
               aria-invalid={fieldState.invalid}
+              className="!ring-0 focus-visible:border-yellow-500"
             />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
@@ -45,7 +46,11 @@ function ProfileForm({
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
             <FieldLabel htmlFor={field.name}>Số điện thoại</FieldLabel>
-            <Input {...field} id={field.name} />
+            <Input
+              {...field}
+              id={field.name}
+              className="!ring-0 focus-visible:border-yellow-500"
+            />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
         )}
@@ -57,7 +62,11 @@ function ProfileForm({
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
             <FieldLabel htmlFor={field.name}>Địa chỉ nhận hàng</FieldLabel>
-            <Input {...field} id={field.name} />
+            <Input
+              {...field}
+              id={field.name}
+              className="!ring-0 focus-visible:border-yellow-500"
+            />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
         )}
@@ -69,7 +78,11 @@ function ProfileForm({
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
             <FieldLabel htmlFor={field.name}>Giới thiệu</FieldLabel>
-            <Input {...field} id={field.name} />
+            <Input
+              {...field}
+              id={field.name}
+              className="!ring-0 focus-visible:border-yellow-500"
+            />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
         )}

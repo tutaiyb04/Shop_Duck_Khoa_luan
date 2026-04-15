@@ -17,10 +17,16 @@ function useLoginGoogle() {
 
       const response = await API.post("/user/google-login", payload);
 
-      toast.success("Đăng nhập Google thành công");
-
       login(response.data);
-      navigate("/");
+
+      const userRole = response.data.user.role;
+
+      if (userRole === "admin") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/");
+      }
+      toast.success("Đăng nhập Google thành công");
     } catch (error) {
       console.log("Lỗi đăng nhập Google: ", error);
       toast.error("Đăng nhập thất bại!");

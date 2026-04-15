@@ -40,6 +40,7 @@ exports.login = async (req, res) => {
         username: findUser.username,
         email: findUser.email,
         role: findUser.role,
+        avatar: findUser.avatar,
       },
     });
   } catch (error) {
@@ -173,8 +174,9 @@ exports.createSuperAdmin = async (req, res) => {
     // 2. Khởi tạo tài khoản Admin
     const newAdmin = new User({
       username: "superadmin",
-      email: "tutai241104@duckshop.com",
-      password: "Admin@123456", // Nhập mk rõ ràng, Mongoose pre-save sẽ tự băm nó!
+      phone: "0344076552",
+      email: "tutai241104@gmail.com",
+      password: "Admin@1234", // Nhập mk rõ ràng, Mongoose pre-save sẽ tự băm nó!
       role: "admin",
       authType: "local",
     });
