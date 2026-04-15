@@ -51,38 +51,40 @@ function CategoryManagement() {
     return <div className="p-8">Đang tải dữ liệu...</div>;
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-sm border">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-yellow-500">Quản lý danh mục</h1>
+    <div className="p-4 sm:p-6 bg-white rounded-xl shadow-sm border border-gray-100">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-yellow-600">
+          Quản lý danh mục
+        </h1>
         <Button
           onClick={openCreateModal}
-          className="!bg-yellow-500 hover:!bg-yellow-700 text-white !border-0 !ring-0 !outline-none"
+          className="w-full sm:w-auto !bg-yellow-500 hover:!bg-yellow-600 text-white shadow-sm !border-0 !ring-0 !outline-none"
         >
           <Plus className="w-4 h-4 mr-2" /> Thêm danh mục
         </Button>
       </div>
 
       {/* Bảng hiển thị danh sách */}
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
+      <div className="overflow-x-auto rounded-lg border border-gray-100">
+        <table className="w-full border-collapse text-sm sm:text-base">
           <thead>
-            <tr className="bg-gray-50 border-b">
-              <th className="p-4 text-left font-semibold text-gray-600 w-16">
+            <tr className="bg-gray-50 border-b border-gray-200">
+              <th className="p-3 sm:p-4 text-left font-semibold text-gray-600 whitespace-nowrap">
                 Icon
               </th>
-              <th className="p-4 text-left font-semibold text-gray-600">
+              <th className="p-3 sm:p-4 text-left font-semibold text-gray-600 whitespace-nowrap">
                 Tên danh mục
               </th>
-              <th className="p-4 text-left font-semibold text-gray-600">
+              <th className="p-3 sm:p-4 text-left font-semibold text-gray-600 whitespace-nowrap">
                 Mô tả
               </th>
-              <th className="p-4 text-left font-semibold text-gray-600">
+              <th className="p-3 sm:p-4 text-left font-semibold text-gray-600 whitespace-nowrap">
                 Slug
               </th>
-              <th className="p-4 text-left font-semibold text-gray-600">
+              <th className="p-3 sm:p-4 text-left font-semibold text-gray-600 whitespace-nowrap">
                 Trạng thái
               </th>
-              <th className="p-4 text-center font-semibold text-gray-600 w-32">
+              <th className="p-3 sm:p-4 text-center font-semibold text-gray-600 whitespace-nowrap">
                 Hành động
               </th>
             </tr>
@@ -92,32 +94,41 @@ function CategoryManagement() {
             {categories.map((cat) => (
               <tr
                 key={cat._id}
-                className="border-b hover:bg-gray-50 transition-colors"
+                className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
               >
-                <td className="p-4 text-2xl">{renderIcon(cat.icon)}</td>
-                <td className="p-4 font-medium text-gray-800">{cat.name}</td>
-                <td className="p-4 text-sm text-gray-600 max-w-xs truncate">
+                <td className="p-3 sm:p-4 text-xl sm:text-2xl">
+                  {renderIcon(cat.icon)}
+                </td>
+                <td className="p-3 sm:p-4 font-semibold text-gray-800 whitespace-nowrap">
+                  {cat.name}
+                </td>
+                <td className="p-3 sm:p-4 text-gray-600 min-w-[150px] max-w-[200px] truncate">
                   {cat.description || (
-                    <span className="text-gray-400 italic">Không có mô tả</span>
+                    <span className="text-gray-400 italic text-xs">
+                      Không có mô tả
+                    </span>
                   )}
                 </td>
-                <td className="p-4 text-sm text-gray-500">{cat.slug}</td>
-                <td className="p-4">
+                <td className="p-3 sm:p-4 text-gray-500 whitespace-nowrap">
+                  {cat.slug}
+                </td>
+                <td className="p-3 sm:p-4 whitespace-nowrap">
                   <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    className={`px-2.5 py-1 text-[11px] sm:text-xs font-bold rounded-full uppercase tracking-wider ${
                       cat.status === "active"
                         ? "bg-green-100 text-green-700"
-                        : "bg-gray-100 text-gray-600"
+                        : "bg-gray-200 text-gray-600"
                     }`}
                   >
                     {cat.status === "active" ? "Hoạt động" : "Đã ẩn"}
                   </span>
                 </td>
-                <td className="p-4 flex justify-center gap-2">
+                <td className="p-3 sm:p-4 flex justify-center gap-2 whitespace-nowrap">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => openEditModal(cat)}
+                    className="h-8 w-8 p-0"
                   >
                     <Edit className="w-4 h-4 text-blue-600" />
                   </Button>
@@ -125,15 +136,16 @@ function CategoryManagement() {
                     variant="outline"
                     size="sm"
                     onClick={() => handleDelete(cat._id)}
+                    className="h-8 w-8 p-0 hover:bg-red-50 hover:border-red-200"
                   >
-                    <Trash2 className="w-4 h-4 text-red-600" />
+                    <Trash2 className="w-4 h-4 text-red-500" />
                   </Button>
                 </td>
               </tr>
             ))}
             {categories.length === 0 && (
               <tr>
-                <td colSpan="5" className="p-8 text-center text-gray-500">
+                <td colSpan="6" className="p-8 text-center text-gray-500">
                   Chưa có danh mục nào.
                 </td>
               </tr>

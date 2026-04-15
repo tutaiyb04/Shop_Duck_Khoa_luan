@@ -40,6 +40,7 @@ exports.login = async (req, res) => {
         username: findUser.username,
         email: findUser.email,
         role: findUser.role,
+        avatar: findUser.avatar,
       },
     });
   } catch (error) {
