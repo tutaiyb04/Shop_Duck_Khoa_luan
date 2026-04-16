@@ -27,6 +27,11 @@ const categorySchema = new mongoose.Schema(
       enum: ["active", "hidden"],
       default: "active",
     },
+    parentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      default: null,
+    },
   },
   { timestamps: true },
 );

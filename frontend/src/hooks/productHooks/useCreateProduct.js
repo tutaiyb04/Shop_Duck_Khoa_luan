@@ -12,7 +12,10 @@ const productSchema = z.object({
   title: z
     .string()
     .min(10, { message: "Tên sản phẩm phải có ít nhất 10 ký tự" }),
-  categoryId: z.string().min(1, { message: "Vui lòng chọn danh mục" }),
+  parentCategory: z
+    .string()
+    .min(1, { message: "Vui lòng chọn danh mục chính" }),
+  category: z.string().min(1, { message: "Vui lòng chọn danh mục phụ" }),
   price: z.coerce
     .number()
     .min(1000, { message: "Giá bán phải lớn hơn 1.000đ" }),
@@ -58,7 +61,8 @@ export function useCreateProduct() {
     resolver: zodResolver(productSchema),
     defaultValues: {
       title: "",
-      categoryId: "",
+      parentCategory: "",
+      category: "",
       price: "",
       quantity: 1,
       condition: "",
@@ -121,7 +125,7 @@ export function useCreateProduct() {
     try {
       const formData = new FormData();
       formData.append("name", data.title);
-      formData.append("category", data.categoryId);
+      formData.append("category", data.category);
       formData.append("price", data.price);
       formData.append("quantity", data.quantity);
       formData.append("condition", data.condition);

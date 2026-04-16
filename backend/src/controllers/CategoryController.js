@@ -36,12 +36,13 @@ exports.getAdminCategories = async (req, res) => {
 
 exports.createCategory = async (req, res) => {
   try {
-    const { name, icon, description } = req.body;
+    const { name, icon, description, parentId } = req.body;
 
     const { newCategory } = await categoryService.createCategoryService(
       name,
       icon,
       description,
+      parentId,
     );
 
     return res
@@ -58,7 +59,7 @@ exports.createCategory = async (req, res) => {
 exports.updateCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, icon, description, status } = req.body;
+    const { name, icon, description, status, parentId } = req.body;
 
     const { updateCategory } = await categoryService.updateCategoryService(
       id,
@@ -66,6 +67,7 @@ exports.updateCategory = async (req, res) => {
       icon,
       description,
       status,
+      parentId,
     );
 
     return res.status(200).json({
