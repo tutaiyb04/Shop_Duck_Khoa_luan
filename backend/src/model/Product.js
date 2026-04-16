@@ -40,7 +40,6 @@ const productSchema = new mongoose.Schema(
       type: {
         type: String,
         enum: ["Point"],
-        default: "Point",
       },
       coordinates: {
         type: [Number], // Định dạng bắt buộc: [Kinh độ (Longitude), Vĩ độ (Latitude)]

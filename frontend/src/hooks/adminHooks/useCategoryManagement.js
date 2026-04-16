@@ -4,15 +4,18 @@ import useCategoryAdmin from "./useCategoryAdmin";
 function useCategoryManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
+  const [viewMode, setViewMode] = useState("parent");
 
-  // 2. Lấy các hàm gọi API từ hook cũ
+  // Lấy các hàm gọi API từ hook cũ
   const { categories, isLoading, handleCreate, handleUpdate, handleDelete } =
     useCategoryAdmin();
 
-  // 3. Xử lý dữ liệu phái sinh (Danh mục cha)
+  // Xử lý dữ liệu phái sinh (Danh mục cha)
   const parentCategories = categories.filter((cat) => !cat.parentId);
 
-  // 4. Các hàm điều khiển Giao diện (Event Handlers)
+  const childCategories = categories.filter((cat) => cat.parentId);
+
+  // Các hàm điều khiển Giao diện (Event Handlers)
   const openCreateModal = () => {
     setEditingCategory(null);
     setIsModalOpen(true);
@@ -40,9 +43,12 @@ function useCategoryManagement() {
   return {
     categories,
     parentCategories,
+    childCategories,
     isLoading,
     isModalOpen,
     editingCategory,
+    viewMode,
+    setViewMode,
     openCreateModal,
     openEditModal,
     closeModal,
