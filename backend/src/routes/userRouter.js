@@ -1,17 +1,23 @@
 const express = require("express");
 
 const userController = require("../controllers/UserController");
-const { protect } = require("../middleware/authMiddleware");
+const { protect, isAdmin } = require("../middleware/authMiddleware");
 const { upload } = require("../config/cloudinary");
 
 const router = express.Router();
 
-router.post("/seed-admin", userController.createSuperAdmin);
 router.post("/google-login", userController.googleLogin);
 router.post("/reset-password", userController.resetPassword);
 router.post("/forgot-password", userController.forgotPassword);
 router.post("/register", userController.register);
 router.post("/login", userController.login);
+router.get("/admin/all", protect, isAdmin, userController.getUsersAdmin);
+router.put(
+  "/admin/:id/status",
+  protect,
+  isAdmin,
+  userController.updateUserStatus,
+);
 router.get("/profile", protect, userController.getProfile);
 router.put(
   "/update-profile",

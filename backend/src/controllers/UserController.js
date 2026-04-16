@@ -161,41 +161,83 @@ exports.updateProfile = async (req, res) => {
     res.status(500).json({ message: error.message || "Lỗi server" });
   }
 };
-exports.createSuperAdmin = async (req, res) => {
+
+// exports.createSuperAdmin = async (req, res) => {
+//   try {
+//     // 1. Kiểm tra xem tài khoản admin này đã tồn tại chưa để tránh tạo trùng
+//     const adminExists = await User.findOne({ username: "superadmin" });
+//     if (adminExists) {
+//       return res
+//         .status(400)
+//         .json({ message: "Tài khoản Super Admin đã tồn tại!" });
+//     }
+
+//     // 2. Khởi tạo tài khoản Admin
+//     const newAdmin = new User({
+//       username: "superadmin",
+//       phone: "0344076552",
+//       email: "tutai241104@gmail.com",
+//       password: "Admin@1234", // Nhập mk rõ ràng, Mongoose pre-save sẽ tự băm nó!
+//       role: "admin",
+//       authType: "local",
+//     });
+
+//     // 3. Lưu vào Database
+//     await newAdmin.save();
+
+//     return res.status(201).json({
+//       message: "Khởi tạo Super Admin thành công!",
+//       admin: {
+//         username: newAdmin.username,
+//         email: newAdmin.email,
+//         role: newAdmin.role,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Lỗi tạo Super Admin:", error);
+//     return res
+//       .status(500)
+//       .json({ message: "Lỗi server", error: error.message });
+//   }
+// };
+
+exports.getUsersAdmin = async (req, res) => {
   try {
-    // 1. Kiểm tra xem tài khoản admin này đã tồn tại chưa để tránh tạo trùng
-    const adminExists = await User.findOne({ username: "superadmin" });
-    if (adminExists) {
-      return res
-        .status(400)
-        .json({ message: "Tài khoản Super Admin đã tồn tại!" });
-    }
+    const { users } = await userService.getUsersAdminService();
 
-    // 2. Khởi tạo tài khoản Admin
-    const newAdmin = new User({
-      username: "superadmin",
-      phone: "0344076552",
-      email: "tutai241104@gmail.com",
-      password: "Admin@1234", // Nhập mk rõ ràng, Mongoose pre-save sẽ tự băm nó!
-      role: "admin",
-      authType: "local",
-    });
-
-    // 3. Lưu vào Database
-    await newAdmin.save();
-
-    return res.status(201).json({
-      message: "Khởi tạo Super Admin thành công!",
-      admin: {
-        username: newAdmin.username,
-        email: newAdmin.email,
-        role: newAdmin.role,
-      },
+    return res.status(200).json({
+      message: "Lấy danh sách người dùng thành công",
+      users: users,
     });
   } catch (error) {
-    console.error("Lỗi tạo Super Admin:", error);
-    return res
-      .status(500)
-      .json({ message: "Lỗi server", error: error.message });
+    console.error("Lỗi tại getUsersAdmin: ", error);
+    return res.status(500).json({
+      message: error.message || "Lỗi server khi lấy danh sách người dùng",
+    });
+  }
+};
+
+exports.updateUserStatus = async (req, res) => {
+  try {
+    const { id } = req.params; // Lấy userId từ URL (/admin/:id/status)
+    const { status } = req.body; // Lấy status ("locked" hoặc "active") từ body
+
+    // Kiểm tra đầu vào cơ bản
+    if (!status || !["active", "locked"].includes(status)) {
+      return res.status(400).json({ message: "Trạng thái không hợp lệ" });
+    }
+
+    // Gọi hàm Service để update
+    const updatedUser = await userService.updateUserStatusService(id, status);
+
+    return res.status(200).json({
+      message: `Đã ${status === "locked" ? "khóa" : "mở khóa"} tài khoản thành công`,
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Lỗi tại updateUserStatus: ", error);
+    return res.status(500).json({
+      message: error.message || "Lỗi server khi cập nhật trạng thái người dùng",
+    });
   }
 };

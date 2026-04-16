@@ -53,8 +53,8 @@ function CategoryManagement() {
             onChange={(e) => setViewMode(e.target.value)}
             className="w-full sm:w-auto h-10 rounded-md border border-gray-200 bg-gray-50 hover:bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 cursor-pointer shadow-sm transition-colors"
           >
-            <option value="parent">Hiển thị: Danh mục chính (Gốc)</option>
-            <option value="child">Hiển thị: Danh mục phụ (Con)</option>
+            <option value="parent">Danh mục chính (Gốc)</option>
+            <option value="child">Danh mục phụ (Con)</option>
           </select>
 
           <Button
@@ -134,15 +134,15 @@ function CategoryManagement() {
                         variant="outline"
                         size="sm"
                         onClick={() => openEditModal(cat)}
-                        className="h-8 w-8 p-0"
+                        className="h-8 w-8 p-0 hover:!bg-gray-200 !border-1 !border-gray-200 !ring-0 !outline-none"
                       >
-                        <Edit className="w-4 h-4 text-blue-600" />
+                        <Edit className="w-4 h-4 text-blue-600 " />
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleDelete(cat._id)}
-                        className="h-8 w-8 p-0 hover:bg-red-50 hover:border-red-200"
+                        className="h-8 w-8 p-0 hover:bg-red-50 hover:border-red-200 hover:!bg-gray-200 !border-1 !border-gray-200 !ring-0 !outline-none"
                       >
                         <Trash2 className="w-4 h-4 text-red-500" />
                       </Button>
@@ -237,7 +237,7 @@ function CategoryManagement() {
                         variant="outline"
                         size="sm"
                         onClick={() => openEditModal(cat)}
-                        className="h-8 w-8 p-0"
+                        className="h-8 w-8 p-0 hover:!bg-gray-200 !border-1 !border-gray-200 !ring-0 !outline-none"
                       >
                         <Edit className="w-4 h-4 text-blue-600" />
                       </Button>
@@ -245,7 +245,7 @@ function CategoryManagement() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleDelete(cat._id)}
-                        className="h-8 w-8 p-0 hover:bg-red-50 hover:border-red-200"
+                        className="h-8 w-8 p-0 hover:bg-red-50 hover:border-red-200 hover:!bg-gray-200 !border-1 !border-gray-200 !ring-0 !outline-none"
                       >
                         <Trash2 className="w-4 h-4 text-red-500" />
                       </Button>
