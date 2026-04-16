@@ -29,6 +29,10 @@ const protect = async (req, res, next) => {
           .json({ message: "Tài khoản này không còn tồn tại trong hệ thống!" });
       }
 
+      if (req.user.status === "locked") {
+        return res.status(403).json({ message: "Tài khoản bị khóa" });
+      }
+
       return next();
     } catch (error) {
       res

@@ -15,6 +15,7 @@ import AdminLayout from "./components/admin/AdminLayout";
 import CategoryManagement from "./pages/admin/CategoryManagement";
 import ClientLayout from "./components/layout/ClientLayout";
 import AdminProfile from "./pages/admin/AdminProfile";
+import UserManagement from "./pages/admin/UserManagement";
 
 function App() {
   return (
@@ -54,11 +55,13 @@ function App() {
             </Route>
 
             <Route path="/admin" element={<AdminLayout />}>
-              <Route path="categories" element={<CategoryManagement />} />
+              <Route path="profile" element={<AdminProfile />} />
 
               <Route path="dashboard" element={<div>Trang tổng quan</div>} />
 
-              <Route path="profile" element={<AdminProfile />} />
+              <Route path="categories" element={<CategoryManagement />} />
+
+              <Route path="users" element={<UserManagement />} />
             </Route>
           </Routes>
         </main>

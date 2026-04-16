@@ -64,6 +64,15 @@ const userSchema = new Schema(
     resetPasswordExpires: {
       type: Date,
     },
+    status: {
+      type: String,
+      enum: ["active", "locked"],
+      default: "active",
+    },
+    reportCount: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,

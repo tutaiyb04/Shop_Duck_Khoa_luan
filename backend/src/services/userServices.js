@@ -53,6 +53,12 @@ exports.loginService = async (username, email, password) => {
     throw new Error("Username hoặc Email không tồn tại!");
   }
 
+  if (findUser.status === "locked") {
+    throw new Error(
+      "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên!",
+    );
+  }
+
   if (!findUser.password) {
     throw new Error(
       "Tài khoản này được đăng ký bằng Mạng xã hội/Số điện thoại. Hãy đăng nhập bằng hình thức tương ứng.",
@@ -176,6 +182,12 @@ exports.loginWithGoogleService = async (accessToken) => {
 
     let user = await User.findOne({ email });
 
+    if (user && user.status === "locked") {
+      throw new Error(
+        "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên!",
+      );
+    }
+
     // Nếu là khách hàng cũ (đã từng đăng ký và có tài khoản)
     if (user) {
       if (!user.googleId) {
@@ -249,5 +261,31 @@ exports.updateProfileService = async (
   } catch (error) {
     console.log("Lỗi catch được: ", error);
     throw new Error("Tên hiển thị đã tồn tại");
+  }
+};
+
+exports.getUsersAdminService = async () => {
+  try {
+    const users = await User.find().select("-password").sort({ createdAt: -1 });
+
+    return { users };
+  } catch (error) {
+    console.error("Lỗi tại getUsersAdminService: ", error);
+    throw new Error("Không thể lấy danh sách Users");
+  }
+};
+
+exports.updateUserStatusService = async (userId, status) => {
+  try {
+    const user = await User.findById(userId);
+    if (!user) throw new Error("Không tìm thấy người dùng");
+
+    user.status = status;
+    const updateUser = await user.save();
+
+    return { updateUser };
+  } catch (error) {
+    console.error("Lỗi tại updateUserStatusService: ", error);
+    throw new Error("Không thể khóa tài khoản");
   }
 };
