@@ -1,59 +1,30 @@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { X } from "lucide-react";
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
 import { Button } from "../ui/button";
+import { useCategoryForm } from "@/hooks/adminHooks/useCategoryForm";
 
-const categorySchema = z.object({
-  name: z.string().min(2, { message: "Tên danh mục phải có ít nhất 2 ký tự" }),
-  icon: z.string().optional(),
-  description: z.string().optional(),
-  status: z.string().optional(),
-});
-function CategoryFormModal({ isOpen, onClose, editingCategory, onSubmit }) {
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm({
-    resolver: zodResolver(categorySchema),
-    defaultValues: {
-      name: "",
-      icon: "",
-      description: "",
-      status: "active",
-    },
-  });
+function CategoryFormModal({
+  isOpen,
+  onClose,
+  editingCategory,
+  onSubmit,
+  parentCategories,
+}) {
+  // GỌI HOOK LOGIC VÀ LẤY ĐỒ NGHỀ RA DÙNG
+  const { register, handleSubmit, errors, isSubmitting, handleFormSubmit } =
+    useCategoryForm(isOpen, editingCategory, onSubmit, onClose);
 
-  useEffect(() => {
-    if (editingCategory) {
-      reset({
-        name: editingCategory.name || "",
-        icon: editingCategory.icon || "",
-        description: editingCategory.description || "",
-        status: editingCategory.status || "active",
-      });
-    } else {
-      reset({ name: "", icon: "", description: "" }); // Xóa trắng nếu là "Thêm mới"
-    }
-  }, [editingCategory, reset, isOpen]);
-
-  const handleFormSubmit = async (data) => {
-    await onSubmit(data); // Gọi hàm onSubmit từ component cha truyền vào
-    onClose(); // Đóng modal sau khi thành công
-  };
-
+  // Nếu Modal đang đóng thì không render gì cả
   if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 transition-all">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-5 sm:p-6 relative animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
+        {/* Nút tắt Modal */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 bg-gray-50 hover:bg-gray-200 rounded-full p-1.5 transition-colors !border !border-gray-200 hover:!bg-gray-200 !ring-0 !outline-none"
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 bg-gray-50 hover:bg-gray-200 rounded-full p-1.5 transition-colors"
         >
           <X size={18} />
         </button>
@@ -62,7 +33,9 @@ function CategoryFormModal({ isOpen, onClose, editingCategory, onSubmit }) {
           {editingCategory ? "Chỉnh sửa danh mục" : "Thêm danh mục mới"}
         </h2>
 
+        {/* BẮT ĐẦU FORM */}
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+          {/* Tên danh mục */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">
               Tên danh mục
@@ -79,6 +52,7 @@ function CategoryFormModal({ isOpen, onClose, editingCategory, onSubmit }) {
             )}
           </div>
 
+          {/* Icon */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">
               Biểu tượng (Icon/Emoji)
@@ -90,6 +64,28 @@ function CategoryFormModal({ isOpen, onClose, editingCategory, onSubmit }) {
             />
           </div>
 
+          {/* Chọn danh mục cha */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+              Danh mục cha
+            </label>
+            <select
+              {...register("parentId")}
+              className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            >
+              <option value="">-- Không có (Đây là danh mục gốc) --</option>
+              {parentCategories?.map(
+                (cat) =>
+                  editingCategory?._id !== cat._id && (
+                    <option key={cat._id} value={cat._id}>
+                      {cat.name}
+                    </option>
+                  ),
+              )}
+            </select>
+          </div>
+
+          {/* Mô tả */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">
               Mô tả chi tiết
@@ -102,6 +98,7 @@ function CategoryFormModal({ isOpen, onClose, editingCategory, onSubmit }) {
             />
           </div>
 
+          {/* Trạng thái */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">
               Trạng thái
@@ -115,6 +112,7 @@ function CategoryFormModal({ isOpen, onClose, editingCategory, onSubmit }) {
             </select>
           </div>
 
+          {/* Nhóm nút Hủy / Lưu */}
           <div className="flex justify-end gap-3 pt-5 border-t border-gray-100 mt-6">
             <Button
               type="button"

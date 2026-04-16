@@ -3,9 +3,9 @@ const Category = require("../model/Category");
 
 exports.getPublicCategories = async () => {
   try {
-    const publicCategories = await Category.find({ status: "active" }).select(
-      "-__v",
-    ); // select('-__v') để ẩn trường nội bộ của mongo
+    const publicCategories = await Category.find({ status: "active" })
+      .populate("parentId", "name")
+      .select("-__v"); // select('-__v') để ẩn trường nội bộ của mongo
 
     return { publicCategories };
   } catch (error) {
@@ -17,6 +17,7 @@ exports.getPublicCategories = async () => {
 exports.getAdminCategories = async () => {
   try {
     const adminCategories = await Category.find()
+      .populate("parentId", "name")
       .sort({ createdAt: -1 })
       .select("-__v");
 
@@ -27,7 +28,7 @@ exports.getAdminCategories = async () => {
   }
 };
 
-exports.createCategoryService = async (name, icon, description) => {
+exports.createCategoryService = async (name, icon, description, parentId) => {
   try {
     if (!name) {
       throw new Error("Tên danh mục không được để trống");
@@ -50,6 +51,7 @@ exports.createCategoryService = async (name, icon, description) => {
       slug,
       description,
       icon: icon || "",
+      parentId: parentId ? parentId : null,
     });
 
     await newCategory.save();
@@ -61,7 +63,14 @@ exports.createCategoryService = async (name, icon, description) => {
   }
 };
 
-exports.updateCategoryService = async (id, name, icon, description, status) => {
+exports.updateCategoryService = async (
+  id,
+  name,
+  icon,
+  description,
+  status,
+  parentId,
+) => {
   try {
     if (!name) {
       throw new Error("Tên danh mục không được để trống");
@@ -88,6 +97,9 @@ exports.updateCategoryService = async (id, name, icon, description, status) => {
     if (icon !== undefined) updateCategory.icon = icon;
     if (description !== undefined) updateCategory.description = description;
     if (status !== undefined) updateCategory.status = status;
+    if (parentId !== undefined) {
+      updateCategory.parentId = parentId === "" ? null : parentId;
+    }
 
     await updateCategory.save();
     return { updateCategory };

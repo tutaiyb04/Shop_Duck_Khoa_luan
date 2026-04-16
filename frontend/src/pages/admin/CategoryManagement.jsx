@@ -1,57 +1,43 @@
 import CategoryFormModal from "@/components/admin/CategoryFormModal";
-import useCategoryAdmin from "@/hooks/adminHooks/useCategoryAdmin";
 import * as LucideIcons from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Edit, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import useCategoryManagement from "@/hooks/adminHooks/useCategoryManagement";
 
 function CategoryManagement() {
-  // State quản lý Modal
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState(null);
+  // GỌI HOOK LẤY LOGIC
+  const {
+    categories,
+    parentCategories,
+    isLoading,
+    isModalOpen,
+    editingCategory,
+    openCreateModal,
+    openEditModal,
+    closeModal,
+    onFormSubmit,
+    handleDelete,
+  } = useCategoryManagement();
 
-  const { categories, isLoading, handleCreate, handleUpdate, handleDelete } =
-    useCategoryAdmin();
-
-  // Hàm mở Modal để Thêm mới
-  const openCreateModal = () => {
-    setEditingCategory(null);
-    setIsModalOpen(true);
-  };
-
-  // Hàm mở Modal để Sửa
-  const openEditModal = (category) => {
-    setEditingCategory(category);
-    setIsModalOpen(true);
-  };
-
-  // Hàm nhận dữ liệu từ Modal Form trả về
-  const onFormSubmit = async (formData) => {
-    if (editingCategory) {
-      // Nếu có editingCategory -> Gọi API Sửa
-      await handleUpdate(editingCategory._id, formData);
-    } else {
-      // Nếu không có -> Gọi API Thêm mới
-      await handleCreate(formData);
-    }
-  };
-
+  // Hàm render giao diện Icon
   const renderIcon = (iconName) => {
     if (iconName?.length <= 2) {
       return <span className="text-2xl">{iconName}</span>;
     }
-
     const cleanName = iconName?.replace(/[<>/\s]/g, "");
-
     const IconComponent = LucideIcons[cleanName] || LucideIcons.Box;
     return <IconComponent className="w-6 h-6 text-gray-600" />;
   };
 
+  // Hiển thị trạng thái tải dữ liệu
   if (isLoading && categories.length === 0)
-    return <div className="p-8">Đang tải dữ liệu...</div>;
+    return (
+      <div className="p-8 text-center text-gray-500">Đang tải dữ liệu...</div>
+    );
 
   return (
     <div className="p-4 sm:p-6 bg-white rounded-xl shadow-sm border border-gray-100">
+      {/* HEADER BẢNG */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-xl sm:text-2xl font-bold text-yellow-600">
           Quản lý danh mục
@@ -64,7 +50,7 @@ function CategoryManagement() {
         </Button>
       </div>
 
-      {/* Bảng hiển thị danh sách */}
+      {/* BẢNG HIỂN THỊ DANH SÁCH */}
       <div className="overflow-x-auto rounded-lg border border-gray-100">
         <table className="w-full border-collapse text-sm sm:text-base">
           <thead>
@@ -74,6 +60,9 @@ function CategoryManagement() {
               </th>
               <th className="p-3 sm:p-4 text-left font-semibold text-gray-600 whitespace-nowrap">
                 Tên danh mục
+              </th>
+              <th className="p-3 sm:p-4 text-left font-semibold text-gray-600 whitespace-nowrap">
+                Thuộc danh mục
               </th>
               <th className="p-3 sm:p-4 text-left font-semibold text-gray-600 whitespace-nowrap">
                 Mô tả
@@ -101,6 +90,17 @@ function CategoryManagement() {
                 </td>
                 <td className="p-3 sm:p-4 font-semibold text-gray-800 whitespace-nowrap">
                   {cat.name}
+                </td>
+                <td className="p-3 sm:p-4 whitespace-nowrap">
+                  {cat.parentId ? (
+                    <span className="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-md text-xs font-semibold">
+                      {cat.parentId.name}
+                    </span>
+                  ) : (
+                    <span className="text-gray-400 text-xs font-medium italic">
+                      Danh mục gốc
+                    </span>
+                  )}
                 </td>
                 <td className="p-3 sm:p-4 text-gray-600 min-w-[150px] max-w-[200px] truncate">
                   {cat.description || (
@@ -143,9 +143,10 @@ function CategoryManagement() {
                 </td>
               </tr>
             ))}
+
             {categories.length === 0 && (
               <tr>
-                <td colSpan="6" className="p-8 text-center text-gray-500">
+                <td colSpan="7" className="p-8 text-center text-gray-500">
                   Chưa có danh mục nào.
                 </td>
               </tr>
@@ -154,12 +155,13 @@ function CategoryManagement() {
         </table>
       </div>
 
-      {/* Tích hợp Component Modal Form */}
+      {/* TÍCH HỢP MODAL */}
       <CategoryFormModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={closeModal}
         editingCategory={editingCategory}
         onSubmit={onFormSubmit}
+        parentCategories={parentCategories}
       />
     </div>
   );
