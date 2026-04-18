@@ -16,6 +16,7 @@ import CategoryManagement from "./pages/admin/CategoryManagement";
 import ClientLayout from "./components/layout/ClientLayout";
 import AdminProfile from "./pages/admin/AdminProfile";
 import UserManagement from "./pages/admin/UserManagement";
+import ProductManagement from "./pages/admin/ProductManagement";
 
 function App() {
   return (
@@ -62,6 +63,8 @@ function App() {
               <Route path="categories" element={<CategoryManagement />} />
 
               <Route path="users" element={<UserManagement />} />
+
+              <Route path="products" element={<ProductManagement />} />
             </Route>
           </Routes>
         </main>

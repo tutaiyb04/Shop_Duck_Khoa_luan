@@ -17,6 +17,47 @@ exports.getAllProducts = async (req, res) => {
   }
 };
 
+exports.getAdminProducts = async (req, res) => {
+  try {
+    const filters = {
+      search: req.query.search || "",
+      category: req.query.category || "",
+      status: req.query.status || "",
+    };
+
+    const { products } = await productService.getAdminProductsService(filters);
+
+    res.status(200).json({
+      message: "Lấy danh sách sản phẩm thành công",
+      products: products,
+    });
+  } catch (error) {
+    console.error("Lỗi tại getAdminProducts:", error);
+    res.status(500).json({ message: error || "Lỗi server khi tải sản phẩm" });
+  }
+};
+
+exports.updateAdminProductStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, note } = req.body;
+
+    const { updatedProduct } = await productService.updateProductStatusService(
+      id,
+      status,
+      note,
+    );
+
+    res.status(200).json({
+      message: "Cập nhật trạng thái sản phẩm thành công",
+      product: updatedProduct,
+    });
+  } catch (error) {
+    console.error("Lỗi tại updateAdminProductStatus:", error);
+    res.status(500).json({ message: error || "Lỗi server khi tải sản phẩm" });
+  }
+};
+
 exports.createProduct = async (req, res) => {
   try {
     // 1. Kiểm tra xác thực (đã có req.user từ middleware protect)
