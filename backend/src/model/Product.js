@@ -29,9 +29,10 @@ const productSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["AVAILABLE", "PENDING"],
-      default: "AVAILABLE",
+      enum: ["PENDING", "AVAILABLE", "REJECTED", "LOCKED", "SOLD"],
+      default: "PENDING",
     },
+    adminNote: String,
     attributes: {
       type: Map,
       of: String,

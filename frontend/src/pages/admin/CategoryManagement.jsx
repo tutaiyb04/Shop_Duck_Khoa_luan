@@ -1,8 +1,9 @@
-import CategoryFormModal from "@/components/admin/CategoryFormModal";
 import * as LucideIcons from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Edit, Plus, Trash2 } from "lucide-react";
 import useCategoryManagement from "@/hooks/adminHooks/useCategoryManagement";
+import CategoryFormModal from "@/components/admin/categoryManagement/CategoryFormModal";
+import CategoryTable from "@/components/admin/categoryManagement/CategoryTable";
 
 function CategoryManagement() {
   // GỌI HOOK LẤY LOGIC
@@ -21,16 +22,6 @@ function CategoryManagement() {
     onFormSubmit,
     handleDelete,
   } = useCategoryManagement();
-
-  // Hàm render giao diện Icon
-  const renderIcon = (iconName) => {
-    if (iconName?.length <= 2) {
-      return <span className="text-2xl">{iconName}</span>;
-    }
-    const cleanName = iconName?.replace(/[<>/\s]/g, "");
-    const IconComponent = LucideIcons[cleanName] || LucideIcons.Box;
-    return <IconComponent className="w-6 h-6 text-gray-600" />;
-  };
 
   // Hiển thị trạng thái tải dữ liệu
   if (isLoading && categories.length === 0)
@@ -68,202 +59,21 @@ function CategoryManagement() {
 
       {/* BẢNG HIỂN THỊ DANH SÁCH */}
       {viewMode === "parent" ? (
-        <div className="animate-in fade-in duration-300">
-          <h2 className="text-lg font-bold text-gray-800 mb-3 border-l-4 border-yellow-500 pl-3">
-            Danh mục chính (Gốc)
-          </h2>
-          <div className="overflow-x-auto rounded-lg border border-gray-100">
-            <table className="w-full border-collapse text-sm sm:text-base">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="p-3 sm:p-4 text-left font-semibold text-gray-600 whitespace-nowrap">
-                    Icon
-                  </th>
-                  <th className="p-3 sm:p-4 text-left font-semibold text-gray-600 whitespace-nowrap">
-                    Tên danh mục
-                  </th>
-                  <th className="p-3 sm:p-4 text-left font-semibold text-gray-600 whitespace-nowrap">
-                    Mô tả
-                  </th>
-                  <th className="p-3 sm:p-4 text-left font-semibold text-gray-600 whitespace-nowrap">
-                    Slug
-                  </th>
-                  <th className="p-3 sm:p-4 text-left font-semibold text-gray-600 whitespace-nowrap">
-                    Trạng thái
-                  </th>
-                  <th className="p-3 sm:p-4 text-center font-semibold text-gray-600 whitespace-nowrap">
-                    Hành động
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {parentCategories.map((cat) => (
-                  <tr
-                    key={cat._id}
-                    className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="p-3 sm:p-4 text-xl sm:text-2xl">
-                      {renderIcon(cat.icon)}
-                    </td>
-                    <td className="p-3 sm:p-4 font-semibold text-gray-800 whitespace-nowrap">
-                      {cat.name}
-                    </td>
-                    <td className="p-3 sm:p-4 text-gray-600 min-w-[150px] max-w-[200px] truncate">
-                      {cat.description || (
-                        <span className="text-gray-400 italic text-xs">
-                          Không có mô tả
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-3 sm:p-4 text-gray-500 whitespace-nowrap">
-                      {cat.slug}
-                    </td>
-                    <td className="p-3 sm:p-4 whitespace-nowrap">
-                      <span
-                        className={`px-2.5 py-1 text-[11px] sm:text-xs font-bold rounded-full uppercase tracking-wider ${
-                          cat.status === "active"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-gray-200 text-gray-600"
-                        }`}
-                      >
-                        {cat.status === "active" ? "Hoạt động" : "Đã ẩn"}
-                      </span>
-                    </td>
-                    <td className="p-3 sm:p-4 flex justify-center gap-2 whitespace-nowrap">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openEditModal(cat)}
-                        className="h-8 w-8 p-0 hover:!bg-gray-200 !border-1 !border-gray-200 !ring-0 !outline-none"
-                      >
-                        <Edit className="w-4 h-4 text-blue-600 " />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(cat._id)}
-                        className="h-8 w-8 p-0 hover:bg-red-50 hover:border-red-200 hover:!bg-gray-200 !border-1 !border-gray-200 !ring-0 !outline-none"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-500" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-
-                {parentCategories.length === 0 && (
-                  <tr>
-                    <td colSpan="6" className="p-8 text-center text-gray-500">
-                      Chưa có danh mục chính nào.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <CategoryTable
+          type="parent"
+          categories={parentCategories}
+          onEdit={openEditModal}
+          onDelete={handleDelete}
+        />
       ) : (
-        /* ================= KHI CHỌN DANH MỤC PHỤ ================= */
-        <div className="animate-in fade-in duration-300">
-          <h2 className="text-lg font-bold text-gray-800 mb-3 border-l-4 border-blue-500 pl-3">
-            Danh mục phụ (Con)
-          </h2>
-          <div className="overflow-x-auto rounded-lg border border-gray-100">
-            <table className="w-full border-collapse text-sm sm:text-base">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="p-3 sm:p-4 text-left font-semibold text-gray-600 whitespace-nowrap">
-                    Icon
-                  </th>
-                  <th className="p-3 sm:p-4 text-left font-semibold text-gray-600 whitespace-nowrap">
-                    Tên danh mục
-                  </th>
-                  <th className="p-3 sm:p-4 text-left font-semibold text-gray-600 whitespace-nowrap">
-                    Thuộc danh mục
-                  </th>
-                  <th className="p-3 sm:p-4 text-left font-semibold text-gray-600 whitespace-nowrap">
-                    Mô tả
-                  </th>
-                  <th className="p-3 sm:p-4 text-left font-semibold text-gray-600 whitespace-nowrap">
-                    Slug
-                  </th>
-                  <th className="p-3 sm:p-4 text-left font-semibold text-gray-600 whitespace-nowrap">
-                    Trạng thái
-                  </th>
-                  <th className="p-3 sm:p-4 text-center font-semibold text-gray-600 whitespace-nowrap">
-                    Hành động
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {childCategories.map((cat) => (
-                  <tr
-                    key={cat._id}
-                    className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="p-3 sm:p-4 text-xl sm:text-2xl">
-                      {renderIcon(cat.icon)}
-                    </td>
-                    <td className="p-3 sm:p-4 font-semibold text-gray-800 whitespace-nowrap">
-                      {cat.name}
-                    </td>
-                    <td className="p-3 sm:p-4 whitespace-nowrap">
-                      <span className="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-md text-xs font-semibold border border-blue-100">
-                        {cat.parentId?.name || "Lỗi tham chiếu"}
-                      </span>
-                    </td>
-                    <td className="p-3 sm:p-4 text-gray-600 min-w-[150px] max-w-[200px] truncate">
-                      {cat.description || (
-                        <span className="text-gray-400 italic text-xs">
-                          Không có mô tả
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-3 sm:p-4 text-gray-500 whitespace-nowrap">
-                      {cat.slug}
-                    </td>
-                    <td className="p-3 sm:p-4 whitespace-nowrap">
-                      <span
-                        className={`px-2.5 py-1 text-[11px] sm:text-xs font-bold rounded-full uppercase tracking-wider ${
-                          cat.status === "active"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-gray-200 text-gray-600"
-                        }`}
-                      >
-                        {cat.status === "active" ? "Hoạt động" : "Đã ẩn"}
-                      </span>
-                    </td>
-                    <td className="p-3 sm:p-4 flex justify-center gap-2 whitespace-nowrap">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openEditModal(cat)}
-                        className="h-8 w-8 p-0 hover:!bg-gray-200 !border-1 !border-gray-200 !ring-0 !outline-none"
-                      >
-                        <Edit className="w-4 h-4 text-blue-600" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(cat._id)}
-                        className="h-8 w-8 p-0 hover:bg-red-50 hover:border-red-200 hover:!bg-gray-200 !border-1 !border-gray-200 !ring-0 !outline-none"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-500" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
+        /* KHI CHỌN DANH MỤC PHỤ  */
 
-                {childCategories.length === 0 && (
-                  <tr>
-                    <td colSpan="7" className="p-8 text-center text-gray-500">
-                      Chưa có danh mục phụ nào.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <CategoryTable
+          type="child"
+          categories={childCategories}
+          onEdit={openEditModal}
+          onDelete={handleDelete}
+        />
       )}
 
       {/* TÍCH HỢP MODAL */}

@@ -14,6 +14,64 @@ exports.getAllProductsService = async () => {
   }
 };
 
+exports.getAdminProductsService = async (filters) => {
+  try {
+    const { search, category, status } = filters;
+
+    // Khởi tạo điều kiện truy vấn trống
+    let query = {};
+
+    // Nếu có từ khóa tìm kiếm -> Lọc gần đúng theo tên (không phân biệt hoa thường)
+    if (search) {
+      query.name = { $regex: search, $options: "i" };
+    }
+
+    // Nếu có chọn danh mục
+    if (category) {
+      query.category = category;
+    }
+
+    // Nếu có chọn trạng thái
+    if (status) {
+      query.status = status;
+    }
+
+    const products = await Product.find(query)
+      .populate("category", "name")
+      .populate("sellerId", "username email avatar")
+      .sort({ createdAt: -1 });
+
+    return { products };
+  } catch (error) {
+    console.error("Lỗi tại getAdminProductsService: ", error);
+    throw new Error("Không thể lấy danh sách sản phẩm");
+  }
+};
+
+exports.updateProductStatusService = async (productId, status, note) => {
+  try {
+    // Tìm sản phẩm
+    const product = await Product.findById(productId);
+    if (!product) {
+      throw new Error("Không tìm thấy sản phẩm này");
+    }
+
+    // Cập nhật trạng thái
+    product.status = status;
+
+    // Nếu có ghi chú từ Admin
+    if (note) {
+      product.adminNote = note;
+    }
+
+    const updatedProduct = await product.save();
+    return { updatedProduct };
+  } catch (error) {
+    console.error("Lỗi tại updateProductStatusService: ", error);
+    throw new Error(`Không thể cập nhật trạng thái thành ${status}`);
+  }
+};
+
 exports.createProductService = async (sellerId, productData, files) => {
   try {
     const { name, category, price, condition, description, shippingInfo } =
@@ -42,6 +100,7 @@ exports.createProductService = async (sellerId, productData, files) => {
       shippingInfo,
       images: imageUrls,
       sellerId: sellerId,
+      status: "PENDING",
     });
 
     // Lưu vào Database

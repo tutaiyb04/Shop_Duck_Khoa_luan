@@ -142,7 +142,9 @@ export function useCreateProduct() {
         },
       });
 
-      toast.success("Đăng bán sản phẩm thành công!");
+      toast.success(
+        "Đăng bán sản phẩm thành công! Vui lòng chờ admin xác nhận",
+      );
       navigate("/");
     } catch (error) {
       console.error("Lỗi đăng bán:", error);

@@ -3,7 +3,6 @@ import { ChevronRight, ListTree } from "lucide-react";
 import { useCategoryMenu } from "@/hooks/productHooks/useCategoryMenu";
 
 export default function CategoryMegaMenu({ form, categories }) {
-  // GỌI HOOK LẤY LOGIC: UI chỉ cần nhận đồ nghề và vẽ
   const {
     isCategoryOpen,
     setIsCategoryOpen,
@@ -29,7 +28,6 @@ export default function CategoryMegaMenu({ form, categories }) {
         Danh mục <span className="text-red-500">*</span>
       </label>
 
-      {/* Nút bấm để mở bảng chọn */}
       <div
         onClick={() => setIsCategoryOpen(!isCategoryOpen)}
         className={`w-full flex h-10 items-center justify-between rounded-md border bg-white px-3 py-2 text-sm cursor-pointer transition-colors shadow-sm ${
@@ -48,7 +46,6 @@ export default function CategoryMegaMenu({ form, categories }) {
         <ListTree className="w-4 h-4 text-gray-400" />
       </div>
 
-      {/* Hiển thị lỗi Zod */}
       {form.formState.errors.category && (
         <p className="text-[0.8rem] font-medium text-red-500 mt-2">
           {form.formState.errors.category.message}
@@ -92,7 +89,7 @@ export default function CategoryMegaMenu({ form, categories }) {
             })}
           </div>
 
-          {/* CỘT PHẢI: CHỈ RENDER KHI CÓ DANH MỤC CON */}
+          {/* CHỈ RENDER KHI CÓ DANH MỤC CON */}
           {currentSubCategories.length > 0 && (
             <div className="w-[280px] sm:w-[300px] overflow-y-auto bg-white py-2 shrink-0 animate-in slide-in-from-left-2 duration-200">
               {currentSubCategories.map((child) => (
