@@ -16,11 +16,6 @@ const productSchema = new mongoose.Schema(
       enum: ["Mới", "Như mới", "Tốt", "Trung bình", "Kém"],
     },
     description: { type: String, required: true },
-    shippingInfo: {
-      type: String,
-      required: true,
-      enum: ["Giao hàng toàn quốc", "Giao dịch trực tiếp", "Thỏa thuận"],
-    },
     images: [{ type: String, required: true }],
     sellerId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -40,7 +35,8 @@ const productSchema = new mongoose.Schema(
     location: {
       type: {
         type: String,
-        enum: ["Point"],
+        required: true,
+        default: "",
       },
       coordinates: {
         type: [Number], // Định dạng bắt buộc: [Kinh độ (Longitude), Vĩ độ (Latitude)]

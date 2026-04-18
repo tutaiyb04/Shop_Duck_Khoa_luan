@@ -19,14 +19,7 @@ import {
 } from "@/components/ui/select";
 import CategoryMegaMenu from "./CategoryMageMenu";
 
-function ProductForm({
-  form,
-  onSubmit,
-  isSubmitting,
-  categories,
-  conditions,
-  shippingMethods,
-}) {
+function ProductForm({ form, onSubmit, isSubmitting, categories, conditions }) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -149,26 +142,19 @@ function ProductForm({
 
         <FormField
           control={form.control}
-          name="shippingInfo"
+          name="location"
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-lg font-bold text-gray-900">
-                Thông tin vận chuyển <span className="text-red-500">*</span>
+                Khu vực bán <span className="text-red-500">*</span>
               </FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger className="!h-10 !text-md hover:!border-yellow-500 focus:!border-yellow-500 transition-colors !border-1 !border-gray-200">
-                    <SelectValue placeholder="Chọn phương thức giao hàng" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {shippingMethods.map((method, index) => (
-                    <SelectItem key={index} value={method}>
-                      {method}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <Input
+                  className="h-10 text-md !ring-0 focus-visible:border-yellow-500"
+                  placeholder="VD: Hà Đông, Hà Nội..."
+                  {...field}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
