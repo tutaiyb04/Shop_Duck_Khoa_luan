@@ -19,11 +19,6 @@ function CreateProduct() {
     MAX_FILE_SIZE_MB,
     categories = [],
     conditions = ["Mới", "Như mới", "Tốt", "Trung bình", "Kém"],
-    shippingMethods = [
-      "Giao hàng toàn quốc",
-      "Giao dịch trực tiếp",
-      "Thỏa thuận",
-    ],
   } = useCreateProduct();
 
   if (isLoadingData) {
@@ -56,7 +51,6 @@ function CreateProduct() {
         isSubmitting={isSubmitting}
         categories={categories}
         conditions={conditions}
-        shippingMethods={shippingMethods}
       />
     </div>
   );

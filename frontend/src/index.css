@@ -179,6 +179,7 @@ button:focus-visible {
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
+  --text-s: 10px;
   --text-xxs: 11px;
   --text-xs: 12px;
   --text-sm: 14px;

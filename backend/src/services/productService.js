@@ -74,7 +74,7 @@ exports.updateProductStatusService = async (productId, status, note) => {
 
 exports.createProductService = async (sellerId, productData, files) => {
   try {
-    const { name, category, price, condition, description, shippingInfo } =
+    const { name, category, price, condition, description, location } =
       productData;
 
     // Lấy danh sách link ảnh đã được Cloudinary xử lý
@@ -97,7 +97,7 @@ exports.createProductService = async (sellerId, productData, files) => {
       price: Number(price), // Đảm bảo lưu dưới dạng số
       condition,
       description,
-      shippingInfo,
+      location: location || "Hà Nội",
       images: imageUrls,
       sellerId: sellerId,
       status: "PENDING",

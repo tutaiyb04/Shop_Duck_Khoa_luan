@@ -9,9 +9,7 @@ import { API } from "@/services/axios";
 import { PRODUCT_CONFIG } from "@/config/constains";
 
 const productSchema = z.object({
-  title: z
-    .string()
-    .min(10, { message: "Tên sản phẩm phải có ít nhất 10 ký tự" }),
+  title: z.string().min(5, { message: "Tên sản phẩm phải có ít nhất 5 ký tự" }),
   parentCategory: z
     .string()
     .min(1, { message: "Vui lòng chọn danh mục chính" }),
@@ -23,10 +21,10 @@ const productSchema = z.object({
   condition: z.string().min(1, { message: "Vui lòng chọn tình trạng" }),
   description: z
     .string()
-    .min(20, { message: "Mô tả chi tiết ít nhất 20 ký tự" }),
-  shippingInfo: z
+    .min(10, { message: "Mô tả chi tiết ít nhất 10 ký tự" }),
+  location: z
     .string()
-    .min(1, { message: "Vui lòng nhập thông tin vận chuyển" }),
+    .min(1, { message: "Vui lòng nhập khu vực bán (VD: Hà Nội)" }),
 });
 
 export function useCreateProduct() {
@@ -67,20 +65,13 @@ export function useCreateProduct() {
       quantity: 1,
       condition: "",
       description: "",
-      shippingInfo: "",
+      location: "",
     },
   });
 
   const handleFileChange = (event) => {
     const selectedFiles = Array.from(event.target.files);
     setImageError("");
-
-    if (images.length + selectedFiles.length > PRODUCT_CONFIG.MAX_IMAGES) {
-      setImageError(
-        `Bạn chỉ được phép tải lên tối đa ${PRODUCT_CONFIG.MAX_IMAGES} hình ảnh.`,
-      );
-      return;
-    }
 
     const newImages = [];
     const filesTooLarge = [];
@@ -130,7 +121,7 @@ export function useCreateProduct() {
       formData.append("quantity", data.quantity);
       formData.append("condition", data.condition);
       formData.append("description", data.description);
-      formData.append("shippingInfo", data.shippingInfo);
+      formData.append("location", data.location);
 
       images.forEach((img) => {
         formData.append("images", img.file);

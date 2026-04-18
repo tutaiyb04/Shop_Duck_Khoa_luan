@@ -1,7 +1,10 @@
-import UserAvatar from "../shared/UserAvatar";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardFooter } from "../ui/card";
+import { MapPin } from "lucide-react";
 
 function ProductCard({ product }) {
+  const navigate = useNavigate();
+
   const formatPrice = (price) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -10,36 +13,38 @@ function ProductCard({ product }) {
   };
 
   return (
-    <Card className="overflow-hidden hover:shadow-md transition-all cursor-pointer border shadow-sm bg-white flex flex-col h-full group">
+    <Card
+      className="w-full h-full py-0 overflow-hidden hover:shadow-lg transition-all cursor-pointer border shadow-sm bg-white flex flex-col group"
+      onClick={() => navigate(`/product/${product._id}`)}
+    >
       {/* Ảnh sản phẩm */}
-      <div className="aspect-square overflow-hidden bg-gray-50 relative">
+      <div className="aspect-square w-full overflow-hidden bg-gray-50 relative border-b border-gray-100">
         <img
           src={product.images[0]}
           alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
-        <div className="absolute top-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm">
+        <div className="absolute top-2 right-2 bg-black/60 text-white text-s font-bold px-2 py-1 rounded backdrop-blur-sm">
           {product.condition}
         </div>
       </div>
 
       {/* Thông tin chính */}
-      <CardContent className="p-3 flex-1">
-        <h3 className="font-medium text-gray-800 line-clamp-2 text-sm leading-tight min-h-[2.5rem]">
+      <CardContent className="p-2 flex flex-col flex-1 justify-between">
+        <h3 className="text-sm font-medium text-gray-800 line-clamp-2 leading-snug group-hover:text-yellow-600 transition-colors">
           {product.name}
         </h3>
-        <p className="text-amber-600 font-bold text-base mt-2">
+        <p className="mt-1 text-black font-bold text-base">
           {formatPrice(product.price)}
         </p>
-      </CardContent>
 
-      {/* Thông tin người bán */}
-      <CardFooter className="p-3 pt-0 flex items-center gap-2 border-t mt-auto border-gray-50">
-        <UserAvatar user={product.sellerId} className="h-5 w-5 border" />
-        <span className="text-[11px] text-gray-500 truncate">
-          {product.sellerId?.username || "Người bán ẩn danh"}
-        </span>
-      </CardFooter>
+        <div className="mt-auto pt-2 flex items-center gap-1 text-gray-400 border-t border-gray-50">
+          <MapPin size={12} className="shrink-0" />
+          <span className="text-[11px] truncate">
+            {typeof product.location === "string" ? product.location : "Hà Nội"}
+          </span>
+        </div>
+      </CardContent>
     </Card>
   );
 }
