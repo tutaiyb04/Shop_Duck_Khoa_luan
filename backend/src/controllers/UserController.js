@@ -203,11 +203,17 @@ exports.updateProfile = async (req, res) => {
 
 exports.getUsersAdmin = async (req, res) => {
   try {
-    const { users } = await userService.getUsersAdminService();
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 15;
+
+    const { users, totalPages, currentPage } =
+      await userService.getUsersAdminService(page, limit);
 
     return res.status(200).json({
       message: "Lấy danh sách người dùng thành công",
-      users: users,
+      users,
+      totalPages,
+      currentPage,
     });
   } catch (error) {
     console.error("Lỗi tại getUsersAdmin: ", error);

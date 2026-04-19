@@ -1,10 +1,15 @@
 import { API } from "@/services/axios";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 function useAdminProduct() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+  });
 
   const [filters, setFilters] = useState({
     search: "",
@@ -12,21 +17,30 @@ function useAdminProduct() {
     status: "",
   });
 
-  const fetchProducts = async () => {
-    setLoading(true);
+  const fetchProducts = useCallback(
+    async (page = 1) => {
+      setLoading(true);
 
-    try {
-      const response = await API.get("products/admin/all", {
-        params: filters,
-      });
-      setProducts(response.data.products || []);
-    } catch (error) {
-      console.error("Lỗi fetchProducts:", error);
-      toast.error("Không thể tải danh sách sản phẩm!");
-    } finally {
-      setLoading(false);
-    }
-  };
+      try {
+        const response = await API.get("products/admin/all", {
+          params: { ...filters, page, limit: 15 },
+        });
+
+        setProducts(response.data.products || []);
+
+        setPagination({
+          currentPage: response.data.currentPage || 1,
+          totalPages: response.data.totalPages || 1,
+        });
+      } catch (error) {
+        console.error("Lỗi fetchProducts:", error);
+        toast.error("Không thể tải danh sách sản phẩm!");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [filters],
+  );
 
   // Kỹ thuật Debounce: Chờ Admin gõ xong 500ms (nửa giây) thì mới gọi API
   useEffect(() => {
@@ -35,7 +49,7 @@ function useAdminProduct() {
     }, 500);
 
     return () => clearTimeout(delayTimer);
-  }, [filters]); // Lắng nghe sự thay đổi của biến filters
+  }, [fetchProducts]); // Lắng nghe sự thay đổi của biến filters
 
   const handleUpdateStatus = async (productId, newStatus) => {
     let actionName = "Duyệt";
@@ -72,6 +86,8 @@ function useAdminProduct() {
     filters,
     setFilters,
     handleUpdateStatus,
+    pagination,
+    fetchProducts,
   };
 }
 

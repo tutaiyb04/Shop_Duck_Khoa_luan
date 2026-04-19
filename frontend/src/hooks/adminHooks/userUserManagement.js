@@ -1,29 +1,39 @@
 import { API } from "@/services/axios";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 function useUserManagement() {
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+  });
+
   // lấy danh sách tài khoản User
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async (page = 1) => {
     setIsLoading(true);
     try {
-      const response = await API.get("/user/admin/all");
+      // Truyền thêm query params page và limit
+      const res = await API.get(`/user/admin/all?page=${page}&limit=15`);
+      setUsers(res.data.users);
 
-      setUsers(response.data.users || []);
+      // Cập nhật thông tin phân trang từ Backend trả về
+      setPagination({
+        currentPage: res.data.currentPage,
+        totalPages: res.data.totalPages,
+      });
     } catch (error) {
-      console.error("Lỗi lấy danh sách user:", error);
-      toast.error("Không thể tải danh sách người dùng");
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    fetchUsers(1);
+  }, [fetchUsers]);
 
   // Xử lý khóa tài khoản
   const handleToggleLock = async (userId, currentStatus) => {
@@ -54,7 +64,9 @@ function useUserManagement() {
   return {
     users,
     isLoading,
+    pagination,
     handleToggleLock,
+    fetchUsers,
   };
 }
 

@@ -1,10 +1,18 @@
 import ProductFilter from "@/components/admin/productManagement/ProductFilter";
 import ProductTable from "@/components/admin/productManagement/ProductTable";
+import CustomPagination from "@/components/shared/CustomPagination";
 import useAdminProduct from "@/hooks/adminHooks/useAdminProduct";
 
 function ProductManagement() {
-  const { products, loading, filters, setFilters, handleUpdateStatus } =
-    useAdminProduct();
+  const {
+    products,
+    loading,
+    filters,
+    setFilters,
+    handleUpdateStatus,
+    pagination,
+    fetchProducts,
+  } = useAdminProduct();
 
   return (
     <div className="p-4 sm:p-6 bg-white rounded-xl shadow-sm border border-gray-100">
@@ -23,6 +31,11 @@ function ProductManagement() {
         products={products}
         loading={loading}
         handleUpdateStatus={handleUpdateStatus}
+      />
+
+      <CustomPagination
+        pagination={pagination}
+        onPageChange={(page) => fetchProducts(page)}
       />
     </div>
   );

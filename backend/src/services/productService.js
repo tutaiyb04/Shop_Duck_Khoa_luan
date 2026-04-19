@@ -62,6 +62,26 @@ exports.getAdminProductsService = async (filters) => {
   }
 };
 
+exports.getProductByIdService = async (id) => {
+  try {
+    // 🚀 TỐI ƯU CẤP ĐỘ CHI TIẾT:
+    // Vẫn dùng .lean() để tăng tốc độ load trang chi tiết sản phẩm lên tối đa
+    const product = await Product.findById(id)
+      .populate("sellerId", "username email avatar phone")
+      .populate("category", "name")
+      .lean();
+
+    if (!product) {
+      throw new Error("Sản phẩm không tồn tại");
+    }
+
+    return { product };
+  } catch (error) {
+    console.error("Lỗi tại getProductByIdService: ", error);
+    throw new Error("Không thể lấy thông tin chi tiết sản phẩm");
+  }
+};
+
 exports.createProductService = async (sellerId, productData, files) => {
   try {
     const { name, category, price, condition, description, lat, lng, address } =

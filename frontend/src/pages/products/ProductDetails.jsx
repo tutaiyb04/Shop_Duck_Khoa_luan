@@ -1,11 +1,9 @@
 import { useProductDetails } from "@/hooks/productHooks/useProductDetails";
 import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import {
   Breadcrumb,
   BreadcrumbItem,
-  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
@@ -14,14 +12,12 @@ import {
   ShieldAlert,
   ChevronLeft,
   ChevronRight,
-  ShoppingCart,
   Heart,
   Share2,
   ImageIcon,
   Check,
   Globe,
   ShieldCheck,
-  CalendarDays,
   MessageCircle,
   Truck,
   BadgeCheck,
@@ -32,7 +28,6 @@ import {
   MapPin,
 } from "lucide-react";
 import UserAvatar from "@/components/shared/UserAvatar";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import ReportDialog from "@/components/product/ReportDialog";
 import { NavLink } from "react-router-dom";
 

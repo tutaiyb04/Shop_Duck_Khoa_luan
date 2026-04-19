@@ -15,15 +15,33 @@ exports.getPublicCategories = async () => {
   }
 };
 
-exports.getAdminCategories = async () => {
+exports.getAdminCategories = async (page = 1, limit = 15, type = "parent") => {
   try {
-    const adminCategories = await Category.find()
-      .populate("parentId", "name")
-      .sort({ createdAt: -1 })
-      .select("-__v")
-      .lean();
+    const skip = (page - 1) * limit;
 
-    return { adminCategories };
+    let query = {};
+    if (type === "parent") {
+      query.parentId = null;
+    } else if (type === "child") {
+      query.parentId = { $ne: null };
+    }
+
+    const [adminCategories, total] = await Promise.all([
+      Category.find(query)
+        .populate("parentId", "name")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .select("-__v")
+        .lean(),
+      Category.countDocuments(query),
+    ]);
+
+    return {
+      adminCategories,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+    };
   } catch (error) {
     console.log("Lỗi khi gọi getAdminCategories: ", error);
     throw new Error("Không thể lấy danh sách danh mục");
@@ -139,5 +157,19 @@ exports.restoreCategoryService = async (id) => {
   } catch (error) {
     console.log("Lỗi khi gọi restoreCategoryService: ", error);
     throw new Error("Không thể khôi phục danh mục");
+  }
+};
+
+exports.getAllParentsForModalService = async () => {
+  try {
+    const parentsForModal = await Category.find({ parentId: null })
+      .select("_id name")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return { parentsForModal };
+  } catch (error) {
+    console.log("Lỗi khi gọi getAllParentsForModalService: ", error);
+    throw new Error("Không thể lấy danh sách danh mục cha cho Modal");
   }
 };
