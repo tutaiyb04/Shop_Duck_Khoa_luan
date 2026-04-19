@@ -1,13 +1,27 @@
 const Product = require("../model/Product");
 
-exports.getAllProductsService = async () => {
+exports.getAllProductsService = async (filters = {}) => {
   try {
-    const products = await Product.find({ status: "AVAILABLE" })
-      .populate("sellerId", "username avatar")
-      .populate("category", "name")
-      .sort({ createdAt: -1 });
+    const page = parseInt(filters.page) || 1;
+    const limit = parseInt(filters.limit) || 20;
+    const skip = (page - 1) * limit;
 
-    return { products };
+    const [products, total] = await Promise.all([
+      Product.find({ status: "AVAILABLE" })
+        .populate("sellerId", "username avatar")
+        .populate("category", "name")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(), // Trả về JSON thuần, siêu nhẹ siêu nhanh
+      Product.countDocuments({ status: "AVAILABLE" }),
+    ]);
+
+    return {
+      products,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+    };
   } catch (error) {
     console.error("Lỗi tại getAllProductsService: ", error);
     throw new Error("Không thể lấy danh sách sản phẩm");
@@ -16,72 +30,81 @@ exports.getAllProductsService = async () => {
 
 exports.getAdminProductsService = async (filters) => {
   try {
-    const { search, category, status } = filters;
-
-    // Khởi tạo điều kiện truy vấn trống
+    const { search, category, status, page = 1, limit = 20 } = filters;
     let query = {};
 
-    // Nếu có từ khóa tìm kiếm -> Lọc gần đúng theo tên (không phân biệt hoa thường)
-    if (search) {
-      query.name = { $regex: search, $options: "i" };
-    }
+    if (search) query.name = { $regex: search, $options: "i" };
+    if (category) query.category = category;
+    if (status) query.status = status;
 
-    // Nếu có chọn danh mục
-    if (category) {
-      query.category = category;
-    }
+    const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    // Nếu có chọn trạng thái
-    if (status) {
-      query.status = status;
-    }
+    // Chạy song song lệnh đếm và lệnh tìm
+    const [products, total] = await Promise.all([
+      Product.find(query)
+        .populate("category", "name")
+        .populate("sellerId", "username email avatar")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .lean(),
+      Product.countDocuments(query),
+    ]);
 
-    const products = await Product.find(query)
-      .populate("category", "name")
-      .populate("sellerId", "username email avatar")
-      .sort({ createdAt: -1 });
-
-    return { products };
+    return {
+      products,
+      totalPages: Math.ceil(total / limit),
+      currentPage: parseInt(page),
+    };
   } catch (error) {
     console.error("Lỗi tại getAdminProductsService: ", error);
-    throw new Error("Không thể lấy danh sách sản phẩm");
+    throw new Error("Không thể tải danh sách sản phẩm quản trị");
   }
 };
 
-exports.getProductByIdService = async (id) => {
+exports.createProductService = async (sellerId, productData, files) => {
   try {
-    const product = await Product.findById(id)
-      .populate("sellerId", "username avatar") // Lấy tên và ảnh đại diện người bán
-      .populate("category", "name"); // Lấy tên danh mục
+    const { name, category, price, condition, description, lat, lng, address } =
+      productData;
 
-    if (!product) {
-      throw new Error("Không tìm thấy sản phẩm");
+    const imageUrls = files?.map((file) => file.path) || [];
+
+    if (imageUrls.length === 0) {
+      throw new Error("Vui lòng tải lên ít nhất 1 hình ảnh sản phẩm.");
     }
 
-    return { product };
+    const newProduct = await Product.create({
+      name,
+      category,
+      price: Number(price),
+      condition,
+      description,
+      images: imageUrls,
+      sellerId,
+      address,
+      location: {
+        type: "Point",
+        coordinates: [parseFloat(lng), parseFloat(lat)], // Chuẩn GeoJSON: [Kinh độ, Vĩ độ]
+      },
+    });
+
+    return { newProduct };
   } catch (error) {
-    console.error("Lỗi tại getProductByIdService: ", error);
-    throw error;
+    console.error("Lỗi tại createProductService: ", error);
+    throw new Error("Không thể tạo mới sản phẩm");
   }
 };
 
-exports.updateProductStatusService = async (productId, status, note) => {
+exports.updateProductStatusService = async (id, status, adminNote) => {
   try {
-    // Tìm sản phẩm
-    const product = await Product.findById(productId);
-    if (!product) {
-      throw new Error("Không tìm thấy sản phẩm này");
-    }
+    const updatedProduct = await Product.findByIdAndUpdate(
+      id,
+      { status, adminNote },
+      { new: true, runValidators: true },
+    );
 
-    // Cập nhật trạng thái
-    product.status = status;
+    if (!updatedProduct) throw new Error("Không tìm thấy sản phẩm");
 
-    // Nếu có ghi chú từ Admin
-    if (note) {
-      product.adminNote = note;
-    }
-
-    const updatedProduct = await product.save();
     return { updatedProduct };
   } catch (error) {
     console.error("Lỗi tại updateProductStatusService: ", error);
@@ -89,56 +112,38 @@ exports.updateProductStatusService = async (productId, status, note) => {
   }
 };
 
-exports.createProductService = async (sellerId, productData, files) => {
+exports.updateProductService = async (id, sellerId, updateData, files) => {
   try {
-    const {
-      name,
-      category,
-      price,
-      condition,
-      description,
-      location,
-      lat,
-      lng,
-      address,
-    } = productData;
+    // Bảo mật: Không cho phép update các trường nhạy cảm
+    delete updateData.sellerId;
+    delete updateData.status;
+    delete updateData.adminNote;
 
-    // Lấy danh sách link ảnh đã được Cloudinary xử lý
-    const imageUrls = [];
     if (files && files.length > 0) {
-      for (const file of files) {
-        imageUrls.push(file.path);
-      }
+      updateData.images = files.map((file) => file.path);
     }
 
-    // Kiểm tra phải có ít nhất 1 ảnh
-    if (imageUrls.length === 0) {
-      throw new Error("Vui lòng tải lên ít nhất 1 hình ảnh sản phẩm.");
-    }
-
-    // Tạo mới sản phẩm
-    const newProduct = new Product({
-      name,
-      category,
-      price: Number(price), // Đảm bảo lưu dưới dạng số
-      condition,
-      description,
-      images: imageUrls,
-      address,
-      location: {
+    if (updateData.lat && updateData.lng) {
+      updateData.location = {
         type: "Point",
-        coordinates: [parseFloat(lng), parseFloat(lat)], // Lưu theo thứ tự [lng, lat]
-      },
-      sellerId: sellerId,
-      status: "PENDING",
-    });
+        coordinates: [parseFloat(updateData.lng), parseFloat(updateData.lat)],
+      };
+      delete updateData.lat;
+      delete updateData.lng;
+    }
 
-    // Lưu vào Database
-    await newProduct.save();
+    const updatedProduct = await Product.findOneAndUpdate(
+      { _id: id, sellerId: sellerId },
+      { $set: updateData },
+      { new: true, runValidators: true },
+    );
 
-    return { newProduct };
+    if (!updatedProduct)
+      throw new Error("Sản phẩm không tồn tại hoặc bạn không có quyền sửa");
+
+    return { updatedProduct };
   } catch (error) {
-    console.error("Lỗi tại createProductService: ", error);
-    throw error; // Ném lỗi ra để Controller bắt đư
+    console.error("Lỗi tại updateProductService: ", error);
+    throw new Error("Không thể cập nhật thông tin sản phẩm");
   }
 };

@@ -73,13 +73,19 @@ function ProductDetails() {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <NavLink to="/" className="hover:text-yellow-600">
+            <NavLink
+              to="/"
+              className="hover:!text-yellow-600 !text-black !transition-colors"
+            >
               Trang chủ
             </NavLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <NavLink to="#" className="hover:text-yellow-600">
+            <NavLink
+              to="#"
+              className="hover:!text-yellow-600 !text-black !transition-colors"
+            >
               {product.category?.name || "Danh mục"}
             </NavLink>
           </BreadcrumbItem>
@@ -103,7 +109,7 @@ function ProductDetails() {
                   className="max-w-full max-h-full object-contain mix-blend-multiply"
                   alt={product.name}
                 />
-                <button className="absolute bottom-4 left-4 bg-black/60 text-white px-3 py-2 rounded-md flex items-center gap-2 text-sm hover:bg-black/80 transition-colors cursor-pointer">
+                <button className="absolute bottom-4 left-4 !bg-black/60 text-white px-3 py-2 rounded-md flex items-center gap-2 text-sm hover:bg-black/80 transition-colors cursor-pointer !border-0 !ring-0 !outline-none">
                   <ImageIcon className="w-4 h-4" /> Xem tất cả ảnh
                 </button>
               </div>
@@ -111,7 +117,7 @@ function ProductDetails() {
               <div className="flex items-center gap-2 w-full">
                 <button
                   onClick={handlePrevImage}
-                  className="p-1 cursor-pointer"
+                  className="p-1 cursor-pointer !border-0 !ring-0 !outline-none !bg-transparent"
                 >
                   <ChevronLeft className="w-6 h-6 !text-black" />
                 </button>
@@ -121,10 +127,10 @@ function ProductDetails() {
                     <button
                       key={index}
                       onClick={() => setActiveImage(index)}
-                      className={`w-16 h-16 border rounded overflow-hidden shrink-0 !transition-all hover:scale-105 cursor-pointer ${
+                      className={`w-16 h-16 rounded overflow-hidden shrink-0 !transition-all hover:scale-105 hover:!border-0 cursor-pointer !border !ring-0 !outline-none ${
                         activeImage === index
-                          ? "border-yellow-800 shadow-sm"
-                          : "border-yellow-200 hover:border-yellow-300 opacity-70 hover:opacity-100"
+                          ? "!border-yellow-800 shadow-sm"
+                          : "!border-yellow-200 hover:!border-yellow-300 opacity-70 hover:opacity-100"
                       }`}
                     >
                       <img src={img} className="w-full h-full object-cover" />
@@ -134,35 +140,35 @@ function ProductDetails() {
 
                 <button
                   onClick={handleNextImage}
-                  className="p-1 cursor-pointer"
+                  className="p-1 cursor-pointer !border-0 !ring-0 !outline-none !bg-transparent"
                 >
                   <ChevronRight className="w-6 h-6 !text-black" />
                 </button>
               </div>
 
               <div className="flex items-start justify-between mt-6 pt-4 text-sm text-gray-500">
-                <div className="mr-10">
+                <div className="mr-3">
                   <div className="whitespace-nowrap">
                     Bạn có sản phẩm muốn bán?{" "}
                   </div>
                   <NavLink
                     to="/sell"
-                    className="text-yellow-600 font-medium hover:underline p-0 whitespace-nowrap"
+                    className="!text-yellow-600 font-medium hover:!underline p-0 whitespace-nowrap "
                   >
                     Đăng bán
                   </NavLink>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
                   <button
                     onClick={() => setIsReportModalOpen(true)}
-                    className="flex items-center gap-1 hover:text-yellow-500 !transition-colors p-0 whitespace-nowrap cursor-pointer"
+                    className="flex items-center gap-1 hover:text-yellow-500 !transition-colors p-0 whitespace-nowrap cursor-pointer !border-0 !ring-0 !outline-none !bg-transparent"
                   >
                     <ShieldAlert className="w-5 h-5" /> Báo cáo
                   </button>
-                  <button className="flex items-center gap-1 hover:text-yellow-500 !transition-colors p-0 whitespace-nowrap cursor-pointer">
+                  <button className="flex items-center gap-1 hover:text-yellow-500 !transition-colors p-0 whitespace-nowrap cursor-pointer !border-0 !ring-0 !outline-none !bg-transparent">
                     <Share2 className="w-5 h-5" /> Chia sẻ
                   </button>
-                  <button className="flex items-center gap-1 hover:text-yellow-500 !transition-colors p-0 whitespace-nowrap cursor-pointer">
+                  <button className="flex items-center gap-1 hover:text-yellow-500 !transition-colors p-0 whitespace-nowrap cursor-pointer !border-0 !ring-0 !outline-none !bg-transparent">
                     <Heart className="w-5 h-5" /> Yêu thích
                   </button>
                 </div>
@@ -213,11 +219,11 @@ function ProductDetails() {
               <div className="grid grid-cols-2 gap-4 mb-8">
                 <Button
                   variant="outline"
-                  className="h-12 text-base font-medium border-yellow-500 text-yellow-500 border-yellow-50 hover:text-yellow-500 border-yellow-500 rounded-md bg-white cursor-pointer"
+                  className="h-12 text-base font-medium !border-yellow-500 !text-yellow-500 !border-yellow-50 hover:!text-yellow-600 !border-yellow-500 rounded-md !bg-white cursor-pointer !border-1 !ring-0 !outline-none !transition-all"
                 >
                   Thêm vào giỏ hàng
                 </Button>
-                <Button className="h-12 text-base font-medium bg-yellow-500 border-yellow-500 hover:bg-yellow-600 text-white rounded-md shadow-sm cursor-pointer">
+                <Button className="h-12 text-base font-medium !bg-yellow-500 !border-yellow-500 hover:!bg-yellow-600 text-white rounded-md shadow-sm cursor-pointer !border-0 !ring-0 !outline-none !transition-all">
                   Mua ngay
                 </Button>
               </div>
@@ -297,7 +303,7 @@ function ProductDetails() {
                     <Star className="w-4 h-4 fill-current mr-1" />
                     <span className="font-medium text-gray-700">5,0</span>
                   </div>
-                  <NavLink href="#" className="text-blue-500 hover:underline">
+                  <NavLink href="#" className="text-blue-500 hover:!underline">
                     (1222 đánh giá)
                   </NavLink>
                   <span className="text-gray-300">•</span>
@@ -309,7 +315,7 @@ function ProductDetails() {
                 <div>
                   <Button
                     variant="secondary"
-                    className="w-35 h-8 text-xs bg-gray-200 hover:bg-gray-300 border border-gray-200 text-black px-3 flex items-center gap-2 cursor-pointer"
+                    className="w-35 h-8 text-xs !bg-gray-200 hover:!bg-gray-300 !border-gray-200 text-black px-3 flex items-center gap-2 cursor-pointer !border-1 !ring-0 !outline-none"
                   >
                     <Store className="w-4 h-4" /> Xem shop
                   </Button>
@@ -364,7 +370,6 @@ function ProductDetails() {
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
-        {/* ================= CỘT TRÁI (Chiếm 9 phần) ================= */}
         <div className="lg:col-span-9 flex flex-col gap-6">
           {/* Thông tin nổi bật */}
           <Card className="border shadow-sm bg-white overflow-hidden rounded-xl">
@@ -407,25 +412,6 @@ function ProductDetails() {
             </CardContent>
           </Card>
 
-          {/* Hỏi đáp */}
-          <Card className="border shadow-sm bg-white overflow-hidden rounded-xl">
-            <CardContent className="px-10 py-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-2">Hỏi đáp</h2>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-2">
-                <p className="text-sm text-gray-500">
-                  Hỏi người bán để biết thêm thông tin về sản phẩm
-                </p>
-                <Button
-                  variant="outline"
-                  className="text-yellow-600 border-yellow-500 hover:text-yellow-600 hover:bg-yellow-50 cursor-pointer whitespace-nowrap"
-                >
-                  + Hỏi ngay
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* ================= SẢN PHẨM LIÊN QUAN (Đã được chuyển vào dưới Hỏi đáp) ================= */}
           <div className="mt-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-800">
@@ -436,7 +422,6 @@ function ProductDetails() {
               </NavLink>
             </div>
 
-            {/* Lưới sản phẩm đã chỉnh lại thành 4 cột trên màn hình lớn để tránh bị chật */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {[
                 {
@@ -502,7 +487,6 @@ function ProductDetails() {
           {/* Hết phần Sản phẩm liên quan */}
         </div>
 
-        {/* ================= CỘT PHẢI (Chiếm 3 phần - Nhỏ hơn trước) ================= */}
         <div className="lg:col-span-3">
           <Card className="border shadow-sm bg-white rounded-xl h-fit sticky top-6">
             <CardContent className="p-4 flex flex-col gap-4">

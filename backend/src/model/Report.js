@@ -5,14 +5,17 @@ const reportSchema = new Schema(
   {
     // Người gửi báo cáo
     reporterId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    // Bổ sung kỹ thuật Polymorphic (Đa hình): Báo cáo cái gì?
     targetType: {
       type: String,
-      enum: ["PRODUCT", "USER", "MESSAGE", "REVIEW"],
+      enum: ["Product", "User", "Message", "Review"],
       required: true,
     },
     // ID của thực thể bị báo cáo (Dựa vào targetType ở trên)
-    targetId: { type: Schema.Types.ObjectId, required: true },
+    targetId: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      refPath: "targetType",
+    },
     // Phân loại lý do để Admin dễ dàng lọc và xử lý tự động
     reason: {
       type: String,

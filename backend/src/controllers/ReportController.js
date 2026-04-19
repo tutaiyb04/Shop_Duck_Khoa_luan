@@ -27,3 +27,42 @@ exports.createReport = async (req, res) => {
     });
   }
 };
+
+exports.getAdminReports = async (req, res) => {
+  try {
+    const filters = {
+      status: req.query.status,
+      search: req.query.search,
+      page: req.query.page,
+      limit: req.query.limit,
+    };
+
+    const result = await reportService.getAllReportsService(filters);
+
+    return res.status(200).json({
+      message: "Lấy báo cáo thành công",
+      result,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || "Lỗi Server" });
+  }
+};
+
+exports.resolveReport = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action, adminNote } = req.body;
+    const { report } = await reportService.resolveReportService(
+      id,
+      action,
+      adminNote,
+    );
+
+    res.status(200).json({
+      message: "Xử lý báo cáo thành công",
+      report,
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message || "Lỗi Server" });
+  }
+};

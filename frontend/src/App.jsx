@@ -18,6 +18,7 @@ import AdminProfile from "./pages/admin/AdminProfile";
 import UserManagement from "./pages/admin/UserManagement";
 import ProductManagement from "./pages/admin/ProductManagement";
 import ProductDetails from "./pages/products/ProductDetails";
+import ReportManagement from "./pages/admin/ReportManagement";
 
 function App() {
   return (
@@ -69,6 +70,8 @@ function App() {
               <Route path="users" element={<UserManagement />} />
 
               <Route path="products" element={<ProductManagement />} />
+
+              <Route path="reports" element={<ReportManagement />} />
             </Route>
           </Routes>
         </main>
