@@ -12,6 +12,7 @@ function CreateProduct() {
     fileInputRef,
     isSubmitting,
     isLoadingData,
+    setCoords,
     handleFileChange,
     removeImage,
     onSubmit,
@@ -51,6 +52,7 @@ function CreateProduct() {
         isSubmitting={isSubmitting}
         categories={categories}
         conditions={conditions}
+        setCoords={setCoords}
       />
     </div>
   );

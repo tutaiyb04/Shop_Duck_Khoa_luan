@@ -13,6 +13,12 @@ router.post(
 );
 router.get("/admin/all", protect, isAdmin, productController.getAdminProducts);
 router.put(
+  "/:id",
+  protect, // Phải đăng nhập
+  upload.array("images", 5), // Xử lý upload ảnh (nếu có)
+  productController.updateProduct,
+);
+router.put(
   "/admin/:id/status",
   protect,
   isAdmin,

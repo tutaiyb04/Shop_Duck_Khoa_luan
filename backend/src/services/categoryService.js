@@ -5,7 +5,8 @@ exports.getPublicCategories = async () => {
   try {
     const publicCategories = await Category.find({ status: "active" })
       .populate("parentId", "name")
-      .select("-__v"); // select('-__v') để ẩn trường nội bộ của mongo
+      .select("-__v") // select('-__v') để ẩn trường nội bộ của mongo
+      .lean(); // lean() chuyển Document Mongoose nặng nề thành plain JSON object, tăng tốc đọc gấp 3-5 lần và giảm tiêu thụ RAM.
 
     return { publicCategories };
   } catch (error) {
@@ -19,7 +20,8 @@ exports.getAdminCategories = async () => {
     const adminCategories = await Category.find()
       .populate("parentId", "name")
       .sort({ createdAt: -1 })
-      .select("-__v");
+      .select("-__v")
+      .lean();
 
     return { adminCategories };
   } catch (error) {
@@ -34,30 +36,21 @@ exports.createCategoryService = async (name, icon, description, parentId) => {
       throw new Error("Tên danh mục không được để trống");
     }
 
-    const exitstingCategory = await Category.findOne({ name });
+    const slug = slugify(name, { lower: true, strict: true, locale: "vi" });
 
-    if (exitstingCategory) {
-      throw new Error("Tên danh mục này đã tồn tại");
-    }
-
-    const slug = slugify(name, {
-      lower: true,
-      strict: true,
-      locale: "vi",
-    });
-
-    const newCategory = new Category({
+    const newCategory = await Category.create({
       name,
       slug,
       description,
       icon: icon || "",
-      parentId: parentId ? parentId : null,
+      parentId: parentId || null,
     });
-
-    await newCategory.save();
 
     return { newCategory };
   } catch (error) {
+    if (error.code === 11000) {
+      throw new Error("Tên danh mục này đã tồn tại");
+    }
     console.log("Lỗi khi gọi createCategoryService: ", error);
     throw new Error("Không thể tạo danh mục");
   }
@@ -72,38 +65,38 @@ exports.updateCategoryService = async (
   parentId,
 ) => {
   try {
-    if (!name) {
-      throw new Error("Tên danh mục không được để trống");
-    }
+    const updateData = {};
 
-    const updateCategory = await Category.findById(id);
-
-    if (!updateCategory) {
-      throw new Error("Không tìm thấy danh mục này");
-    }
-
-    if (name && name !== updateCategory.name) {
-      const exitstingCategory = await Category.findOne({ name });
-      if (exitstingCategory) {
-        throw new Error("Tên danh mục này đã tồn tại");
-      }
-      updateCategory.name = name;
-      updateCategory.slug = slugify(name, {
+    if (name) {
+      updateData.name = name;
+      updateData.slug = slugify(name, {
         lower: true,
         strict: true,
         locale: "vi",
       });
     }
-    if (icon !== undefined) updateCategory.icon = icon;
-    if (description !== undefined) updateCategory.description = description;
-    if (status !== undefined) updateCategory.status = status;
+    if (icon !== undefined) updateData.icon = icon;
+    if (description !== undefined) updateData.description = description;
+    if (status !== undefined) updateData.status = status;
     if (parentId !== undefined) {
-      updateCategory.parentId = parentId === "" ? null : parentId;
+      updateData.parentId = parentId === "" ? null : parentId;
     }
 
-    await updateCategory.save();
+    const updateCategory = await Category.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true, runValidators: true },
+    );
+
+    if (!updateCategory) {
+      throw new Error("Không tìm thấy danh mục này");
+    }
+
     return { updateCategory };
   } catch (error) {
+    if (error.code === 11000) {
+      throw new Error("Tên danh mục này đã tồn tại");
+    }
     console.log("Lỗi khi gọi updateCategoryService: ", error);
     throw new Error("Không thể cập nhật danh mục");
   }
@@ -111,14 +104,15 @@ exports.updateCategoryService = async (
 
 exports.deleteCategoryService = async (id) => {
   try {
-    const deleteCategory = await Category.findById(id);
+    const deleteCategory = await Category.findByIdAndUpdate(
+      id,
+      { status: "hidden" },
+      { new: true },
+    );
 
     if (!deleteCategory) {
       throw new Error("Không tìm thấy danh mục này");
     }
-
-    deleteCategory.status = "hidden";
-    await deleteCategory.save();
 
     return { deleteCategory };
   } catch (error) {
@@ -129,19 +123,17 @@ exports.deleteCategoryService = async (id) => {
 
 exports.restoreCategoryService = async (id) => {
   try {
-    const restoreCategory = await Category.findById(id);
+    const restoreCategory = await Category.findOneAndUpdate(
+      { _id: id, status: { $ne: "active" } },
+      { status: "active" },
+      { new: true },
+    );
+
     if (!restoreCategory) {
-      throw new Error("Không tìm thấy danh mục này");
+      throw new Error(
+        "Danh mục không tồn tại hoặc đã ở trạng thái hoạt động rồi",
+      );
     }
-
-    // Kiểm tra nếu nó vốn đã active rồi thì báo lỗi
-    if (restoreCategory.status === "active") {
-      throw new Error("Danh mục này đang ở trạng thái hoạt động rồi");
-    }
-
-    // Thực hiện khôi phục
-    restoreCategory.status = "active";
-    await restoreCategory.save();
 
     return { restoreCategory };
   } catch (error) {

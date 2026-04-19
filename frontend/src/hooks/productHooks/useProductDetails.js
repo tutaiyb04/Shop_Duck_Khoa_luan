@@ -55,7 +55,7 @@ export function useProductDetails() {
     setIsReporting(true);
     try {
       await API.post("/reports", {
-        targetType: "PRODUCT",
+        targetType: "Product",
         targetId: id,
         reason: reportData.reason,
         description: reportData.description,

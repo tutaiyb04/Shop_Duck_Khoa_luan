@@ -9,46 +9,27 @@ const sendEmail = require("../helper/sendEmail");
 dotenv.config();
 
 exports.registerService = async (username, password, email, avatar) => {
-  // Kiểm tra xem Email đã được sử dụng hay chưa
-  const userExits = await User.findOne({
-    $or: [
-      {
-        username: username,
-      },
-      {
-        email: email,
-      },
-    ],
-  });
-  if (userExits) {
-    if (userExits.username === username) {
-      throw new Error("Tên đăng nhập đã được sử dụng");
+  try {
+    const newUser = await User.create({ username, password, email, avatar });
+    return { newUser };
+  } catch (error) {
+    if (error.code === 11000) {
+      if (error.keyPattern?.username)
+        throw new Error("Tên đăng nhập đã được sử dụng");
+      if (error.keyPattern?.email) throw new Error("Email đã được sử dụng!");
     }
-
-    if (userExits.email === email) {
-      throw new Error("Email đã được sử dụng!");
-    }
+    throw error;
   }
-
-  // Tạo vào lưu tài khoản
-  const user = new User({ username, password, email, avatar });
-  const newUser = await user.save();
-
-  return { newUser };
 };
 
 exports.loginService = async (username, email, password) => {
   // tìm user theo email HOẶC email
   const findUser = await User.findOne({
-    $or: [
-      {
-        username: username,
-      },
-      {
-        email: email,
-      },
-    ],
-  }).select("+password");
+    $or: [{ username: username }, { email: email }],
+  })
+    .select("+password")
+    .lean();
+
   if (!findUser) {
     throw new Error("Username hoặc Email không tồn tại!");
   }
@@ -71,8 +52,6 @@ exports.loginService = async (username, email, password) => {
     throw new Error("Mật khẩu không chính xác");
   }
 
-  console.log("Đã tìm thấy User ID: ", findUser._id);
-
   // tạo token
   const payload = {
     id: findUser._id,
@@ -85,36 +64,34 @@ exports.loginService = async (username, email, password) => {
     expiresIn: "1d",
   });
 
+  // Xóa password trước khi trả về Frontend (vì dùng lean() nên phải xóa thủ công)
+  delete findUser.password;
+
   return { token, findUser };
 };
 
 exports.resetPasswordService = async (email) => {
-  const findUserHaveEmail = await User.findOne({ email });
+  // Tạo mã reset mật khẩu (Bất đồng bộ để không block event loop)
+  const randomToken = await new Promise((resolve, reject) => {
+    crypto.randomBytes(16, (err, buffer) => {
+      if (err) reject(err);
+      else resolve(buffer.toString("hex"));
+    });
+  });
+
+  const resetPasswordExpires = Date.now() + 15 * 60 * 1000;
+
+  const findUserHaveEmail = await User.findOneAndUpdate(
+    { email },
+    { resetPasswordToken: randomToken, resetPasswordExpires },
+    { new: true, lean: true },
+  );
+
   if (!findUserHaveEmail) {
     throw new Error("Email không tồn tại !");
   }
 
-  // Tạo mã reset mật khẩu
-  const randomToken = await new Promise((resolve, reject) => {
-    crypto.randomBytes(16, (err, buffer) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(buffer.toString("hex"));
-      }
-    });
-  });
-
-  // Tạo thời hạn cho mã reset Password
-  const resetPasswordExpires = Date.now() + 15 * 60 * 1000;
-
-  // Cập nhật mã reset và thời hạn reset password vào User
-  findUserHaveEmail.resetPasswordToken = randomToken;
-  findUserHaveEmail.resetPasswordExpires = resetPasswordExpires;
-  await findUserHaveEmail.save();
-
   const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-  // tạo url để gửi mã đặt lại mật khẩu
   const resetUrl = `${frontendUrl}/reset-password-confirm?token=${randomToken}`;
 
   try {
@@ -155,6 +132,7 @@ exports.updatePasswordService = async (token, newPassword) => {
   findUserHavePassword.password = newPassword;
   findUserHavePassword.resetPasswordToken = undefined;
   findUserHavePassword.resetPasswordExpires = undefined;
+
   await findUserHavePassword.save();
 
   return true;
@@ -166,17 +144,14 @@ exports.loginWithGoogleService = async (accessToken) => {
     const response = await fetch(
       "https://www.googleapis.com/oauth2/v3/userinfo",
       {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: { Authorization: `Bearer ${accessToken}` },
       },
     );
 
     const payload = await response.json();
 
-    if (payload.error) {
+    if (payload.error)
       throw new Error("Token Google không hợp lệ hoặc đã hết hạn!");
-    }
 
     const { email, name, picture, sub } = payload;
 
@@ -237,18 +212,13 @@ exports.updateProfileService = async (
     if (username) updateData.username = username;
     if (phone) updateData.phone = phone;
 
-    if (description !== undefined) {
+    if (description !== undefined)
       updateData["sellerProfile.description"] = description;
-    }
 
-    if (address !== undefined) {
+    if (address !== undefined)
       updateData["buyerProfile.shippingAddresses"] = [address];
-    }
 
-    // nếu người dùng upload ảnh mới, lấy link URL từ Cloudinary
-    if (file && file.path) {
-      updateData.avatar = file.path;
-    }
+    if (file && file.path) updateData.avatar = file.path;
 
     // Cập nhật vào DB
     const updateUser = await User.findByIdAndUpdate(
@@ -266,7 +236,10 @@ exports.updateProfileService = async (
 
 exports.getUsersAdminService = async () => {
   try {
-    const users = await User.find().select("-password").sort({ createdAt: -1 });
+    const users = await User.find()
+      .select("-password")
+      .sort({ createdAt: -1 })
+      .lean();
 
     return { users };
   } catch (error) {
@@ -277,12 +250,14 @@ exports.getUsersAdminService = async () => {
 
 exports.updateUserStatusService = async (userId, status) => {
   try {
-    const user = await User.findById(userId);
-    if (!user) throw new Error("Không tìm thấy người dùng");
+    const updateUser = await User.findByIdAndUpdate(
+      userId,
+      { status },
+      { new: true, runValidators: true },
+    );
 
-    user.status = status;
-    const updateUser = await user.save();
-
+    if (!updateUser) throw new Error("Không tìm thấy người dùng");
+    
     return { updateUser };
   } catch (error) {
     console.error("Lỗi tại updateUserStatusService: ", error);
