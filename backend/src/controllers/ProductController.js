@@ -23,13 +23,18 @@ exports.getAdminProducts = async (req, res) => {
       search: req.query.search || "",
       category: req.query.category || "",
       status: req.query.status || "",
+      page: parseInt(req.query.page) || 1,
+      limit: parseInt(req.query.limit) || 15,
     };
 
-    const { products } = await productService.getAdminProductsService(filters);
+    const { products, totalPages, currentPage } =
+      await productService.getAdminProductsService(filters);
 
     res.status(200).json({
       message: "Lấy danh sách sản phẩm thành công",
       products: products,
+      totalPages,
+      currentPage,
     });
   } catch (error) {
     console.error("Lỗi tại getAdminProducts:", error);

@@ -36,7 +36,7 @@ function ReportDialog({ open, onOpenChange, onSend, isReporting }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[42.5rem] rounded-[1.6rem] bg-white p-[2.4rem] gap-[1.6rem] border-none shadow-2xl">
         <DialogHeader className="space-y-[0.8rem]">
-          <DialogTitle className="text-[2rem] font-bold text-red-600 flex items-center gap-[0.8rem]">
+          <DialogTitle className="text-[2rem] font-bold text-yellow-600 flex items-center gap-[0.8rem]">
             <ShieldAlert className="w-[2.4rem] h-[2.4rem]" />
             Báo cáo vi phạm
           </DialogTitle>
@@ -57,7 +57,7 @@ function ReportDialog({ open, onOpenChange, onSend, isReporting }) {
             <Select onValueChange={setReason} value={reason}>
               <SelectTrigger
                 id="reason"
-                className="w-full h-[4rem] text-[1.4rem] rounded-[0.8rem] focus:ring-red-500 focus:border-red-500"
+                className="w-full h-[4rem] text-[1.4rem] rounded-[0.8rem]"
               >
                 <SelectValue placeholder="-- Vui lòng chọn lý do --" />
               </SelectTrigger>
@@ -107,14 +107,14 @@ function ReportDialog({ open, onOpenChange, onSend, isReporting }) {
               htmlFor="description"
               className="text-[1.4rem] font-bold text-gray-800"
             >
-              Mô tả chi tiết
+              Mô tả chi tiết <span className="text-red-500">*</span>
             </Label>
             <Textarea
               id="description"
               placeholder="Cung cấp thêm bằng chứng hoặc mô tả chi tiết lỗi để hệ thống xử lý nhanh hơn..."
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
-              className="min-h-[12rem] text-[1.4rem] resize-none rounded-[0.8rem] p-[1.2rem] focus-visible:ring-red-500"
+              className="min-h-[12rem] text-[1.4rem] resize-none rounded-[0.8rem] p-[1.2rem] focus-visible:ring-yellow-500"
             />
           </div>
         </div>
@@ -123,12 +123,12 @@ function ReportDialog({ open, onOpenChange, onSend, isReporting }) {
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}
-            className="h-[4rem] px-[1.6rem] text-[1.4rem] rounded-[0.8rem] hover:bg-gray-100"
+            className="h-[4rem] px-[1.6rem] text-[1.4rem] rounded-[0.8rem] !bg-gray-200 hover:!bg-gray-300 !border-1 !border-gray-200 !ring-0 !outline-none"
           >
             Hủy bỏ
           </Button>
           <Button
-            className="h-[4rem] px-[2.4rem] text-[1.4rem] bg-red-600 hover:bg-red-700 text-white font-bold transition-colors rounded-[0.8rem] shadow-sm"
+            className="h-[4rem] px-[2.4rem] text-[1.4rem] !bg-yellow-600 hover:!bg-yellow-700 text-white font-bold transition-colors rounded-[0.8rem] shadow-sm !border-1 !border-gray-200 !ring-0 !outline-none"
             disabled={!reason || isReporting}
             onClick={handleConfirm}
           >

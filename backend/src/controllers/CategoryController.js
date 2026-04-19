@@ -19,11 +19,18 @@ exports.getPublicCategories = async (req, res) => {
 
 exports.getAdminCategories = async (req, res) => {
   try {
-    const { adminCategories } = await categoryService.getAdminCategories();
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 15;
+    const type = req.query.type || "parent";
+
+    const { adminCategories, totalPages, currentPage } =
+      await categoryService.getAdminCategories(page, limit, type);
 
     return res.status(200).json({
       message: "Lấy danh sách mục cho admin thành công",
       category: adminCategories,
+      totalPages,
+      currentPage,
     });
   } catch (error) {
     console.error("Lỗi khi gọi getAdminCategories:", error);
@@ -116,5 +123,18 @@ exports.restoreCategory = async (req, res) => {
     return res
       .status(500)
       .json({ message: error.message || "Lỗi server khi khôi phục danh mục" });
+  }
+};
+
+exports.getAllParentsForModal = async (req, res) => {
+  try {
+    const { parentsForModal } =
+      await categoryService.getAllParentsForModalService();
+    return res.status(200).json({
+      message: "Thành công",
+      category: parentsForModal,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
   }
 };

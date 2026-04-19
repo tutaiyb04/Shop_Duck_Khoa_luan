@@ -34,5 +34,11 @@ router.put(
   isAdmin,
   CategoryController.restoreCategory,
 );
+router.get(
+  "/admin/parents-all",
+  protect,
+  isAdmin,
+  CategoryController.getAllParentsForModal,
+);
 
 module.exports = router;

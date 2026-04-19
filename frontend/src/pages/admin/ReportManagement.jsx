@@ -1,10 +1,18 @@
 import useReportManagement from "@/hooks/adminHooks/useReportManagement";
 import ReportFilter from "@/components/admin/reportManagement/ReportFilter";
 import ReportTable from "@/components/admin/reportManagement/ReportTable";
+import CustomPagination from "@/components/shared/CustomPagination";
 
 function ReportManagement() {
-  const { reports, loading, filters, setFilters, handleResolve } =
-    useReportManagement();
+  const {
+    reports,
+    loading,
+    filters,
+    setFilters,
+    handleResolve,
+    pagination,
+    fetchReports,
+  } = useReportManagement();
 
   return (
     <div className="p-4 sm:p-6 bg-white rounded-xl shadow-sm border border-gray-100">
@@ -24,6 +32,11 @@ function ReportManagement() {
         reports={reports}
         loading={loading}
         onResolve={handleResolve}
+      />
+
+      <CustomPagination
+        pagination={pagination}
+        onPageChange={(page) => fetchReports(page)}
       />
     </div>
   );

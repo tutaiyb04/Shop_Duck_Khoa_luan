@@ -234,14 +234,25 @@ exports.updateProfileService = async (
   }
 };
 
-exports.getUsersAdminService = async () => {
+exports.getUsersAdminService = async (page = 1, limit = 15) => {
   try {
-    const users = await User.find()
-      .select("-password")
-      .sort({ createdAt: -1 })
-      .lean();
+    const skip = (page - 1) * limit;
 
-    return { users };
+    const [users, total] = await Promise.all([
+      User.find()
+        .select("-password")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      User.countDocuments(),
+    ]);
+
+    return {
+      users,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+    };
   } catch (error) {
     console.error("Lỗi tại getUsersAdminService: ", error);
     throw new Error("Không thể lấy danh sách Users");
@@ -257,7 +268,7 @@ exports.updateUserStatusService = async (userId, status) => {
     );
 
     if (!updateUser) throw new Error("Không tìm thấy người dùng");
-    
+
     return { updateUser };
   } catch (error) {
     console.error("Lỗi tại updateUserStatusService: ", error);

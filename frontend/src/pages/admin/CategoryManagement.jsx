@@ -1,26 +1,28 @@
 import * as LucideIcons from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Edit, Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import useCategoryManagement from "@/hooks/adminHooks/useCategoryManagement";
 import CategoryFormModal from "@/components/admin/categoryManagement/CategoryFormModal";
 import CategoryTable from "@/components/admin/categoryManagement/CategoryTable";
 
+import CustomPagination from "@/components/shared/CustomPagination";
+
 function CategoryManagement() {
-  // GỌI HOOK LẤY LOGIC
   const {
-    categories,
-    parentCategories,
-    childCategories,
+    categories, // Mảng chứa đúng 15 bản ghi
     isLoading,
-    isModalOpen,
-    editingCategory,
+    pagination, // State phân trang
+    fetchCategories, // Hàm gọi API chuyển trang
     viewMode,
     setViewMode,
+    isModalOpen,
+    editingCategory,
     openCreateModal,
     openEditModal,
     closeModal,
     onFormSubmit,
     handleDelete,
+    parentCategoriesForModal,
   } = useCategoryManagement();
 
   // Hiển thị trạng thái tải dữ liệu
@@ -61,20 +63,25 @@ function CategoryManagement() {
       {viewMode === "parent" ? (
         <CategoryTable
           type="parent"
-          categories={parentCategories}
+          categories={categories} // 🚀 Dùng chung mảng categories từ API
           onEdit={openEditModal}
           onDelete={handleDelete}
         />
       ) : (
         /* KHI CHỌN DANH MỤC PHỤ  */
-
         <CategoryTable
           type="child"
-          categories={childCategories}
+          categories={categories} // 🚀 Dùng chung mảng categories từ API
           onEdit={openEditModal}
           onDelete={handleDelete}
         />
       )}
+
+      {/* 🚀 COMPONENT PHÂN TRANG */}
+      <CustomPagination
+        pagination={pagination}
+        onPageChange={(page) => fetchCategories(page, viewMode)}
+      />
 
       {/* TÍCH HỢP MODAL */}
       <CategoryFormModal
@@ -82,7 +89,7 @@ function CategoryManagement() {
         onClose={closeModal}
         editingCategory={editingCategory}
         onSubmit={onFormSubmit}
-        parentCategories={parentCategories}
+        parentCategories={parentCategoriesForModal || []}
       />
     </div>
   );

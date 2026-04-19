@@ -1,8 +1,10 @@
 import UserTable from "@/components/admin/usermanagement/UserTable";
+import CustomPagination from "@/components/shared/CustomPagination";
 import useUserManagement from "@/hooks/adminHooks/userUserManagement";
 
 function UserManagement() {
-  const { users, isLoading, handleToggleLock } = useUserManagement();
+  const { users, isLoading, pagination, fetchUsers, handleToggleLock } =
+    useUserManagement();
 
   if (isLoading && users.length === 0) {
     return (
@@ -28,6 +30,11 @@ function UserManagement() {
       </div>
 
       <UserTable users={users} handleToggleLock={handleToggleLock} />
+
+      <CustomPagination
+        pagination={pagination}
+        onPageChange={(newPage) => fetchUsers(newPage)}
+      />
     </div>
   );
 }
