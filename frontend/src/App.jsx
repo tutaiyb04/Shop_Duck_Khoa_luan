@@ -17,6 +17,7 @@ import ClientLayout from "./components/layout/ClientLayout";
 import AdminProfile from "./pages/admin/AdminProfile";
 import UserManagement from "./pages/admin/UserManagement";
 import ProductManagement from "./pages/admin/ProductManagement";
+import ProductDetails from "./pages/products/ProductDetails";
 
 function App() {
   return (
@@ -50,6 +51,9 @@ function App() {
 
               {/* Trang Đăng bán sản phẩm */}
               <Route path="/sell" element={<CreateProduct />} />
+
+              {/* Chi Tiết Sản Phẩm */}
+              <Route path="/product/:id" element={<ProductDetails />} />
 
               {/* Quản lý đơn hàng */}
               <Route path="/orders" element={<Orders />} />

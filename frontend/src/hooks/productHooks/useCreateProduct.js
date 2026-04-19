@@ -35,6 +35,7 @@ export function useCreateProduct() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categories, setCategories] = useState([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [coords, setCoords] = useState({ lat: null, lng: null });
 
   const fileInputRef = useRef(null);
 
@@ -106,6 +107,11 @@ export function useCreateProduct() {
   };
 
   const onSubmit = async (data) => {
+    if (!coords.lat || !coords.lng) {
+      toast.error("Vui lòng chọn vị trí sản phẩm trên bản đồ!");
+      return;
+    }
+
     if (images.length === 0) {
       toast.error("Vui lòng tải lên ít nhất 1 hình ảnh sản phẩm.");
       return;
@@ -121,7 +127,9 @@ export function useCreateProduct() {
       formData.append("quantity", data.quantity);
       formData.append("condition", data.condition);
       formData.append("description", data.description);
-      formData.append("location", data.location);
+      formData.append("address", data.location);
+      formData.append("lat", coords.lat);
+      formData.append("lng", coords.lng);
 
       images.forEach((img) => {
         formData.append("images", img.file);
@@ -155,6 +163,7 @@ export function useCreateProduct() {
     categories,
     isLoadingData,
     isSubmitting,
+    setCoords,
     handleFileChange,
     removeImage,
     onSubmit,

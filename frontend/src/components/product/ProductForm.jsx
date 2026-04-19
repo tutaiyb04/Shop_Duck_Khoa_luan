@@ -18,8 +18,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import CategoryMegaMenu from "./CategoryMageMenu";
+import Mappicker from "./Mappicker";
 
-function ProductForm({ form, onSubmit, isSubmitting, categories, conditions }) {
+function ProductForm({
+  form,
+  onSubmit,
+  isSubmitting,
+  categories,
+  conditions,
+  setCoords,
+}) {
+  const addressValue = form.watch("location");
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -146,14 +156,24 @@ function ProductForm({ form, onSubmit, isSubmitting, categories, conditions }) {
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-lg font-bold text-gray-900">
-                Khu vực bán <span className="text-red-500">*</span>
+                Vị trí sản phẩm <span className="text-red-500">*</span>
               </FormLabel>
               <FormControl>
-                <Input
-                  className="h-10 text-md !ring-0 focus-visible:border-yellow-500"
-                  placeholder="VD: Hà Đông, Hà Nội..."
-                  {...field}
-                />
+                <div className="space-y-4">
+                  <Input
+                    className="h-10 text-md bg-gray-50 !ring-0 focus-visible:border-yellow-500"
+                    placeholder="Địa chỉ tự động hiện khi chọn trên bản đồ"
+                    {...field}
+                  />
+                  {/* Hiển thị bản đồ OpenStreetMap */}
+                  <Mappicker
+                    searchAddress={addressValue}
+                    onLocationSelect={(loc) => {
+                      form.setValue("location", loc.address); // Điền địa chỉ vào input
+                      setCoords({ lat: loc.lat, lng: loc.lng }); // Lưu tọa độ vào Hook
+                    }}
+                  />
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
