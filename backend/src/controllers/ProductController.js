@@ -37,6 +37,21 @@ exports.getAdminProducts = async (req, res) => {
   }
 };
 
+exports.getProductById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { product } = await productService.getProductByIdService(id);
+
+    return res.status(200).json({
+      message: "Lấy chi tiết sản phẩm thành công",
+      product,
+    });
+  } catch (error) {
+    console.error("Lỗi tại getProductById:", error);
+    return res.status(404).json({ message: error.message || "Lỗi server" });
+  }
+};
+
 exports.updateAdminProductStatus = async (req, res) => {
   try {
     const { id } = req.params;

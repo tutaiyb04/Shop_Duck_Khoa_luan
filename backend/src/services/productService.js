@@ -48,6 +48,23 @@ exports.getAdminProductsService = async (filters) => {
   }
 };
 
+exports.getProductByIdService = async (id) => {
+  try {
+    const product = await Product.findById(id)
+      .populate("sellerId", "username avatar") // Lấy tên và ảnh đại diện người bán
+      .populate("category", "name"); // Lấy tên danh mục
+
+    if (!product) {
+      throw new Error("Không tìm thấy sản phẩm");
+    }
+
+    return { product };
+  } catch (error) {
+    console.error("Lỗi tại getProductByIdService: ", error);
+    throw error;
+  }
+};
+
 exports.updateProductStatusService = async (productId, status, note) => {
   try {
     // Tìm sản phẩm
@@ -74,8 +91,17 @@ exports.updateProductStatusService = async (productId, status, note) => {
 
 exports.createProductService = async (sellerId, productData, files) => {
   try {
-    const { name, category, price, condition, description, location } =
-      productData;
+    const {
+      name,
+      category,
+      price,
+      condition,
+      description,
+      location,
+      lat,
+      lng,
+      address,
+    } = productData;
 
     // Lấy danh sách link ảnh đã được Cloudinary xử lý
     const imageUrls = [];
@@ -97,8 +123,12 @@ exports.createProductService = async (sellerId, productData, files) => {
       price: Number(price), // Đảm bảo lưu dưới dạng số
       condition,
       description,
-      location: location || "Hà Nội",
       images: imageUrls,
+      address,
+      location: {
+        type: "Point",
+        coordinates: [parseFloat(lng), parseFloat(lat)], // Lưu theo thứ tự [lng, lat]
+      },
       sellerId: sellerId,
       status: "PENDING",
     });

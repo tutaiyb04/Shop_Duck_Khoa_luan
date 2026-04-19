@@ -15,6 +15,7 @@ const productSchema = new mongoose.Schema(
       required: true,
       enum: ["Mới", "Như mới", "Tốt", "Trung bình", "Kém"],
     },
+    quantity: { type: Number, default: 1 },
     description: { type: String, required: true },
     images: [{ type: String, required: true }],
     sellerId: {
@@ -32,11 +33,12 @@ const productSchema = new mongoose.Schema(
       type: Map,
       of: String,
     },
+    address: { type: String, required: true },
     location: {
       type: {
         type: String,
-        required: true,
-        default: "",
+        enum: ["Point"],
+        default: "Point",
       },
       coordinates: {
         type: [Number], // Định dạng bắt buộc: [Kinh độ (Longitude), Vĩ độ (Latitude)]
