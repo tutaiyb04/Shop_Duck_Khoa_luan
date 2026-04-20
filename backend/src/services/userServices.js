@@ -275,3 +275,40 @@ exports.updateUserStatusService = async (userId, status) => {
     throw new Error("Không thể khóa tài khoản");
   }
 };
+
+exports.toggleWishlistService = async (userId, productId) => {
+  const isExist = await User.exists({
+    _id: userId,
+    "buyerProfile.wishlist": productId,
+  });
+
+  // Dùng $pull để xóa, hoặc $addToSet để thêm (addToSet an toàn hơn $push vì nó tự chặn trùng lặp).
+  const updateQuery = isExist
+    ? { $pull: { "buyerProfile.wishlist": productId } }
+    : { $addToSet: { "buyerProfile.wishlist": productId } };
+
+  // bắn thẳng 1 request duy nhất xuống DB để tự xử lý
+  const result = await User.updateOne({ _id: userId }, updateQuery);
+
+  if (result.matchedCount === 0) {
+    throw new Error("Người dùng không tồn tại");
+  }
+
+  return { isLiked: !isExist };
+};
+
+exports.getWishlistService = async (userId) => {
+  const user = await User.findById(userId)
+    .select("buyerProfile.wishlist")
+    .populate({
+      path: "buyerProfile.wishlist",
+      // select các trường thật sự cần thiết để vẽ giao diện ProductCard
+      select: "name price images condition location status category",
+      populate: { path: "category", select: "name" },
+    })
+    .lean();
+
+  if (!user) throw new Error("Người dùng không tồn tại");
+
+  return user.buyerProfile.wishlist || [];
+};

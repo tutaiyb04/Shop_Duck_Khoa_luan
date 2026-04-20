@@ -12,6 +12,7 @@ import {
   ShoppingCart,
   ChevronDown,
   CirclePlus,
+  Heart,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -143,6 +144,14 @@ export default function Header() {
                   >
                     <Package className="mr-2 h-4 w-4" />
                     <span>Đơn hàng của tôi</span>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onClick={() => navigate("/wishlist")}
+                  >
+                    <Heart className="mr-2 h-4 w-4" />
+                    <span>Yêu thích</span>
                   </DropdownMenuItem>
 
                   <DropdownMenuSeparator />

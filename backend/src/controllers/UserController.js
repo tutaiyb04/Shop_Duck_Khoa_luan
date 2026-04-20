@@ -247,3 +247,44 @@ exports.updateUserStatus = async (req, res) => {
     });
   }
 };
+
+exports.toggleWishlist = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { productId } = req.body;
+
+    if (!productId) {
+      return res.status(400).json({ message: "Thiếu mã sản phẩm" });
+    }
+
+    const { isLiked } = await userService.toggleWishlistService(
+      userId,
+      productId,
+    );
+
+    return res.status(200).json({
+      message: isLiked
+        ? "Đã thêm vào danh sách yêu thích"
+        : "Đã xóa khỏi danh sách yêu thích",
+      isLiked,
+    });
+  } catch (error) {
+    console.error("Lỗi tại toggleWishlist:", error);
+    res.status(500).json({ message: error.message || "Lỗi server" });
+  }
+};
+
+exports.getWishlist = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const wishlist = await userService.getWishlistService(userId);
+
+    return res.status(200).json({
+      message: "Lấy danh sách yêu thích thành công",
+      wishlist,
+    });
+  } catch (error) {
+    console.error("Lỗi tại getWishlist:", error);
+    res.status(500).json({ message: error.message || "Lỗi server" });
+  }
+};

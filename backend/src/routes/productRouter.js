@@ -12,6 +12,8 @@ router.post(
   productController.createProduct,
 );
 router.get("/admin/all", protect, isAdmin, productController.getAdminProducts);
+router.get("/:id", productController.getProductById);
+router.get("/", productController.getAllProducts);
 router.put(
   "/:id",
   protect, // Phải đăng nhập
@@ -24,7 +26,5 @@ router.put(
   isAdmin,
   productController.updateAdminProductStatus,
 );
-router.get("/:id", productController.getProductById);
-router.get("/", productController.getAllProducts);
 
 module.exports = router;
