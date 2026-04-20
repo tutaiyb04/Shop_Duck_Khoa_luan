@@ -11,14 +11,16 @@ router.post("/reset-password", userController.resetPassword);
 router.post("/forgot-password", userController.forgotPassword);
 router.post("/register", userController.register);
 router.post("/login", userController.login);
+router.post("/wishlist/toggle", protect, userController.toggleWishlist);
+router.get("/wishlist", protect, userController.getWishlist);
 router.get("/admin/all", protect, isAdmin, userController.getUsersAdmin);
+router.get("/profile", protect, userController.getProfile);
 router.put(
   "/admin/:id/status",
   protect,
   isAdmin,
   userController.updateUserStatus,
 );
-router.get("/profile", protect, userController.getProfile);
 router.put(
   "/update-profile",
   protect,

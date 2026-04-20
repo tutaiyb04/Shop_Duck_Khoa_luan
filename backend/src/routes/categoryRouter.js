@@ -10,6 +10,12 @@ router.get(
   isAdmin,
   CategoryController.getAdminCategories,
 );
+router.get(
+  "/admin/parents-all",
+  protect,
+  isAdmin,
+  CategoryController.getAllParentsForModal,
+);
 router.post(
   "/create-category",
   protect,
@@ -22,23 +28,17 @@ router.put(
   isAdmin,
   CategoryController.updateCategory,
 );
-router.delete(
-  "/delete-category/:id",
-  protect,
-  isAdmin,
-  CategoryController.deleteCategory,
-);
 router.put(
   "/:id/restore",
   protect,
   isAdmin,
   CategoryController.restoreCategory,
 );
-router.get(
-  "/admin/parents-all",
+router.delete(
+  "/delete-category/:id",
   protect,
   isAdmin,
-  CategoryController.getAllParentsForModal,
+  CategoryController.deleteCategory,
 );
 
 module.exports = router;

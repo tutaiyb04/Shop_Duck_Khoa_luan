@@ -19,6 +19,7 @@ import UserManagement from "./pages/admin/UserManagement";
 import ProductManagement from "./pages/admin/ProductManagement";
 import ProductDetails from "./pages/products/ProductDetails";
 import ReportManagement from "./pages/admin/ReportManagement";
+import Wishlist from "./pages/products/Wishlist";
 
 function App() {
   return (
@@ -58,6 +59,9 @@ function App() {
 
               {/* Quản lý đơn hàng */}
               <Route path="/orders" element={<Orders />} />
+
+              {/* Yêu thích */}
+              <Route path="/wishlist" element={<Wishlist />} />
             </Route>
 
             <Route path="/admin" element={<AdminLayout />}>

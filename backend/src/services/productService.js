@@ -64,8 +64,6 @@ exports.getAdminProductsService = async (filters) => {
 
 exports.getProductByIdService = async (id) => {
   try {
-    // 🚀 TỐI ƯU CẤP ĐỘ CHI TIẾT:
-    // Vẫn dùng .lean() để tăng tốc độ load trang chi tiết sản phẩm lên tối đa
     const product = await Product.findById(id)
       .populate("sellerId", "username email avatar phone")
       .populate("category", "name")
