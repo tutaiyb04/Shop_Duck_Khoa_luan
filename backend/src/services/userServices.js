@@ -2,15 +2,40 @@ const dotenv = require("dotenv");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const util = require("util");
 
 const User = require("../model/User");
 const sendEmail = require("../helper/sendEmail");
 
 dotenv.config();
 
+const randomBytesAsync = util.promisify(crypto.randomBytes);
+
 exports.registerService = async (username, password, email, avatar) => {
   try {
-    const newUser = await User.create({ username, password, email, avatar });
+    // Tạo token bất đồng bộ
+    const buffer = await randomBytesAsync(32);
+    const verificationToken = buffer.toString("hex");
+    const emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // Hạn 24h
+
+    const newUser = await User.create({
+      username,
+      password,
+      email,
+      avatar,
+      emailVerificationToken: verificationToken,
+      emailVerificationExpires: emailVerificationExpires,
+    });
+
+    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+
+    sendEmail({
+      email: newUser.email,
+      subject: "Xác minh tài khoản Duck Shop",
+      html: `<h3>Chào ${newUser.username}!</h3>
+             <p>Vui lòng xác minh tài khoản bằng cách nhấn vào link: <a href="${verifyUrl}">Xác minh ngay</a></p>`,
+    }).catch((error) => console.error("Lỗi Background Email:", error));
+
     return { newUser };
   } catch (error) {
     if (error.code === 11000) {
@@ -20,6 +45,34 @@ exports.registerService = async (username, password, email, avatar) => {
     }
     throw error;
   }
+};
+
+exports.verifyEmailService = async (token) => {
+  // Thực hiện Tìm + Cập nhật + Xóa trường chỉ trong 1 request duy nhất xuống DB.
+  const updatedUser = await User.findOneAndUpdate(
+    {
+      emailVerificationToken: token,
+      emailVerificationExpires: { $gt: Date.now() }, // Token còn hạn
+    },
+    {
+      $set: {
+        isEmailVerified: true,
+        "sellerProfile.isVerified": true,
+      },
+      $unset: {
+        // Xóa thẳng 2 trường rác này khỏi DB cho nhẹ
+        emailVerificationToken: "",
+        emailVerificationExpires: "",
+      },
+    },
+    { new: true, lean: true },
+  );
+
+  if (!updatedUser) {
+    throw new Error("Token không hợp lệ hoặc đã hết hạn");
+  }
+
+  return updatedUser;
 };
 
 exports.loginService = async (username, email, password) => {

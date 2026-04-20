@@ -11,6 +11,7 @@ router.post("/reset-password", userController.resetPassword);
 router.post("/forgot-password", userController.forgotPassword);
 router.post("/register", userController.register);
 router.post("/login", userController.login);
+router.post("/verify-email", userController.verifyEmail);
 router.post("/wishlist/toggle", protect, userController.toggleWishlist);
 router.get("/wishlist", protect, userController.getWishlist);
 router.get("/admin/all", protect, isAdmin, userController.getUsersAdmin);
