@@ -20,6 +20,7 @@ import ProductManagement from "./pages/admin/ProductManagement";
 import ProductDetails from "./pages/products/ProductDetails";
 import ReportManagement from "./pages/admin/ReportManagement";
 import Wishlist from "./pages/products/Wishlist";
+import VerifyEmail from "./pages/auth/VerifiEmail";
 
 function App() {
   return (
@@ -62,6 +63,9 @@ function App() {
 
               {/* Yêu thích */}
               <Route path="/wishlist" element={<Wishlist />} />
+
+              {/* Xác thực tài khoản */}
+              <Route path="/verify-email" element={<VerifyEmail />} />
             </Route>
 
             <Route path="/admin" element={<AdminLayout />}>

@@ -2,7 +2,7 @@ import { useContext } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 
 import { AuthContext } from "@/context/AuthContext";
-import { ClipboardList, User, PlusCircle } from "lucide-react";
+import { ClipboardList, User, PlusCircle, Heart } from "lucide-react";
 import UserAvatar from "./UserAvatar";
 
 function UserSidebar() {
@@ -28,8 +28,7 @@ function UserSidebar() {
       title: "Mua hàng",
       items: [
         { path: "/orders", label: "Đơn hàng của tôi", icon: ClipboardList },
-        // GỢI Ý: Sau này muốn thêm "Sản phẩm đã thích" thì cứ paste code vào đây
-        // { path: "/wishlist", label: "Sản phẩm yêu thích", icon: Heart },
+        { path: "/wishlist", label: "Sản phẩm yêu thích", icon: Heart },
       ],
     },
   ];

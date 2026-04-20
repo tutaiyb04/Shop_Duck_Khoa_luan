@@ -103,6 +103,7 @@ exports.getProfile = (req, res) => {
         email: user.email,
         phone: user.phone,
         avatar: user.avatar,
+        isEmailVerified: user.isEmailVerified,
         address: user.buyerProfile?.shippingAddresses[0] || "",
         description: user.sellerProfile?.description,
         role: user.role,
@@ -111,8 +112,30 @@ exports.getProfile = (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Lỗi khi gọi getProfile: ", error);
+    console.log("Lỗi khi gọi getProfile: ", error);
     res.status(500).json({ message: error.message || "Lỗi server" });
+  }
+};
+
+exports.verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ message: "Thiếu mã xác minh" });
+    }
+
+    // Gọi service đã được tối ưu
+    const updatedUser = await userService.verifyEmailService(token);
+
+    res.status(200).json({
+      message: "Xác minh Email thành công! Bạn đã có thể bắt đầu bán hàng.",
+      // Trả về một phần data nếu Frontend cần cập nhật state ngay lập tức
+      isVerified: updatedUser.isEmailVerified,
+    });
+  } catch (error) {
+    console.log("Lỗi tại verifyEmail: ", error);
+    res.status(400).json({ message: error.message || "Lỗi hệ thống" });
   }
 };
 
@@ -152,7 +175,7 @@ exports.updateProfile = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Lỗi khi updateProfile: ", error);
+    console.log("Lỗi khi updateProfile: ", error);
     res.status(500).json({ message: error.message || "Lỗi server" });
   }
 };
@@ -211,7 +234,7 @@ exports.getUsersAdmin = async (req, res) => {
       currentPage,
     });
   } catch (error) {
-    console.error("Lỗi tại getUsersAdmin: ", error);
+    console.log("Lỗi tại getUsersAdmin: ", error);
     return res.status(500).json({
       message: error.message || "Lỗi server khi lấy danh sách người dùng",
     });
@@ -236,7 +259,7 @@ exports.updateUserStatus = async (req, res) => {
       user: updatedUser,
     });
   } catch (error) {
-    console.error("Lỗi tại updateUserStatus: ", error);
+    console.log("Lỗi tại updateUserStatus: ", error);
     return res.status(500).json({
       message: error.message || "Lỗi server khi cập nhật trạng thái người dùng",
     });
@@ -264,7 +287,7 @@ exports.toggleWishlist = async (req, res) => {
       isLiked,
     });
   } catch (error) {
-    console.error("Lỗi tại toggleWishlist:", error);
+    console.log("Lỗi tại toggleWishlist:", error);
     res.status(500).json({ message: error.message || "Lỗi server" });
   }
 };
@@ -279,7 +302,7 @@ exports.getWishlist = async (req, res) => {
       wishlist,
     });
   } catch (error) {
-    console.error("Lỗi tại getWishlist:", error);
+    console.log("Lỗi tại getWishlist:", error);
     res.status(500).json({ message: error.message || "Lỗi server" });
   }
 };

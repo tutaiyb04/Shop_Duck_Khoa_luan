@@ -33,6 +33,12 @@ const userSchema = new Schema(
       type: String,
       required: true,
     },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerificationToken: String,
+    emailVerificationExpires: Date,
     avatar: {
       type: String,
       default: "https://via.placeholder.com/150",
@@ -78,6 +84,8 @@ const userSchema = new Schema(
     timestamps: true,
   },
 );
+
+userSchema.index({ emailVerificationToken: 1 });
 
 // mã hóa mật khẩu trước khi lưu
 userSchema.pre("save", async function () {
