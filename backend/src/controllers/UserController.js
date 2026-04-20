@@ -35,13 +35,7 @@ exports.login = async (req, res) => {
     res.status(200).json({
       message: "Đăng nhập thành công!",
       token,
-      user: {
-        id: findUser._id,
-        username: findUser.username,
-        email: findUser.email,
-        role: findUser.role,
-        avatar: findUser.avatar,
-      },
+      user: findUser,
     });
   } catch (error) {
     console.log("Lỗi khi gọi login: ", error);
@@ -112,7 +106,8 @@ exports.getProfile = (req, res) => {
         address: user.buyerProfile?.shippingAddresses[0] || "",
         description: user.sellerProfile?.description,
         role: user.role,
-        sellerProfile: user.sellerProfile, // Có thể trả về thêm nếu cần hiển thị
+        sellerProfile: user.sellerProfile,
+        buyerProfile: user.buyerProfile,
       },
     });
   } catch (error) {

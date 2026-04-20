@@ -58,10 +58,15 @@ exports.loginService = async (username, email, password) => {
     username: findUser.username,
     email: findUser.email,
     role: findUser.role,
+    avatar: findUser.avatar,
+    address: findUser.buyerProfile?.shippingAddresses[0] || "",
+    description: findUser.sellerProfile?.description,
+    sellerProfile: findUser.sellerProfile,
+    buyerProfile: findUser.buyerProfile,
   };
   const secretKey = process.env.SECRET_KEY;
   const token = jwt.sign(payload, secretKey, {
-    expiresIn: "1d",
+    expiresIn: "8h",
   });
 
   // Xóa password trước khi trả về Frontend (vì dùng lean() nên phải xóa thủ công)
@@ -188,7 +193,7 @@ exports.loginWithGoogleService = async (accessToken) => {
     };
 
     const ggToken = jwt.sign(payloadJwt, process.env.SECRET_KEY, {
-      expiresIn: "1d",
+      expiresIn: "8h",
     });
 
     return { user: user, ggToken: ggToken };
