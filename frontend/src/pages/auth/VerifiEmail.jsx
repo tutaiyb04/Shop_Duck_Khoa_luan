@@ -11,7 +11,7 @@ function VerifyEmail() {
         {/* TRẠNG THÁI 1: ĐANG LOAD */}
         {status === "loading" && (
           <div className="flex flex-col items-center gap-4 py-6">
-            <Loader2 className="w-16 h-16 text-yellow-500 animate-spin" />
+            <Loader2 className="w-16 h-16 !text-yellow-500 animate-spin" />
             <h2 className="text-xl font-bold text-gray-800">
               Đang xác minh...
             </h2>
@@ -44,7 +44,7 @@ function VerifyEmail() {
                   navigate("/login"); // Chưa đăng nhập -> Bắt đi đăng nhập
                 }
               }}
-              className="mt-6 w-full h-12 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl font-medium"
+              className="mt-6 w-full h-12 !bg-yellow-500 hover:!bg-yellow-600 text-white rounded-xl font-medium !transition-colors !border-0 !ring-0 !outline-none"
             >
               {/* Đổi text nút bấm tương ứng */}
               {localStorage.getItem("token")
@@ -72,13 +72,13 @@ function VerifyEmail() {
               <Button
                 variant="outline"
                 onClick={() => navigate("/")}
-                className="w-1/2 h-12 rounded-xl font-medium"
+                className="w-1/2 h-12 rounded-xl font-medium !transition-colors !border-1 !bg-gray-200 hover:!bg-gray-300 hover:!border-gray-200 !ring-0 !outline-none"
               >
                 Về trang chủ
               </Button>
               <Button
                 onClick={() => navigate("/login")}
-                className="w-1/2 h-12 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl font-medium"
+                className="w-1/2 h-12 !bg-yellow-500 hover:!bg-yellow-600 text-white rounded-xl font-medium !transition-colors !border-0 !ring-0 !outline-none"
               >
                 Đăng nhập lại
               </Button>
