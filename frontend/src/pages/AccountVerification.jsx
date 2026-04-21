@@ -1,9 +1,10 @@
 import { useState, useContext } from "react";
+import { Button } from "@/components/ui/button";
+// Mình import thêm icon ShieldCheck cho Admin
+import { Mail, CheckCircle, AlertCircle, ShieldCheck } from "lucide-react";
+import toast from "react-hot-toast";
 import { AuthContext } from "@/context/AuthContext";
 import { API } from "@/services/axios";
-import { Button } from "@/components/ui/button";
-import { Mail, CheckCircle, AlertCircle } from "lucide-react";
-import toast from "react-hot-toast";
 
 const AccountVerification = () => {
   const { user } = useContext(AuthContext);
@@ -25,7 +26,17 @@ const AccountVerification = () => {
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
       <h2 className="text-2xl font-bold mb-6">Xác minh danh tính</h2>
 
-      {user?.isEmailVerified ? (
+      {user?.role === "admin" ? (
+        <div className="p-6 bg-purple-50 rounded-2xl border border-purple-100 flex gap-4">
+          <ShieldCheck className="w-6 h-6 text-purple-500 shrink-0" />
+          <div>
+            <p className="text-purple-700 font-medium">Quyền Quản trị viên</p>
+            <p className="text-purple-600 text-sm">
+              Tài khoản Admin của hệ thống được bỏ qua bước xác minh này.
+            </p>
+          </div>
+        </div>
+      ) : user?.isEmailVerified ? (
         <div className="flex flex-col items-center py-10 bg-green-50 rounded-2xl border border-green-100">
           <CheckCircle className="w-16 h-16 text-green-500 mb-4" />
           <p className="text-green-700 font-medium">
@@ -68,7 +79,7 @@ const AccountVerification = () => {
             <Button
               onClick={handleRequestVerify}
               disabled={loading}
-              className="w-full md:w-auto px-10 bg-yellow-500 hover:bg-yellow-600"
+              className="w-full md:w-auto px-10 !bg-yellow-500 hover:!bg-yellow-600 !transition-colors !border-0 !ring-0 !outline-none"
             >
               {loading ? "Đang gửi..." : "Gửi email xác minh ngay"}
             </Button>

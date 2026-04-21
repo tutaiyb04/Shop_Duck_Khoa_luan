@@ -79,16 +79,12 @@ exports.getProductByIdService = async (id) => {
     const rawSellerId = product.sellerId?._id || product.sellerId;
     const rawCategoryId = product.category?._id || product.category;
 
-    console.log("rawSellerId", rawSellerId);
-    console.log("rawCategoryId", rawCategoryId);
-
     let totalProducts = 0;
     let totalSold = 0;
     let relatedProducts = [];
     let recommendedProducts = [];
 
     if (rawSellerId && rawCategoryId) {
-      // Chú ý: Bỏ chữ "const" ở đây đi, chỉ là gán lại giá trị cho các biến "let" ở trên
       [totalProducts, totalSold, relatedProducts, recommendedProducts] =
         await Promise.all([
           Product.countDocuments({ rawSellerId }),
@@ -136,8 +132,17 @@ exports.getProductByIdService = async (id) => {
 
 exports.createProductService = async (sellerId, productData, files) => {
   try {
-    const { name, category, price, condition, description, lat, lng, address } =
-      productData;
+    const {
+      name,
+      category,
+      price,
+      quantity,
+      condition,
+      description,
+      lat,
+      lng,
+      address,
+    } = productData;
 
     const imageUrls = files?.map((file) => file.path) || [];
 
@@ -149,6 +154,7 @@ exports.createProductService = async (sellerId, productData, files) => {
       name,
       category,
       price: Number(price),
+      quantity: Number(quantity),
       condition,
       description,
       images: imageUrls,

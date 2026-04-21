@@ -69,7 +69,7 @@ function LoginForm({ form, onSubmit, isLoading, error }) {
 
       <Button
         type="submit"
-        className="w-full !bg-yellow-500 text-white hover:!bg-yellow-600 transition-colors h-10 !border-0 !ring-0 !outline-none"
+        className="w-full !bg-yellow-500 text-white hover:!bg-yellow-600 !transition-colors h-10 !border-0 !ring-0 !outline-none"
         disabled={isLoading}
       >
         {isLoading ? "Đang xử lý..." : "Đăng nhập"}
