@@ -25,6 +25,11 @@ const productSchema = z.object({
   location: z
     .string()
     .min(1, { message: "Vui lòng nhập khu vực bán (VD: Hà Nội)" }),
+  attributes: z
+    .object({
+      size: z.string().optional(),
+    })
+    .optional(),
 });
 
 export function useCreateProduct() {
@@ -67,6 +72,9 @@ export function useCreateProduct() {
       condition: "",
       description: "",
       location: "",
+      attributes: {
+        size: "",
+      },
     },
   });
 
@@ -130,6 +138,9 @@ export function useCreateProduct() {
       formData.append("address", data.location);
       formData.append("lat", coords.lat);
       formData.append("lng", coords.lng);
+      if (data.attributes) {
+        formData.append("attributes", JSON.stringify(data.attributes));
+      }
 
       images.forEach((img) => {
         formData.append("images", img.file);

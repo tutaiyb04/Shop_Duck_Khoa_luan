@@ -87,8 +87,8 @@ exports.getProductByIdService = async (id) => {
     if (rawSellerId && rawCategoryId) {
       [totalProducts, totalSold, relatedProducts, recommendedProducts] =
         await Promise.all([
-          Product.countDocuments({ rawSellerId }),
-          Product.countDocuments({ rawSellerId, status: "SOLD" }),
+          Product.countDocuments({ sellerId: rawSellerId }),
+          Product.countDocuments({ sellerId: rawSellerId, status: "SOLD" }),
 
           // Sản phẩm liên quan
           Product.find({
@@ -142,6 +142,7 @@ exports.createProductService = async (sellerId, productData, files) => {
       lat,
       lng,
       address,
+      attributes,
     } = productData;
 
     const imageUrls = files?.map((file) => file.path) || [];
@@ -157,6 +158,7 @@ exports.createProductService = async (sellerId, productData, files) => {
       quantity: Number(quantity),
       condition,
       description,
+      attributes: attributes ? JSON.parse(attributes) : {},
       images: imageUrls,
       sellerId,
       address,
@@ -178,7 +180,7 @@ exports.updateProductStatusService = async (id, status, adminNote) => {
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
       { status, adminNote },
-      { new: true, runValidators: true },
+      { returnDocument: "after", runValidators: true },
     );
 
     if (!updatedProduct) throw new Error("Không tìm thấy sản phẩm");
