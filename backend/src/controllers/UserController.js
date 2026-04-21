@@ -139,6 +139,20 @@ exports.verifyEmail = async (req, res) => {
   }
 };
 
+exports.requestEmailVerify = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    await userService.sendVerificationEmailService(userId);
+    res
+      .status(200)
+      .json({
+        message: "Email xác minh đã được gửi! Vui lòng kiểm tra hộp thư.",
+      });
+  } catch (error) {
+    res.status(400).json({ message: error.message || "Lỗi hệ thống" });
+  }
+};
+
 exports.updateProfile = async (req, res) => {
   try {
     // Kiểm tra an toàn biến req.user từ middleware

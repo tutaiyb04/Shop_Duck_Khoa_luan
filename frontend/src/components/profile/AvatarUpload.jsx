@@ -21,7 +21,7 @@ function AvatarUpload({ user, previewImage, onFileSelect, className }) {
       <Avatar className="h-40 w-40 object-cover">
         <AvatarImage src={previewImage} />
         <AvatarFallback>
-          {user.username?.charAt(0).toUpperCase()}
+          {user?.username?.charAt(0).toUpperCase()}
         </AvatarFallback>
       </Avatar>
       <div className="flex items-center space-x-2">

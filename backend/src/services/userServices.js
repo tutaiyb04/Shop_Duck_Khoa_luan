@@ -13,29 +13,13 @@ const randomBytesAsync = util.promisify(crypto.randomBytes);
 
 exports.registerService = async (username, password, email, avatar) => {
   try {
-    // Tạo token bất đồng bộ
-    const buffer = await randomBytesAsync(32);
-    const verificationToken = buffer.toString("hex");
-    const emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // Hạn 24h
-
     const newUser = await User.create({
       username,
       password,
       email,
       avatar,
-      emailVerificationToken: verificationToken,
-      emailVerificationExpires: emailVerificationExpires,
+      // Mặc định isEmailVerified là false (đảm bảo schema của bạn có trường này)
     });
-
-    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
-
-    sendEmail({
-      email: newUser.email,
-      subject: "Xác minh tài khoản Duck Shop",
-      html: `<h3>Chào ${newUser.username}!</h3>
-             <p>Vui lòng xác minh tài khoản bằng cách nhấn vào link: <a href="${verifyUrl}">Xác minh ngay</a></p>`,
-    }).catch((error) => console.error("Lỗi Background Email:", error));
-
     return { newUser };
   } catch (error) {
     if (error.code === 11000) {
@@ -47,32 +31,67 @@ exports.registerService = async (username, password, email, avatar) => {
   }
 };
 
-exports.verifyEmailService = async (token) => {
-  // Thực hiện Tìm + Cập nhật + Xóa trường chỉ trong 1 request duy nhất xuống DB.
-  const updatedUser = await User.findOneAndUpdate(
-    {
-      emailVerificationToken: token,
-      emailVerificationExpires: { $gt: Date.now() }, // Token còn hạn
-    },
-    {
-      $set: {
-        isEmailVerified: true,
-        "sellerProfile.isVerified": true,
-      },
-      $unset: {
-        // Xóa thẳng 2 trường rác này khỏi DB cho nhẹ
-        emailVerificationToken: "",
-        emailVerificationExpires: "",
-      },
-    },
-    { new: true, lean: true },
-  );
+exports.sendVerificationEmailService = async (userId) => {
+  const user = await User.findById(userId);
+  if (!user) throw new Error("Người dùng không tồn tại");
 
-  if (!updatedUser) {
-    throw new Error("Token không hợp lệ hoặc đã hết hạn");
+  // Chỉ cho phép user type local xác minh
+  if (user.authType !== "local") {
+    throw new Error("Tài khoản mạng xã hội đã được xác minh tự động");
   }
 
-  return updatedUser;
+  if (user.isEmailVerified) {
+    throw new Error("Email này đã được xác minh rồi");
+  }
+
+  // Tạo token mới
+  const buffer = await randomBytesAsync(32);
+  const verificationToken = buffer.toString("hex");
+  const emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000;
+
+  user.emailVerificationToken = verificationToken;
+  user.emailVerificationExpires = emailVerificationExpires;
+  await user.save();
+
+  const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+
+  await sendEmail({
+    email: user.email,
+    subject: "Xác minh tài khoản Duck Shop",
+    html: `<h3>Chào ${user.username}!</h3>
+           <p>Bạn vừa yêu cầu gửi mã xác minh. Vui lòng nhấn vào link sau để hoàn tất: 
+           <a href="${verifyUrl}">Xác minh ngay</a></p>
+           <p>Link có hiệu lực trong 24h.</p>`,
+  });
+
+  return true;
+};
+
+exports.verifyEmailService = async (token) => {
+  // Tìm user có token này trước để phân biệt lỗi
+  const user = await User.findOne({ emailVerificationToken: token });
+
+  if (!user) {
+    // Nếu không thấy user có token này, có thể họ đã xác minh rồi (token đã bị xóa)
+    throw new Error(
+      "Liên kết không hợp lệ hoặc bạn đã xác minh tài khoản trước đó.",
+    );
+  }
+
+  if (user.emailVerificationExpires < Date.now()) {
+    throw new Error(
+      "Liên kết xác minh đã hết hạn. Vui lòng yêu cầu gửi lại email mới.",
+    );
+  }
+
+  // Nếu mọi thứ ổn, tiến hành cập nhật
+  user.isEmailVerified = true;
+  user.emailVerificationToken = undefined;
+  user.emailVerificationExpires = undefined;
+  user["sellerProfile.isVerified"] = true; // Kích hoạt quyền bán hàng
+  await user.save();
+
+  return user;
 };
 
 exports.loginService = async (username, email, password) => {
