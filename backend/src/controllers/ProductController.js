@@ -45,6 +45,7 @@ exports.getAdminProducts = async (req, res) => {
 exports.getProductById = async (req, res) => {
   try {
     const { id } = req.params;
+
     const { product, relatedProducts, recommendedProducts } =
       await productService.getProductByIdService(id);
 

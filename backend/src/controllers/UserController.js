@@ -143,11 +143,9 @@ exports.requestEmailVerify = async (req, res) => {
   try {
     const userId = req.user.id;
     await userService.sendVerificationEmailService(userId);
-    res
-      .status(200)
-      .json({
-        message: "Email xác minh đã được gửi! Vui lòng kiểm tra hộp thư.",
-      });
+    res.status(200).json({
+      message: "Email xác minh đã được gửi! Vui lòng kiểm tra hộp thư.",
+    });
   } catch (error) {
     res.status(400).json({ message: error.message || "Lỗi hệ thống" });
   }
@@ -206,10 +204,10 @@ exports.updateProfile = async (req, res) => {
 
 //     // 2. Khởi tạo tài khoản Admin
 //     const newAdmin = new User({
-//       username: "superadmin",
+//       username: "Admin",
 //       phone: "0344076552",
 //       email: "tutai241104@gmail.com",
-//       password: "Admin@1234", // Nhập mk rõ ràng, Mongoose pre-save sẽ tự băm nó!
+//       password: "Admin@1234",
 //       role: "admin",
 //       authType: "local",
 //     });

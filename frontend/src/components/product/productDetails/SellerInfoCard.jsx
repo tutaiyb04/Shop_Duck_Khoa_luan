@@ -23,7 +23,7 @@ function SellerInfoCard({ seller }) {
   const responseRate = seller?.sellerProfile?.responseRate || 0;
 
   const isReliable = rating >= 4.5 && totalReviews >= 10; // Đáng tin cậy: >= 4.5 sao và >= 10 đánh giá
-  const isReputable = seller?.isEmailVerified; // Uy tín: Đã xác minh tài khoản
+  const isReputable = seller?.isEmailVerified || seller?.authType === "google"; // Uy tín: Đã xác minh tài khoản
   const isFastResponse = responseRate >= 90; // Phản hồi nhanh: Tỷ lệ >= 90%
   const isFastDelivery = rating >= 4.0;
   return (
@@ -41,7 +41,7 @@ function SellerInfoCard({ seller }) {
                   user={seller}
                   className="w-24 h-24 shadow-sm text-2xl"
                 />
-                {seller?.isEmailVerified ? (
+                {isReputable ? (
                   <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-yellow-600 text-white text-sm font-medium px-2 py-1 rounded flex items-center gap-1 whitespace-nowrap z-10 border border-white">
                     <BadgeCheck className="w-4 h-4" /> Đã xác minh
                   </div>
@@ -152,7 +152,7 @@ function SellerInfoCard({ seller }) {
               !isReputable &&
               !isFastResponse &&
               !isFastDelivery && (
-                <div className="text-xs text-gray-400 italic flex items-center h-full">
+                <div className="text-xs text-gray-400 italic flex items-center justify-center h-full">
                   Shop mới / Chưa có huy hiệu
                 </div>
               )}
