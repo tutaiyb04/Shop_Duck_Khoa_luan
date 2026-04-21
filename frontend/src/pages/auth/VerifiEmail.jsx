@@ -32,11 +32,24 @@ function VerifyEmail() {
               Xác minh thành công!
             </h2>
             <p className="text-gray-600 text-sm leading-relaxed">{message}</p>
+
+            {/* KIỂM TRA ĐĂNG NHẬP THÔNG MINH */}
             <Button
-              onClick={() => navigate("/profile")}
+              onClick={() => {
+                // Kiểm tra xem trình duyệt hiện tại có token không
+                const hasToken = localStorage.getItem("token");
+                if (hasToken) {
+                  navigate("/profile"); // Đã đăng nhập -> Cho vào trang cá nhân
+                } else {
+                  navigate("/login"); // Chưa đăng nhập -> Bắt đi đăng nhập
+                }
+              }}
               className="mt-6 w-full h-12 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl font-medium"
             >
-              Vào trang cá nhân
+              {/* Đổi text nút bấm tương ứng */}
+              {localStorage.getItem("token")
+                ? "Vào trang cá nhân"
+                : "Đăng nhập để tiếp tục"}
             </Button>
           </div>
         )}
@@ -50,7 +63,11 @@ function VerifyEmail() {
             <h2 className="text-2xl font-bold text-gray-800">
               Xác minh thất bại
             </h2>
-            <p className="text-gray-600 text-sm leading-relaxed">{message}</p>
+            <p className="text-gray-600 text-sm leading-relaxed">
+              {message.includes("xác minh trước đó")
+                ? "Có vẻ như bạn đã hoàn tất việc xác minh từ trước. Hãy kiểm tra lại trạng thái trong hồ sơ nhé!"
+                : message}
+            </p>
             <div className="flex gap-3 w-full mt-6">
               <Button
                 variant="outline"

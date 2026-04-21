@@ -21,6 +21,7 @@ import ProductDetails from "./pages/products/ProductDetails";
 import ReportManagement from "./pages/admin/ReportManagement";
 import Wishlist from "./pages/products/Wishlist";
 import VerifyEmail from "./pages/auth/VerifiEmail";
+import AccountVerification from "./pages/AccountVerification";
 
 function App() {
   return (
@@ -64,8 +65,11 @@ function App() {
               {/* Yêu thích */}
               <Route path="/wishlist" element={<Wishlist />} />
 
-              {/* Xác thực tài khoản */}
+              {/* Xác minh tài khoản khi ấn link ở trong email */}
               <Route path="/verify-email" element={<VerifyEmail />} />
+
+              {/* Xác nhận gửi email xác minh */}
+              <Route path="/verify" element={<AccountVerification />} />
             </Route>
 
             <Route path="/admin" element={<AdminLayout />}>
