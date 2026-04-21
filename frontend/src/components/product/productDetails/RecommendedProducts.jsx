@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import ProductCard from "../ProductCard";
 
 function RecommendedProducts({ products }) {
   if (!products || products.length === 0) return null;

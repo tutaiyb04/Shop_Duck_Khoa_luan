@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardFooter } from "../ui/card";
+import { Card, CardContent } from "../ui/card";
 import { MapPin } from "lucide-react";
 
 function ProductCard({ product }) {

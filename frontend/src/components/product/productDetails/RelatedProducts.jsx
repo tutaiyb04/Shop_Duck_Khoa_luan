@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import ProductCard from "../ProductCard";
 
 function RelatedProducts({ products }) {
   if (!products || products.length === 0) return null;
