@@ -254,6 +254,7 @@ exports.loginWithGoogleService = async (accessToken) => {
         avatar: picture,
         authType: "google",
         googleId: sub,
+        isEmailVerified: true,
       });
     }
 

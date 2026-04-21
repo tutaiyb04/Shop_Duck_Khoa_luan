@@ -95,6 +95,8 @@ exports.createProduct = async (req, res) => {
     const productData = req.body;
     const files = req.files;
 
+    console.log("productData", productData);
+
     const { newProduct } = await productService.createProductService(
       sellerId,
       productData,

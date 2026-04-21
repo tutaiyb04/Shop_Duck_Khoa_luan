@@ -103,6 +103,7 @@ exports.getProfile = (req, res) => {
         email: user.email,
         phone: user.phone,
         avatar: user.avatar,
+        authType: user.authType,
         isEmailVerified: user.isEmailVerified,
         address: user.buyerProfile?.shippingAddresses[0] || "",
         description: user.sellerProfile?.description,

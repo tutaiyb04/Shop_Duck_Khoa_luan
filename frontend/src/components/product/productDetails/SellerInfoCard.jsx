@@ -26,6 +26,7 @@ function SellerInfoCard({ seller }) {
   const isReputable = seller?.isEmailVerified || seller?.authType === "google"; // Uy tín: Đã xác minh tài khoản
   const isFastResponse = responseRate >= 90; // Phản hồi nhanh: Tỷ lệ >= 90%
   const isFastDelivery = rating >= 4.0;
+
   return (
     <Card className="border shadow-sm bg-white overflow-hidden rounded-xl p-0">
       <CardContent className="px-10 py-6">
@@ -41,7 +42,7 @@ function SellerInfoCard({ seller }) {
                   user={seller}
                   className="w-24 h-24 shadow-sm text-2xl"
                 />
-                {isReputable ? (
+                {seller?.isEmailVerified || seller?.authType === "google" ? (
                   <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-yellow-600 text-white text-sm font-medium px-2 py-1 rounded flex items-center gap-1 whitespace-nowrap z-10 border border-white">
                     <BadgeCheck className="w-4 h-4" /> Đã xác minh
                   </div>
