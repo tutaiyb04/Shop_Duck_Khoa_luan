@@ -7,6 +7,8 @@ import { AuthContext } from "@/context/AuthContext";
 export function useProductDetails() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [recommendedProducts, setRecommendedProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isReporting, setIsReporting] = useState(false);
   const [buyQuantity, setBuyQuantity] = useState(1);
@@ -124,6 +126,8 @@ export function useProductDetails() {
       try {
         const response = await API.get(`/products/${id}`);
         setProduct(response.data.product);
+        setRelatedProducts(response.data.relatedProducts || []);
+        setRecommendedProducts(response.data.recommendedProducts || []);
       } catch (error) {
         toast.error("Không thể tải thông tin sản phẩm");
         console.log(error);
@@ -136,6 +140,8 @@ export function useProductDetails() {
 
   return {
     product,
+    relatedProducts,
+    recommendedProducts,
     isLoading,
     isReporting,
     handleSendReport,

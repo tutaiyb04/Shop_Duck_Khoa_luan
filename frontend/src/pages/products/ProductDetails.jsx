@@ -19,6 +19,8 @@ import RelatedProducts from "@/components/product/productDetails/RelatedProducts
 function ProductDetails() {
   const {
     product,
+    relatedProducts,
+    recommendedProducts,
     isLoading,
     isReporting,
     handleSendReport,
@@ -116,11 +118,11 @@ function ProductDetails() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
         <div className="lg:col-span-9 flex flex-col gap-6">
           <ProductDescription product={product} />
-          <RelatedProducts />
+          <RelatedProducts products={relatedProducts} />
         </div>
 
         <div className="lg:col-span-3">
-          <RecommendedProducts />
+          <RecommendedProducts products={recommendedProducts} />
         </div>
       </div>
 

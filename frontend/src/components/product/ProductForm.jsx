@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import CategoryMegaMenu from "./CategoryMageMenu";
-import Mappicker from "./Mappicker";
+import MapPicker from "./MapPicker";
 
 function ProductForm({
   form,
@@ -166,7 +166,7 @@ function ProductForm({
                     {...field}
                   />
                   {/* Hiển thị bản đồ OpenStreetMap */}
-                  <Mappicker
+                  <MapPicker
                     searchAddress={addressValue}
                     onLocationSelect={(loc) => {
                       form.setValue("location", loc.address); // Điền địa chỉ vào input

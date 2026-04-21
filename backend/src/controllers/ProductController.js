@@ -45,11 +45,14 @@ exports.getAdminProducts = async (req, res) => {
 exports.getProductById = async (req, res) => {
   try {
     const { id } = req.params;
-    const { product } = await productService.getProductByIdService(id);
+    const { product, relatedProducts, recommendedProducts } =
+      await productService.getProductByIdService(id);
 
     return res.status(200).json({
       message: "Lấy chi tiết sản phẩm thành công",
       product,
+      relatedProducts,
+      recommendedProducts,
     });
   } catch (error) {
     console.error("Lỗi tại getProductById:", error);

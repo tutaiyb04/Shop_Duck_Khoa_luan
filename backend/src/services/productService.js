@@ -65,7 +65,10 @@ exports.getAdminProductsService = async (filters) => {
 exports.getProductByIdService = async (id) => {
   try {
     const product = await Product.findById(id)
-      .populate("sellerId", "username email avatar phone")
+      .populate(
+        "sellerId",
+        "username email avatar phone isEmailVerified sellerProfile",
+      )
       .populate("category", "name")
       .lean();
 
@@ -73,7 +76,45 @@ exports.getProductByIdService = async (id) => {
       throw new Error("Sản phẩm không tồn tại");
     }
 
-    return { product };
+    const sellerId = product.sellerId._id;
+    const categoryId = product.category._id;
+
+    const [totalProducts, totalSold, relatedProducts, recommendedProducts] =
+      await Promise.all([
+        Product.countDocuments({ sellerId }),
+        Product.countDocuments({ sellerId, status: "SOLD" }),
+
+        // Sản phẩm liên quan (loại trừ sp hiện tại)
+        Product.find({
+          category: categoryId,
+          _id: { $ne: id },
+          status: "AVAILABLE",
+        })
+          .sort({ createdAt: -1 })
+          .limit(8)
+          .lean(),
+
+        // 2. Có thể bạn sẽ thích
+        Product.aggregate([
+          {
+            $match: {
+              category: categoryId,
+              _id: { $ne: product._id },
+              status: "AVAILABLE",
+            },
+          },
+          { $sample: { size: 3 } },
+        ]),
+      ]);
+
+    product.sellerId.totalProducts = totalProducts;
+    product.sellerId.totalSold = totalSold;
+
+    return {
+      product,
+      relatedProducts,
+      recommendedProducts,
+    };
   } catch (error) {
     console.error("Lỗi tại getProductByIdService: ", error);
     throw new Error("Không thể lấy thông tin chi tiết sản phẩm");
