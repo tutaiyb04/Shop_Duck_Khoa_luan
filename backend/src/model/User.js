@@ -54,6 +54,8 @@ const userSchema = new Schema(
       storeName: { type: String },
       description: { type: String },
       balance: { type: Number, default: 0 }, // Tiền bán hàng tạm giữ
+      totalReviews: { type: Number, default: 0 }, // Thêm trường này để Review update được
+      responseRate: { type: Number, default: 100 },
     },
     // Thông tin người mua
     buyerProfile: {

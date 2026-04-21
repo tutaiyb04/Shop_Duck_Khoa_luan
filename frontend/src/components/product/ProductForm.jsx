@@ -131,6 +131,30 @@ function ProductForm({
 
         <FormField
           control={form.control}
+          name="attributes.size"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-lg font-bold text-gray-900">
+                Kích thước{" "}
+                <span className="text-sm font-normal text-gray-500">
+                  (Không bắt buộc)
+                </span>
+              </FormLabel>
+              <FormControl>
+                <Input
+                  className="h-10 text-md bg-gray-50 !ring-0 focus-visible:border-yellow-500"
+                  placeholder="XL, 24x24, 15 inch..."
+                  {...field}
+                  value={field.value || ""}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="description"
           render={({ field }) => (
             <FormItem>
