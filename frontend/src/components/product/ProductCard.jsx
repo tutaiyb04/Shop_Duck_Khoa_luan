@@ -38,11 +38,18 @@ function ProductCard({ product }) {
           {formatPrice(product.price)}
         </p>
 
-        <div className="mt-auto pt-2 flex items-center gap-1 text-gray-400 border-t border-gray-50">
-          <MapPin size={12} className="shrink-0" />
-          <span className="text-[11px] truncate">
-            {product.address || "Hà Nội"}
-          </span>
+        <div className="mt-auto pt-2 flex flex-col gap-0.5 border-t border-gray-50">
+          {typeof product.distance === "number" && (
+            <span className="text-[11px] font-medium text-yellow-700">
+              Cách bạn ~{(product.distance / 1000).toFixed(1)} km
+            </span>
+          )}
+          <div className="flex items-center gap-1 text-gray-400">
+            <MapPin size={12} className="shrink-0" />
+            <span className="text-[11px] truncate">
+              {product.address || "Hà Nội"}
+            </span>
+          </div>
         </div>
       </CardContent>
     </Card>

@@ -3,7 +3,26 @@ import { useGetProduct } from "@/hooks/productHooks/useGetProduct";
 import ProductCard from "@/components/product/ProductCard";
 
 function Home() {
-  const { products, isLoading } = useGetProduct();
+  const { products, isLoading, activeSearch, hasLocationFilter } =
+    useGetProduct();
+
+  const isFiltered = Boolean(activeSearch || hasLocationFilter);
+
+  let sectionTitle = "Sản phẩm mới đăng";
+  if (activeSearch && hasLocationFilter) {
+    sectionTitle = `Kết quả “${activeSearch}” gần bạn`;
+  } else if (activeSearch) {
+    sectionTitle = `Kết quả cho “${activeSearch}”`;
+  } else if (hasLocationFilter) {
+    sectionTitle = "Sản phẩm gần bạn";
+  }
+
+  let emptyMessage = "Chưa có sản phẩm nào được rao bán.";
+  if (isFiltered) {
+    emptyMessage = activeSearch
+      ? `Không tìm thấy sản phẩm phù hợp với “${activeSearch}”.`
+      : "Không có sản phẩm nào trong bán kính đã chọn.";
+  }
 
   return (
     <div className="min-h-screen bg-amber-50 w-full pb-10 sm:pb-20">
@@ -21,7 +40,7 @@ function Home() {
 
       <div className="container mx-auto px-2 sm:px-4 mt-4 sm:mt-8 max-w-7xl">
         <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 sm:mb-6 pl-2 sm:pl-0">
-          Sản phẩm mới đăng
+          {sectionTitle}
         </h2>
 
         {isLoading ? (
@@ -30,7 +49,7 @@ function Home() {
           </div>
         ) : products.length === 0 ? (
           <div className="text-center py-10 sm:py-20 bg-white rounded-xl border border-dashed text-gray-400 mx-2 sm:mx-0 text-sm sm:text-base">
-            Chưa có sản phẩm nào được rao bán.
+            {emptyMessage}
           </div>
         ) : (
           /* Tối ưu Gap trên Mobile: dùng gap-2 hoặc gap-3 thay vì gap-4 */
