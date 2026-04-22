@@ -56,9 +56,8 @@ export default function CategoryMegaMenu({ form, categories }) {
       {isCategoryOpen && (
         <div
           className="absolute top-[70px] left-0 z-50 bg-white border border-gray-200 shadow-2xl rounded-lg flex h-[350px] animate-in fade-in zoom-in-95 duration-200 max-w-[calc(100vw-2rem)]"
-          onMouseLeave={() => setHoveredParent(null)} // Tự cụp cột phải lại khi chuột rời khỏi menu
+          onMouseLeave={() => setHoveredParent(null)}
         >
-          {/* CỘT TRÁI: Luôn hiển thị, cố định 300px */}
           <div className="w-[280px] sm:w-[300px] border-r border-gray-100 overflow-y-auto bg-gray-50/50 py-2 shrink-0">
             {mainCategories.map((cat) => {
               const isActive =
@@ -78,7 +77,6 @@ export default function CategoryMegaMenu({ form, categories }) {
                   }`}
                 >
                   <span className="text-sm">{cat.name}</span>
-                  {/* CHỈ HIỆN MŨI TÊN KHI CÓ DANH MỤC CON */}
                   {hasChildren && (
                     <ChevronRight
                       className={`w-4 h-4 transition-transform ${isActive ? "opacity-100" : "opacity-40"}`}
@@ -89,7 +87,6 @@ export default function CategoryMegaMenu({ form, categories }) {
             })}
           </div>
 
-          {/* CHỈ RENDER KHI CÓ DANH MỤC CON */}
           {currentSubCategories.length > 0 && (
             <div className="w-[280px] sm:w-[300px] overflow-y-auto bg-white py-2 shrink-0 animate-in slide-in-from-left-2 duration-200">
               {currentSubCategories.map((child) => (

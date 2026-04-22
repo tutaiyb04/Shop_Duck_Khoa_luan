@@ -60,7 +60,6 @@ function ProductForm({
             control={form.control}
             name="condition"
             render={({ field }) => {
-              // 1. Loại bỏ khoảng trắng thừa và ép đồng bộ chuẩn Unicode tiếng Việt
               const safeValue = field.value
                 ? String(field.value).trim().normalize("NFC")
                 : "";
@@ -73,7 +72,7 @@ function ProductForm({
 
                   <Select
                     onValueChange={field.onChange}
-                    value={safeValue} // Dùng giá trị đã được làm sạch
+                    value={safeValue}
                   >
                     <FormControl>
                       <SelectTrigger className="!h-10 !text-md hover:!border-yellow-500 focus:!border-yellow-500 transition-colors !border-1 !border-gray-200">
@@ -82,7 +81,6 @@ function ProductForm({
                     </FormControl>
                     <SelectContent>
                       {conditions.map((cond, index) => {
-                        // 2. Làm sạch tương tự cho các Option trong menu
                         const safeCond = String(cond).trim().normalize("NFC");
 
                         return (
