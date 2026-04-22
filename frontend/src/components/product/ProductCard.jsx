@@ -31,7 +31,10 @@ function ProductCard({ product }) {
 
       {/* Thông tin chính */}
       <CardContent className="p-2 flex flex-col flex-1 justify-between">
-        <h3 className="text-sm font-medium text-gray-800 line-clamp-2 leading-snug group-hover:text-yellow-600 transition-colors">
+        <h3
+          className="text-sm font-medium text-gray-800 min-w-0 w-full truncate leading-snug group-hover:text-yellow-600 transition-colors"
+          title={product.name}
+        >
           {product.name}
         </h3>
         <p className="mt-1 text-black font-bold text-base">
