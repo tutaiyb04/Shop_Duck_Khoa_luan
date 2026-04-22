@@ -26,9 +26,6 @@ function ProductDetails() {
     handleSendReport,
     handlePrevImage,
     handleNextImage,
-    handleDecrease,
-    handleIncrease,
-    buyQuantity,
     maxQuantity,
     activeImage,
     isReportModalOpen,
@@ -107,10 +104,7 @@ function ProductDetails() {
             <div className="md:col-span-1 lg:col-span-7">
               <ProductPurchasePanel
                 product={product}
-                buyQuantity={buyQuantity}
                 maxQuantity={maxQuantity}
-                handleDecrease={handleDecrease}
-                handleIncrease={handleIncrease}
               />
             </div>
           </div>

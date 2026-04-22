@@ -24,8 +24,6 @@ exports.getAllProductsService = async (filters = {}) => {
       lat && lng && Number.isFinite(lngN) && Number.isFinite(latN);
     const maxDistanceM = parseInt(radius, 10) || 5000;
 
-    // --- Lọc theo vị trí: dùng $geoNear ở đầu pipeline → thứ tự gần → xa, không bị
-    //     xung đột với $near + .sort(createdAt) trên find (MongoDB 8+).
     if (hasValidGeo) {
       const geoQuery = { status: "AVAILABLE" };
       if (search) {
@@ -92,7 +90,6 @@ exports.getAllProductsService = async (filters = {}) => {
       };
     }
 
-    // --- Không có vị trí: sort theo bài mới
     let query = { status: "AVAILABLE" };
     if (search) {
       query.name = {

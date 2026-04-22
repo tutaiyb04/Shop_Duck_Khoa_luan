@@ -1,13 +1,7 @@
 import { Check, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-function ProductPurchasePanel({
-  product,
-  buyQuantity,
-  maxQuantity,
-  handleDecrease,
-  handleIncrease,
-}) {
+function ProductPurchasePanel({ product, maxQuantity }) {
   return (
     <div className="flex flex-col h-full w-full lg:pl-4 xl:pl-6">
       {/* 1. TÊN & GIÁ SẢN PHẨM: Nhỏ lại một chút trên mobile */}
@@ -25,48 +19,16 @@ function ProductPurchasePanel({
         </span>
 
         <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-          <div className="flex items-center border border-gray-300 rounded overflow-hidden bg-white shrink-0">
-            <button
-              onClick={handleDecrease}
-              className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-gray-600 hover:bg-gray-100 !transition-colors !border-0 !ring-0 !outline-none disabled:opacity-50 cursor-pointer"
-              disabled={buyQuantity <= 1}
-            >
-              -
-            </button>
-
-            {/* Đã chuyển viền phân cách vào input cho đồng bộ */}
-            <input
-              type="text"
-              value={buyQuantity}
-              readOnly
-              className="w-10 sm:w-12 h-8 sm:h-9 text-center text-sm outline-none text-gray-800 border-x border-gray-300"
-            />
-
-            <button
-              onClick={handleIncrease}
-              className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-gray-600 hover:bg-gray-100 !border-0 !ring-0 !outline-none !transition-colors disabled:opacity-50 cursor-pointer"
-              disabled={buyQuantity >= maxQuantity}
-            >
-              +
-            </button>
-          </div>
-
           <span className="text-xs sm:text-sm text-gray-500 whitespace-nowrap">
-            {maxQuantity} sản phẩm có sẵn
+            {maxQuantity} sản phẩm
           </span>
         </div>
       </div>
 
       {/* 3. CÁC NÚT MUA HÀNG: Xếp dọc trên mobile, ngang trên tablet/PC */}
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8">
-        <Button
-          variant="outline"
-          className="flex-1 h-11 sm:h-12 text-sm sm:text-base font-medium !border-yellow-600 !text-yellow-600 hover:!bg-yellow-50 hover:!text-yellow-700 !bg-white cursor-pointer !transition-colors"
-        >
-          Thêm vào giỏ hàng
-        </Button>
         <Button className="flex-1 h-11 sm:h-12 text-sm sm:text-base font-medium !bg-yellow-600 hover:!bg-yellow-700 text-white shadow-sm cursor-pointer !border-0 !ring-0 !outline-none !transition-colors">
-          Mua ngay
+          Chat với người bán để mua
         </Button>
       </div>
 

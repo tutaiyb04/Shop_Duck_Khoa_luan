@@ -11,22 +11,13 @@ export function useProductDetails() {
   const [recommendedProducts, setRecommendedProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isReporting, setIsReporting] = useState(false);
-  const [buyQuantity, setBuyQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const { user } = useContext(AuthContext);
   const lastShareTime = useRef(0);
 
-  const maxQuantity = product?.quantity || 1; // Lấy số lượng từ Database
-
-  const handleDecrease = () => {
-    if (buyQuantity > 1) setBuyQuantity((prev) => prev - 1);
-  };
-
-  const handleIncrease = () => {
-    if (buyQuantity < maxQuantity) setBuyQuantity((prev) => prev + 1);
-  };
+  const maxQuantity = product?.quantity || 1;
 
   const handlePrevImage = () => {
     setActiveImage((prev) =>
@@ -147,11 +138,8 @@ export function useProductDetails() {
     handleSendReport,
     handlePrevImage,
     handleNextImage,
-    handleDecrease,
-    handleIncrease,
     isLiked,
     handleToggleLike,
-    buyQuantity,
     maxQuantity,
     activeImage,
     setActiveImage,
