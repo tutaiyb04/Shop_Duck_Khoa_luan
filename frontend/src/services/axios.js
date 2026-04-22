@@ -5,7 +5,7 @@ const isLocal = window.location.hostname === "localhost";
 export const API = axios.create({
   baseURL: isLocal
     ? "http://localhost:3000"
-    : "https://tutaiyb04.github.io/Shop_Duck_Khoa_luan",
+    : "https://shop-duck-api.onrender.com",
 });
 
 // tự động đính kèm Token vào Header nếu có
