@@ -51,7 +51,6 @@ const productSchema = new mongoose.Schema(
 // Đánh chỉ mục (Index) 2dsphere cho trường location để tối ưu tốc độ tìm kiếm quanh đây
 productSchema.index({ location: "2dsphere" });
 
-productSchema.index({ category: 1, status: 1 }); // Lọc sản phẩm theo danh mục cực nhanh
 productSchema.index({ sellerId: 1 }); // Load trang cá nhân của người bán nhanh hơn
 
 module.exports = mongoose.model("Product", productSchema);

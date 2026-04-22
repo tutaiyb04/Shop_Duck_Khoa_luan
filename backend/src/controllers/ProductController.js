@@ -2,12 +2,29 @@ const productService = require("../services/productService");
 
 exports.getAllProducts = async (req, res) => {
   try {
-    // Chỉ lấy sản phẩm "active", dùng populate để lấy name & avatar từ User (người bán)
-    const { products } = await productService.getAllProductsService();
+    // 1. Lấy các tham số từ query string trên URL
+    // Ví dụ: /api/products?search=iphone&lat=21.0&lng=105.8
+    const filters = {
+      search: req.query.search || req.query.q || "", // Lấy từ khóa tìm kiếm
+      lat: req.query.lat, // Vĩ độ
+      lng: req.query.lng, // Kinh độ
+      radius: req.query.radius, // Bán kính (mét)
+      page: parseInt(req.query.page) || 1,
+      limit: parseInt(req.query.limit) || 20,
+    };
 
+    // 2. Truyền đối tượng filters vào Service
+    const { products, totalPages, currentPage } =
+      await productService.getAllProductsService(filters);
+
+    // 3. Trả về kết quả kèm theo thông tin phân trang
     return res.status(200).json({
       message: "Lấy danh sách sản phẩm thành công",
       products,
+      pagination: {
+        totalPages,
+        currentPage,
+      },
     });
   } catch (error) {
     console.error("Lỗi khi lấy danh sách sản phẩm: ", error);

@@ -2,24 +2,55 @@ const Product = require("../model/Product");
 
 exports.getAllProductsService = async (filters = {}) => {
   try {
-    const page = parseInt(filters.page) || 1;
-    const limit = parseInt(filters.limit) || 20;
+    const {
+      search,
+      lat,
+      lng,
+      radius = 5000, // Mặc định tìm trong bán kính 5km (5000 mét)
+      page = 1,
+      limit = 20,
+    } = filters;
+
     const skip = (page - 1) * limit;
 
+    // 1. Chức năng mặc định: Chỉ lấy hàng đang mở bán
+    let query = { status: "AVAILABLE" };
+
+    // 2. Nếu có từ khóa -> Thêm điều kiện tìm kiếm Full-text
+    if (search) {
+      query.name = { $regex: search, $options: "i" };
+    }
+
+    // 3. Nếu có tọa độ GPS -> Thêm điều kiện lọc không gian (2dsphere)
+    if (lat && lng) {
+      query.location = {
+        $near: {
+          $geometry: {
+            type: "Point",
+            // Lưu ý quan trọng: MongoDB yêu cầu chuẩn [Kinh độ, Vĩ độ]
+            coordinates: [parseFloat(lng), parseFloat(lat)],
+          },
+          $maxDistance: parseInt(radius),
+        },
+      };
+    }
+
+    // 4. Chạy truy vấn song song để tối ưu hiệu suất
     const [products, total] = await Promise.all([
-      Product.find({ status: "AVAILABLE" })
+      Product.find(query)
         .populate("sellerId", "username avatar")
         .populate("category", "name")
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(limit)
+        .limit(parseInt(limit))
         .lean(),
-      Product.countDocuments({ status: "AVAILABLE" }),
+      Product.countDocuments(query),
     ]);
+
     return {
       products,
       totalPages: Math.ceil(total / limit),
-      currentPage: page,
+      currentPage: parseInt(page),
     };
   } catch (error) {
     console.error("Lỗi tại getAllProductsService: ", error);
