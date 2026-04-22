@@ -19,7 +19,7 @@ const EditProduct = () => {
   const fileInputRef = useRef(null);
 
   const form = useForm({
-    values: initialData || {
+    defaultValues: {
       title: "",
       parentCategory: "",
       category: "",
@@ -35,14 +35,29 @@ const EditProduct = () => {
   const conditions = ["Mới", "Như mới", "Tốt", "Trung bình", "Kém"];
 
   useEffect(() => {
-    if (initialData?.existingImages && images.length === 0) {
-      const formattedImages = initialData.existingImages.map((url) => ({
-        preview: url,
-        isExisting: true,
-      }));
-      setImages(formattedImages);
+    // Chỉ chạy khi initialData thực sự có dữ liệu từ API trả về
+    if (initialData && Object.keys(initialData).length > 0) {
+      // 1. Đổ dữ liệu vào React Hook Form (Cái này sẽ giúp thẻ Select hiện chữ "Tốt")
+      form.reset(initialData);
+
+      // 2. Đổ dữ liệu Ảnh cũ
+      if (initialData.existingImages) {
+        const formattedImages = initialData.existingImages.map((url) => ({
+          preview: url,
+          file: null,
+          isExisting: true,
+        }));
+        setImages(formattedImages);
+      }
+
+      // 3. Đổ dữ liệu tọa độ Bản đồ
+      if (initialData.lat && initialData.lng) {
+        setCoords({ lat: initialData.lat, lng: initialData.lng });
+      }
     }
-  }, [initialData, images.length]);
+    // Mảng dependency CHỈ phụ thuộc vào initialData và form.
+    // Không cho images.length vào đây!
+  }, [initialData, form]);
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
