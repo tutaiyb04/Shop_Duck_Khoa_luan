@@ -59,32 +59,34 @@ function ProductForm({
           <FormField
             control={form.control}
             name="condition"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-lg font-bold text-gray-900">
-                  Tình trạng <span className="text-red-500">*</span>
-                </FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value || undefined}
-                  defaultValue={field.value || undefined}
-                >
-                  <FormControl>
-                    <SelectTrigger className="!h-10 !text-md hover:!border-yellow-500 focus:!border-yellow-500 transition-colors !border-1 !border-gray-200">
-                      <SelectValue placeholder="Chọn tình trạng" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {conditions.map((cond, index) => (
-                      <SelectItem key={index} value={cond}>
-                        {cond}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              return (
+                <FormItem>
+                  <FormLabel className="text-lg font-bold text-gray-900">
+                    Tình trạng <span className="text-red-500">*</span>
+                  </FormLabel>
+
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value || ""}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="!h-10 !text-md hover:!border-yellow-500 focus:!border-yellow-500 transition-colors !border-1 !border-gray-200">
+                        <SelectValue placeholder="Chọn tình trạng" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {conditions.map((cond, index) => (
+                        <SelectItem key={index} value={cond}>
+                          {cond}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
           />
         </div>
 

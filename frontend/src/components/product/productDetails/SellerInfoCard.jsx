@@ -42,7 +42,9 @@ function SellerInfoCard({ seller }) {
                   user={seller}
                   className="w-24 h-24 shadow-sm text-2xl"
                 />
-                {seller?.isEmailVerified || seller?.authType === "google" ? (
+                {seller?.isEmailVerified ||
+                seller?.authType === "google" ||
+                seller?.authType === "admin" ? (
                   <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-yellow-600 text-white text-sm font-medium px-2 py-1 rounded flex items-center gap-1 whitespace-nowrap z-10 border border-white">
                     <BadgeCheck className="w-4 h-4" /> Đã xác minh
                   </div>

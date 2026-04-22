@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 export const useEditProduct = (productId) => {
   const [initialData, setInitialData] = useState(null);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const navigate = useNavigate();
@@ -12,17 +13,25 @@ export const useEditProduct = (productId) => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await API.get(`/products/${productId}`);
-        const product = response.data.product;
+        const [productRes, categoryRes] = await Promise.all([
+          API.get(`/products/${productId}`),
+          API.get("/categories"),
+        ]);
+        const product = productRes.data.product;
+        const fetchedCategories = categoryRes.data.category || categoryRes.data;
+        setCategories(fetchedCategories);
 
         setInitialData({
-          title: product.name, // SỬA: 'name' đổi thành 'title'
+          title: product.name,
           price: product.price,
-          category: product.category._id || product.category,
+          category: product.category?._id || product.category,
+          parentCategory:
+            product.category?.parentId?._id || product.category?.parentId || "",
           condition: product.condition,
           quantity: product.quantity,
           description: product.description,
-          location: product.address, // SỬA: 'address' đổi thành 'location'
+          location: product.address,
+          attributes: product.attributes || { size: "" },
           lat: product.location?.coordinates[1] || "",
           lng: product.location?.coordinates[0] || "",
           existingImages: product.images,
@@ -39,6 +48,8 @@ export const useEditProduct = (productId) => {
     if (productId) fetchProduct();
   }, [productId, navigate]);
 
+  console.log("initialData", initialData);
+
   const handleUpdate = async (formData) => {
     try {
       setIsUpdating(true);
@@ -47,7 +58,7 @@ export const useEditProduct = (productId) => {
       });
 
       toast.success("Cập nhật sản phẩm thành công!");
-      navigate("/manage-products");
+      navigate("/my-products");
     } catch (error) {
       toast.error(error.response?.data?.message || "Cập nhật thất bại");
     } finally {
@@ -55,5 +66,5 @@ export const useEditProduct = (productId) => {
     }
   };
 
-  return { initialData, loading, isUpdating, handleUpdate };
+  return { initialData, categories, loading, isUpdating, handleUpdate };
 };
