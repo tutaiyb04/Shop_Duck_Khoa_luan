@@ -66,7 +66,8 @@ function ProductForm({
                 </FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  value={field.value || undefined}
+                  defaultValue={field.value || undefined}
                 >
                   <FormControl>
                     <SelectTrigger className="!h-10 !text-md hover:!border-yellow-500 focus:!border-yellow-500 transition-colors !border-1 !border-gray-200">

@@ -7,7 +7,6 @@ import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
-import Header from "./components/layout/Header";
 import Profile from "./pages/Profile";
 import CreateProduct from "./pages/products/CreateProduct";
 import Orders from "./pages/products/Orders";
@@ -22,6 +21,8 @@ import ReportManagement from "./pages/admin/ReportManagement";
 import Wishlist from "./pages/products/Wishlist";
 import VerifyEmail from "./pages/auth/VerifiEmail";
 import AccountVerification from "./pages/AccountVerification";
+import ManageProducts from "./pages/products/ManageProducts";
+import EditProduct from "./pages/products/EditProduct";
 
 function App() {
   return (
@@ -70,6 +71,12 @@ function App() {
 
               {/* Xác nhận gửi email xác minh */}
               <Route path="/verify" element={<AccountVerification />} />
+
+              {/* Tất cả sản phẩm */}
+              <Route path="/my-products" element={<ManageProducts />} />
+
+              {/* Chỉnh sửa sản phẩm */}
+              <Route path="/edit-product/:id" element={<EditProduct />} />
             </Route>
 
             <Route path="/admin" element={<AdminLayout />}>

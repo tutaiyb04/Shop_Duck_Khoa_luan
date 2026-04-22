@@ -8,6 +8,7 @@ import {
   PlusCircle,
   Heart,
   ShieldCheck,
+  List,
 } from "lucide-react";
 import UserAvatar from "./UserAvatar";
 
@@ -25,6 +26,7 @@ function UserSidebar() {
       title: "Bán hàng",
       items: [
         { path: "/sell", label: "Đăng tin bán", icon: PlusCircle },
+        { path: "/my-products", label: "Tất cả sản phẩm", icon: List },
         {
           path: "/verify",
           label: "Xác minh tài khoản",

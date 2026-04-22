@@ -41,7 +41,7 @@ function ProductCard({ product }) {
         <div className="mt-auto pt-2 flex items-center gap-1 text-gray-400 border-t border-gray-50">
           <MapPin size={12} className="shrink-0" />
           <span className="text-[11px] truncate">
-            {typeof product.location === "string" ? product.location : "Hà Nội"}
+            {product.address || "Hà Nội"}
           </span>
         </div>
       </CardContent>

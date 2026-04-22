@@ -13,7 +13,7 @@ import ProductPurchasePanel from "@/components/product/productDetails/ProductPur
 import SellerInfoCard from "@/components/product/productDetails/SellerInfoCard";
 import ProductDescription from "@/components/product/productDetails/ProductDescription";
 import RecommendedProducts from "@/components/product/productDetails/RecommendedProducts";
-import ReportDialog from "@/components/product/ReportDialog";
+import ReportDialog from "@/components/product/productDetails/ReportDialog";
 import RelatedProducts from "@/components/product/productDetails/RelatedProducts";
 
 function ProductDetails() {
