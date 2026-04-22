@@ -1,23 +1,6 @@
-import { useContext, useEffect, useRef, useState, startTransition } from "react";
-import { NavLink, useNavigate, useSearchParams } from "react-router-dom";
-import { AuthContext } from "@/context/AuthContext";
+import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Search,
-  UserCircle,
-  Package,
-  LogOut,
-  ShoppingCart,
-  ChevronDown,
-  CirclePlus,
-  Heart,
-  ShieldCheck,
-  Bell,
-  Menu,
-  List,
-  MapPin,
-} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -27,180 +10,32 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Search,
+  ChevronDown,
+  CirclePlus,
+  Bell,
+  Menu,
+  MapPin,
+} from "lucide-react";
 import logoImage from "@/assets/logo1.png";
+import useHeader from "@/hooks/header/useHeader";
+import UserMenuLinks from "./header/UserMenuLinks";
 
 export default function Header() {
-  const { user, logout } = useContext(AuthContext);
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [location, setLocation] = useState(null); // Lưu tọa độ {lat, lng}
-  const [radius, setRadius] = useState("5000"); // Mặc định bán kính 5km
-  const [isLocating, setIsLocating] = useState(false);
-  /** Tăng mỗi lần hủy / tắt vị trí / bắt đầu mới — bỏ qua callback geolocation cũ */
-  const geoRequestGen = useRef(0);
-
-  const qSearch = searchParams.get("search") ?? "";
-  const qLat = searchParams.get("lat") ?? "";
-  const qLng = searchParams.get("lng") ?? "";
-  const qRadius = searchParams.get("radius") ?? "5000";
-
-  // Đồng bộ ô tìm kiếm + bộ lọc vị trí với URL (F5, chia sẻ link, bấm back/forward)
-  useEffect(() => {
-    startTransition(() => {
-      setSearchQuery(qSearch);
-      if (qLat && qLng) {
-        const latNum = parseFloat(qLat);
-        const lngNum = parseFloat(qLng);
-        if (Number.isFinite(latNum) && Number.isFinite(lngNum)) {
-          setLocation({ lat: latNum, lng: lngNum });
-        } else {
-          setLocation(null);
-        }
-      } else {
-        setLocation(null);
-      }
-      setRadius(qRadius || "5000");
-    });
-  }, [qSearch, qLat, qLng, qRadius]);
-
-  // Hàm xử lý xin quyền lấy tọa độ GPS
-  const handleGetLocation = () => {
-    if (isLocating) {
-      geoRequestGen.current += 1;
-      setIsLocating(false);
-      return;
-    }
-    if (location) {
-      setLocation(null);
-      geoRequestGen.current += 1;
-      return;
-    }
-
-    if (!("geolocation" in navigator)) {
-      alert("Trình duyệt của bạn không hỗ trợ tính năng định vị.");
-      return;
-    }
-
-    const myGen = (geoRequestGen.current += 1);
-    setIsLocating(true);
-    const geoOptions = {
-      enableHighAccuracy: false,
-      maximumAge: 5 * 60 * 1000,
-      timeout: 25_000,
-    };
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        if (myGen !== geoRequestGen.current) return;
-        setLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
-        setIsLocating(false);
-      },
-      (error) => {
-        if (myGen !== geoRequestGen.current) return;
-        console.error("Lỗi lấy vị trí: ", error);
-        alert(
-          "Vui lòng cấp quyền truy cập vị trí trên trình duyệt để tìm đồ gần bạn!",
-        );
-        setIsLocating(false);
-      },
-      geoOptions,
-    );
-  };
-
-  // Hàm xử lý Tìm kiếm (Kết hợp cả từ khóa và vị trí)
-  const handleSearch = (e) => {
-    e.preventDefault();
-
-    // Nếu không nhập gì và không bật vị trí -> Về trang chủ mặc định
-    if (!searchQuery.trim() && !location) {
-      navigate("/");
-      return;
-    }
-
-    // Đẩy dữ liệu vào URL params
-    const queryParams = new URLSearchParams();
-    if (searchQuery.trim()) queryParams.append("search", searchQuery.trim());
-    if (location) {
-      queryParams.append("lat", location.lat);
-      queryParams.append("lng", location.lng);
-      queryParams.append("radius", radius);
-    }
-
-    // Chuyển hướng về trang chủ kèm theo bộ lọc
-    navigate(`/?${queryParams.toString()}`);
-  };
-
-  // Hàm Đăng xuất ĐÃ ĐƯỢC KHÔI PHỤC
-  const handleLogout = () => {
-    logout();
-    navigate("/");
-  };
-
-  const renderUserMenuLinks = () => (
-    <>
-      <DropdownMenuItem
-        onClick={() => navigate("/profile")}
-        className="cursor-pointer"
-      >
-        <UserCircle className="mr-2 h-4 w-4" />
-        <span>Thông tin cá nhân</span>
-      </DropdownMenuItem>
-      <DropdownMenuSeparator />
-
-      <DropdownMenuLabel>Bán hàng</DropdownMenuLabel>
-      <DropdownMenuItem
-        onClick={() => navigate("/sell")}
-        className="cursor-pointer"
-      >
-        <CirclePlus className="mr-2 h-4 w-4" />
-        <span>Đăng tin bán</span>
-      </DropdownMenuItem>
-      <DropdownMenuItem
-        onClick={() => navigate("/my-products")}
-        className="cursor-pointer"
-      >
-        <List className="mr-2 h-4 w-4" />
-        <span>Tất cả sản phẩm</span>
-      </DropdownMenuItem>
-      <DropdownMenuItem
-        onClick={() => navigate("/verify")}
-        className="cursor-pointer"
-      >
-        <ShieldCheck className="mr-2 h-4 w-4" />
-        <span>Xác minh tài khoản</span>
-      </DropdownMenuItem>
-      <DropdownMenuSeparator />
-
-      <DropdownMenuLabel>Mua hàng</DropdownMenuLabel>
-      <DropdownMenuItem
-        onClick={() => navigate("/orders")}
-        className="cursor-pointer"
-      >
-        <Package className="mr-2 h-4 w-4" />
-        <span>Đơn hàng của tôi</span>
-      </DropdownMenuItem>
-      <DropdownMenuItem
-        onClick={() => navigate("/wishlist")}
-        className="cursor-pointer"
-      >
-        <Heart className="mr-2 h-4 w-4" />
-        <span>Yêu thích</span>
-      </DropdownMenuItem>
-      <DropdownMenuSeparator />
-
-      <DropdownMenuItem
-        onClick={handleLogout}
-        className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
-      >
-        <LogOut className="mr-2 h-4 w-4" />
-        <span>Đăng xuất</span>
-      </DropdownMenuItem>
-    </>
-  );
+  const {
+    user,
+    navigate,
+    searchQuery,
+    setSearchQuery,
+    location,
+    radius,
+    setRadius,
+    isLocating,
+    handleGetLocation,
+    handleSearch,
+    handleLogout,
+  } = useHeader();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white shadow-sm">
@@ -232,7 +67,7 @@ export default function Header() {
               onClick={handleGetLocation}
               title={
                 isLocating
-                  ? "Đang lấy vị trí (bấm lần nữa để hủy)"
+                  ? "Đang lấy vị trí"
                   : location
                     ? "Tắt tìm quanh đây"
                     : "Bật tìm quanh đây"
@@ -243,16 +78,16 @@ export default function Header() {
               />
             </Button>
 
-            {/* Dropdown chọn Bán kính (Chỉ hiện khi đang Bật vị trí) */}
+            {/* Dropdown chọn Bán kính */}
             {location && (
               <select
                 value={radius}
                 onChange={(e) => setRadius(e.target.value)}
-                className="h-10 px-3 py-2 text-sm  rounded-full bg-background shrink-0 cursor-pointer"
+                className="h-10 px-3 py-2 text-sm rounded-full bg-background shrink-0 cursor-pointer"
               >
-                <option value="5000">Quanh 5 km</option>
-                <option value="10000">Quanh 10 km</option>
-                <option value="20000">Quanh 20 km</option>
+                <option value="5000">~ 5 km</option>
+                <option value="10000">~ 10 km</option>
+                <option value="20000">~ 20 km</option>
               </select>
             )}
 
@@ -267,8 +102,6 @@ export default function Header() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-
-            {/* Nút Submit Ẩn (để bắt sự kiện khi nhấn Enter) */}
             <button type="submit" className="hidden">
               Tìm
             </button>
@@ -310,7 +143,12 @@ export default function Header() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  {renderUserMenuLinks()}
+
+                  {/* Nhúng UI Component vào đây */}
+                  <UserMenuLinks
+                    navigate={navigate}
+                    handleLogout={handleLogout}
+                  />
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
@@ -333,19 +171,11 @@ export default function Header() {
 
           <div className="h-6 w-px bg-gray-300 hidden md:block"></div>
 
-          {/* Icons dùng chung (Thông báo, Giỏ hàng) */}
           <div className="flex items-center gap-1 sm:gap-3">
             <button className="!text-gray-600 hover:!text-yellow-600 relative p-2 cursor-pointer !bg-transparent !border-0 !outline-none transition-colors">
               <Bell className="w-5 h-5 md:w-6 md:h-6" />
               <span className="absolute top-1 right-1.5 flex h-2 w-2 rounded-full bg-red-500"></span>
             </button>
-
-            <NavLink
-              to="/cart"
-              className="!text-gray-600 hover:!text-yellow-600 relative p-2 transition-colors"
-            >
-              <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" />
-            </NavLink>
 
             <NavLink to="/sell" className="flex items-center">
               <Button className="hidden md:flex h-9 px-6 rounded-full !bg-yellow-500 text-white hover:!bg-yellow-600 transition-colors !border-0 !outline-none shadow-sm cursor-pointer">
@@ -356,7 +186,6 @@ export default function Header() {
               </button>
             </NavLink>
 
-            {/* HAMBURGER MENU (Chỉ hiện trên Mobile) */}
             <div className="md:hidden">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -413,8 +242,10 @@ export default function Header() {
                         </div>
                       </DropdownMenuLabel>
                       <DropdownMenuSeparator />
-
-                      {renderUserMenuLinks()}
+                      <UserMenuLinks
+                        navigate={navigate}
+                        handleLogout={handleLogout}
+                      />
                     </>
                   ) : (
                     <>
