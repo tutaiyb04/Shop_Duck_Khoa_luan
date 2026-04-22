@@ -1,5 +1,5 @@
-import { useContext, useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useContext, useEffect, useRef, useState, startTransition } from "react";
+import { NavLink, useNavigate, useSearchParams } from "react-router-dom";
 import { AuthContext } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,41 +32,83 @@ import logoImage from "@/assets/logo1.png";
 export default function Header() {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [location, setLocation] = useState(null); // Lưu tọa độ {lat, lng}
   const [radius, setRadius] = useState("5000"); // Mặc định bán kính 5km
   const [isLocating, setIsLocating] = useState(false);
+  /** Tăng mỗi lần hủy / tắt vị trí / bắt đầu mới — bỏ qua callback geolocation cũ */
+  const geoRequestGen = useRef(0);
+
+  const qSearch = searchParams.get("search") ?? "";
+  const qLat = searchParams.get("lat") ?? "";
+  const qLng = searchParams.get("lng") ?? "";
+  const qRadius = searchParams.get("radius") ?? "5000";
+
+  // Đồng bộ ô tìm kiếm + bộ lọc vị trí với URL (F5, chia sẻ link, bấm back/forward)
+  useEffect(() => {
+    startTransition(() => {
+      setSearchQuery(qSearch);
+      if (qLat && qLng) {
+        const latNum = parseFloat(qLat);
+        const lngNum = parseFloat(qLng);
+        if (Number.isFinite(latNum) && Number.isFinite(lngNum)) {
+          setLocation({ lat: latNum, lng: lngNum });
+        } else {
+          setLocation(null);
+        }
+      } else {
+        setLocation(null);
+      }
+      setRadius(qRadius || "5000");
+    });
+  }, [qSearch, qLat, qLng, qRadius]);
 
   // Hàm xử lý xin quyền lấy tọa độ GPS
   const handleGetLocation = () => {
+    if (isLocating) {
+      geoRequestGen.current += 1;
+      setIsLocating(false);
+      return;
+    }
     if (location) {
-      setLocation(null); // Hủy nếu đang bật
+      setLocation(null);
+      geoRequestGen.current += 1;
       return;
     }
 
-    setIsLocating(true);
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
-          setIsLocating(false);
-        },
-        (error) => {
-          console.error("Lỗi lấy vị trí: ", error);
-          alert(
-            "Vui lòng cấp quyền truy cập vị trí trên trình duyệt để tìm đồ gần bạn!",
-          );
-          setIsLocating(false);
-        },
-      );
-    } else {
+    if (!("geolocation" in navigator)) {
       alert("Trình duyệt của bạn không hỗ trợ tính năng định vị.");
-      setIsLocating(false);
+      return;
     }
+
+    const myGen = (geoRequestGen.current += 1);
+    setIsLocating(true);
+    const geoOptions = {
+      enableHighAccuracy: false,
+      maximumAge: 5 * 60 * 1000,
+      timeout: 25_000,
+    };
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        if (myGen !== geoRequestGen.current) return;
+        setLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+        setIsLocating(false);
+      },
+      (error) => {
+        if (myGen !== geoRequestGen.current) return;
+        console.error("Lỗi lấy vị trí: ", error);
+        alert(
+          "Vui lòng cấp quyền truy cập vị trí trên trình duyệt để tìm đồ gần bạn!",
+        );
+        setIsLocating(false);
+      },
+      geoOptions,
+    );
   };
 
   // Hàm xử lý Tìm kiếm (Kết hợp cả từ khóa và vị trí)
@@ -181,13 +223,20 @@ export default function Header() {
               type="button"
               variant={location ? "default" : "outline"}
               size="icon"
-              className={`rounded-full shrink-0 transition-colors ${
+              aria-busy={isLocating}
+              className={`rounded-full shrink-0 !transition-colors !bg-gray-200 hover:!bg-gray-300 !border-1 !border-gray-200 !ring-0 !outline-none ${
                 location
-                  ? "bg-primary text-primary-foreground"
+                  ? "!bg-yellow-500 hover:!bg-yellow-600 text-white !transition-colors"
                   : "border-primary/20"
-              }`}
+              } ${isLocating ? "pointer-events-auto opacity-80" : ""}`}
               onClick={handleGetLocation}
-              title={location ? "Tắt tìm quanh đây" : "Bật tìm quanh đây"}
+              title={
+                isLocating
+                  ? "Đang lấy vị trí (bấm lần nữa để hủy)"
+                  : location
+                    ? "Tắt tìm quanh đây"
+                    : "Bật tìm quanh đây"
+              }
             >
               <MapPin
                 className={`h-4 w-4 ${isLocating ? "animate-pulse" : ""}`}
@@ -199,7 +248,7 @@ export default function Header() {
               <select
                 value={radius}
                 onChange={(e) => setRadius(e.target.value)}
-                className="h-10 px-3 py-2 text-sm border border-primary/20 rounded-full bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 shrink-0 cursor-pointer"
+                className="h-10 px-3 py-2 text-sm  rounded-full bg-background shrink-0 cursor-pointer"
               >
                 <option value="5000">Quanh 5 km</option>
                 <option value="10000">Quanh 10 km</option>
@@ -213,7 +262,7 @@ export default function Header() {
               <Input
                 type="search"
                 placeholder="Tìm kiếm sản phẩm, danh mục..."
-                className="pl-9 w-full bg-muted/50 focus-visible:bg-background rounded-full border-primary/20 focus-visible:ring-primary/30"
+                className="pl-9 w-full bg-muted/50 focus-visible:bg-background rounded-full border-primary/20 !ring-0 focus-visible:border-yellow-500"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />

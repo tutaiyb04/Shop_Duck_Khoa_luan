@@ -1,56 +1,121 @@
 const Product = require("../model/Product");
+const User = require("../model/User");
+const Category = require("../model/Category");
+const { escapeRegexForSearch } = require("../utils/escapeRegex");
 
 exports.getAllProductsService = async (filters = {}) => {
   try {
     const {
-      search,
+      search: rawSearch,
       lat,
       lng,
-      radius = 5000, // Mặc định tìm trong bán kính 5km (5000 mét)
+      radius = 5000,
       page = 1,
       limit = 20,
     } = filters;
+    const search = (rawSearch || "").trim();
 
-    const skip = (page - 1) * limit;
+    const limitN = parseInt(limit, 10) || 20;
+    const pageN = parseInt(page, 10) || 1;
+    const skip = (pageN - 1) * limitN;
+    const lngN = parseFloat(lng);
+    const latN = parseFloat(lat);
+    const hasValidGeo =
+      lat && lng && Number.isFinite(lngN) && Number.isFinite(latN);
+    const maxDistanceM = parseInt(radius, 10) || 5000;
 
-    // 1. Chức năng mặc định: Chỉ lấy hàng đang mở bán
-    let query = { status: "AVAILABLE" };
+    // --- Lọc theo vị trí: dùng $geoNear ở đầu pipeline → thứ tự gần → xa, không bị
+    //     xung đột với $near + .sort(createdAt) trên find (MongoDB 8+).
+    if (hasValidGeo) {
+      const geoQuery = { status: "AVAILABLE" };
+      if (search) {
+        geoQuery.name = {
+          $regex: escapeRegexForSearch(search),
+          $options: "i",
+        };
+      }
 
-    // 2. Nếu có từ khóa -> Thêm điều kiện tìm kiếm Full-text
-    if (search) {
-      query.name = { $regex: search, $options: "i" };
-    }
-
-    // 3. Nếu có tọa độ GPS -> Thêm điều kiện lọc không gian (2dsphere)
-    if (lat && lng) {
-      query.location = {
-        $near: {
-          $geometry: {
-            type: "Point",
-            // Lưu ý quan trọng: MongoDB yêu cầu chuẩn [Kinh độ, Vĩ độ]
-            coordinates: [parseFloat(lng), parseFloat(lat)],
-          },
-          $maxDistance: parseInt(radius),
+      const geoNearStage = {
+        $geoNear: {
+          key: "location",
+          near: { type: "Point", coordinates: [lngN, latN] },
+          distanceField: "distance",
+          maxDistance: maxDistanceM,
+          spherical: true,
+          query: geoQuery,
         },
+      };
+
+      const pipeline = [
+        geoNearStage,
+        { $skip: skip },
+        { $limit: limitN },
+        {
+          $lookup: {
+            from: User.collection.name,
+            let: { sid: "$sellerId" },
+            pipeline: [
+              { $match: { $expr: { $eq: ["$_id", "$$sid"] } } },
+              { $project: { username: 1, avatar: 1 } },
+            ],
+            as: "sellerIdArr",
+          },
+        },
+        { $unwind: { path: "$sellerIdArr", preserveNullAndEmptyArrays: true } },
+        { $addFields: { sellerId: "$sellerIdArr" } },
+        {
+          $lookup: {
+            from: Category.collection.name,
+            let: { cid: "$category" },
+            pipeline: [
+              { $match: { $expr: { $eq: ["$_id", "$$cid"] } } },
+              { $project: { name: 1 } },
+            ],
+            as: "categoryArr",
+          },
+        },
+        { $unwind: { path: "$categoryArr", preserveNullAndEmptyArrays: true } },
+        { $addFields: { category: "$categoryArr" } },
+        { $project: { sellerIdArr: 0, categoryArr: 0 } },
+      ];
+
+      const [products, countAgg] = await Promise.all([
+        Product.aggregate(pipeline),
+        Product.aggregate([geoNearStage, { $count: "total" }]),
+      ]);
+      const total = countAgg[0]?.total || 0;
+
+      return {
+        products,
+        totalPages: Math.ceil(total / limitN),
+        currentPage: pageN,
       };
     }
 
-    // 4. Chạy truy vấn song song để tối ưu hiệu suất
+    // --- Không có vị trí: sort theo bài mới
+    let query = { status: "AVAILABLE" };
+    if (search) {
+      query.name = {
+        $regex: escapeRegexForSearch(search),
+        $options: "i",
+      };
+    }
+
     const [products, total] = await Promise.all([
       Product.find(query)
         .populate("sellerId", "username avatar")
         .populate("category", "name")
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(parseInt(limit))
+        .limit(limitN)
         .lean(),
       Product.countDocuments(query),
     ]);
 
     return {
       products,
-      totalPages: Math.ceil(total / limit),
-      currentPage: parseInt(page),
+      totalPages: Math.ceil(total / limitN),
+      currentPage: pageN,
     };
   } catch (error) {
     console.error("Lỗi tại getAllProductsService: ", error);
@@ -60,10 +125,22 @@ exports.getAllProductsService = async (filters = {}) => {
 
 exports.getAdminProductsService = async (filters) => {
   try {
-    const { search, category, status, page = 1, limit = 20 } = filters;
+    const {
+      search: rawSearch,
+      category,
+      status,
+      page = 1,
+      limit = 20,
+    } = filters;
+    const search = (rawSearch || "").trim();
     let query = {};
 
-    if (search) query.name = { $regex: search, $options: "i" };
+    if (search) {
+      query.name = {
+        $regex: escapeRegexForSearch(search),
+        $options: "i",
+      };
+    }
     if (category) query.category = category;
     if (status) query.status = status;
 
