@@ -16,9 +16,6 @@ exports.getAllProductsService = async (filters = {}) => {
         .lean(),
       Product.countDocuments({ status: "AVAILABLE" }),
     ]);
-
-    console.log("products", products);
-
     return {
       products,
       totalPages: Math.ceil(total / limit),
@@ -182,7 +179,7 @@ exports.updateProductStatusService = async (id, status, adminNote) => {
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
       { status, adminNote },
-      { returnDocument: "after", runValidators: true },
+      { returnDocument: "after", runValidators: true }, // FIX WARNING Mongoose
     );
 
     if (!updatedProduct) throw new Error("Không tìm thấy sản phẩm");
@@ -201,9 +198,25 @@ exports.updateProductService = async (id, sellerId, updateData, files) => {
     delete updateData.status;
     delete updateData.adminNote;
 
-    if (files && files.length > 0) {
-      updateData.images = files.map((file) => file.path);
+    // FIX 1: Convert Map (Attributes) từ chuỗi JSON sang Object để chống lỗi Mongoose Iterator
+    if (updateData.attributes && typeof updateData.attributes === "string") {
+      updateData.attributes = JSON.parse(updateData.attributes);
     }
+
+    let finalImages = [];
+    // Lấy lại các ảnh cũ mà người dùng không xóa
+    if (updateData.existingImages) {
+      finalImages = Array.isArray(updateData.existingImages)
+        ? [...updateData.existingImages]
+        : [updateData.existingImages];
+    }
+
+    if (files && files.length > 0) {
+      finalImages = [...finalImages, ...files.map((file) => file.path)];
+    }
+
+    updateData.images = finalImages;
+    delete updateData.existingImages;
 
     if (updateData.lat && updateData.lng) {
       updateData.location = {
@@ -217,7 +230,7 @@ exports.updateProductService = async (id, sellerId, updateData, files) => {
     const updatedProduct = await Product.findOneAndUpdate(
       { _id: id, sellerId: sellerId },
       { $set: updateData },
-      { new: true, runValidators: true },
+      { returnDocument: "after", runValidators: true },
     );
 
     if (!updatedProduct)
@@ -270,7 +283,7 @@ exports.updateMyProductStatusService = async (id, sellerId, status) => {
     const updatedProduct = await Product.findOneAndUpdate(
       { _id: id, sellerId: sellerId },
       { $set: { status: status } },
-      { new: true, runValidators: true },
+      { returnDocument: "after", runValidators: true }, // FIX WARNING Mongoose
     );
 
     if (!updatedProduct) {
