@@ -5,7 +5,6 @@ export function useCategoryMenu(form, categories) {
   const [hoveredParent, setHoveredParent] = useState(null);
   const categoryRef = useRef(null);
 
-  // 1. Logic xử lý click ra ngoài để đóng Menu
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (categoryRef.current && !categoryRef.current.contains(event.target)) {
@@ -16,7 +15,6 @@ export function useCategoryMenu(form, categories) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // 2. Logic lọc danh mục chính và phụ
   const mainCategories = categories?.filter((cat) => !cat.parentId) || [];
 
   const getSubCategories = (parentId) => {
@@ -28,9 +26,15 @@ export function useCategoryMenu(form, categories) {
     );
   };
 
-  // 3. Logic lấy giá trị đang chọn từ Form (Zod)
-  const selectedParentId = form.watch("parentCategory");
+  let selectedParentId = form.watch("parentCategory");
   const selectedCategoryId = form.watch("category");
+
+  if (selectedCategoryId && !selectedParentId && categories) {
+    const currentCat = categories.find((c) => c._id === selectedCategoryId);
+    if (currentCat && currentCat.parentId) {
+      selectedParentId = currentCat.parentId._id || currentCat.parentId;
+    }
+  }
 
   const selectedParentName = categories?.find(
     (c) => c._id === selectedParentId,
@@ -39,30 +43,31 @@ export function useCategoryMenu(form, categories) {
     (c) => c._id === selectedCategoryId,
   )?.name;
 
-  // 4. Logic tạo chuỗi hiển thị
-  const displayCategory = selectedCategoryId
-    ? `${selectedParentName} > ${selectedCategoryName}`
-    : "Vui lòng chọn ngành hàng...";
-
-  // 5. Hàm xử lý khi người dùng click chọn 1 danh mục con
+  let displayCategory = "Vui lòng chọn danh mục...";
+  if (selectedCategoryId) {
+    if (selectedParentName && selectedCategoryName) {
+      displayCategory = `${selectedParentName} > ${selectedCategoryName}`;
+    } else if (selectedCategoryName) {
+      displayCategory = selectedCategoryName;
+    }
+  }
   const handleSelectChild = (childId, parentId) => {
     form.setValue("parentCategory", parentId, { shouldValidate: true });
     form.setValue("category", childId, { shouldValidate: true });
-    setIsCategoryOpen(false); // Chọn xong thì đóng menu
+    setIsCategoryOpen(false);
   };
 
-  // 6. Trả về toàn bộ "Đồ nghề" cho UI sử dụng
   return {
     isCategoryOpen,
-    setIsCategoryOpen,
     hoveredParent,
-    setHoveredParent,
     categoryRef,
     mainCategories,
-    getSubCategories,
     displayCategory,
     selectedParentId,
     selectedCategoryId,
+    setHoveredParent,
+    getSubCategories,
+    setIsCategoryOpen,
     handleSelectChild,
   };
 }

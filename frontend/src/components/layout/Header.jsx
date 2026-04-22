@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Bell,
   Menu,
+  List,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -46,11 +47,71 @@ export default function Header() {
     navigate("/");
   };
 
+  const renderUserMenuLinks = () => (
+    <>
+      <DropdownMenuItem
+        onClick={() => navigate("/profile")}
+        className="cursor-pointer"
+      >
+        <UserCircle className="mr-2 h-4 w-4" />
+        <span>Thông tin cá nhân</span>
+      </DropdownMenuItem>
+      <DropdownMenuSeparator />
+
+      <DropdownMenuLabel>Bán hàng</DropdownMenuLabel>
+      <DropdownMenuItem
+        onClick={() => navigate("/sell")}
+        className="cursor-pointer"
+      >
+        <CirclePlus className="mr-2 h-4 w-4" />
+        <span>Đăng tin bán</span>
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onClick={() => navigate("/my-products")}
+        className="cursor-pointer"
+      >
+        <List className="mr-2 h-4 w-4" />
+        <span>Tất cả sản phẩm</span>
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onClick={() => navigate("/verify")}
+        className="cursor-pointer"
+      >
+        <ShieldCheck className="mr-2 h-4 w-4" />
+        <span>Xác minh tài khoản</span>
+      </DropdownMenuItem>
+      <DropdownMenuSeparator />
+
+      <DropdownMenuLabel>Mua hàng</DropdownMenuLabel>
+      <DropdownMenuItem
+        onClick={() => navigate("/orders")}
+        className="cursor-pointer"
+      >
+        <Package className="mr-2 h-4 w-4" />
+        <span>Đơn hàng của tôi</span>
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onClick={() => navigate("/wishlist")}
+        className="cursor-pointer"
+      >
+        <Heart className="mr-2 h-4 w-4" />
+        <span>Yêu thích</span>
+      </DropdownMenuItem>
+      <DropdownMenuSeparator />
+
+      <DropdownMenuItem
+        onClick={handleLogout}
+        className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+      >
+        <LogOut className="mr-2 h-4 w-4" />
+        <span>Đăng xuất</span>
+      </DropdownMenuItem>
+    </>
+  );
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white shadow-sm">
-      {/* Giảm chiều cao header trên mobile h-14, desktop h-16 */}
       <div className="max-w-6xl mx-auto flex h-14 md:h-16 items-center justify-between px-2 sm:px-4 md:px-6">
-        {/* NỬA TRÁI: Logo + Tìm kiếm (Desktop) */}
         <div className="flex w-full items-center">
           <NavLink to="/">
             <img
@@ -60,10 +121,9 @@ export default function Header() {
             />
           </NavLink>
 
-          {/* Thanh Tìm kiếm Desktop */}
           <form
             onSubmit={handleSearch}
-            className="hidden md:flex flex-1 max-w-lg relative mx-8 items-center"
+            className="hidden md:flex flex-1 max-w-96 relative mx-8 items-center"
           >
             <Input
               type="text"
@@ -83,9 +143,7 @@ export default function Header() {
           </form>
         </div>
 
-        {/* NỬA PHẢI: Menu, Icons */}
         <div className="flex items-center gap-2 md:gap-6 shrink-0">
-          {/* Menu User Desktop (Ẩn trên Mobile) */}
           <div className="hidden md:block">
             {user ? (
               <DropdownMenu>
@@ -103,7 +161,13 @@ export default function Header() {
                     </span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
+
+                {/* Đã thêm max-h-[80vh] và overflow-y-auto vào Desktop Menu */}
+                <DropdownMenuContent
+                  className="w-56 max-h-[80vh] overflow-y-auto"
+                  align="end"
+                  forceMount
+                >
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none">
@@ -115,43 +179,7 @@ export default function Header() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => navigate("/profile")}
-                    className="cursor-pointer"
-                  >
-                    <UserCircle className="mr-2 h-4 w-4" />
-                    <span>Thông tin cá nhân</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => navigate("/verify")}
-                    className="cursor-pointer"
-                  >
-                    <ShieldCheck className="mr-2 h-4 w-4" />
-                    <span>Xác minh tài khoản</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => navigate("/orders")}
-                    className="cursor-pointer"
-                  >
-                    <Package className="mr-2 h-4 w-4" />
-                    <span>Đơn hàng của tôi</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => navigate("/wishlist")}
-                    className="cursor-pointer"
-                  >
-                    <Heart className="mr-2 h-4 w-4" />
-                    <span>Yêu thích</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={handleLogout}
-                    className="cursor-pointer text-red-600 focus:text-red-600"
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Đăng xuất</span>
-                  </DropdownMenuItem>
+                  {renderUserMenuLinks()}
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
@@ -176,14 +204,11 @@ export default function Header() {
 
           {/* Icons dùng chung (Thông báo, Giỏ hàng) */}
           <div className="flex items-center gap-1 sm:gap-3">
-            {/* Nút Thông báo (Mới thêm) */}
             <button className="!text-gray-600 hover:!text-yellow-600 relative p-2 cursor-pointer !bg-transparent !border-0 !outline-none transition-colors">
               <Bell className="w-5 h-5 md:w-6 md:h-6" />
-              {/* Chấm đỏ báo có thông báo mới (Ví dụ) */}
               <span className="absolute top-1 right-1.5 flex h-2 w-2 rounded-full bg-red-500"></span>
             </button>
 
-            {/* Nút Giỏ hàng */}
             <NavLink
               to="/cart"
               className="!text-gray-600 hover:!text-yellow-600 relative p-2 transition-colors"
@@ -191,7 +216,6 @@ export default function Header() {
               <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" />
             </NavLink>
 
-            {/* Nút Đăng bán (Chỉ hiện Icon trên Mobile, hiện Button đầy đủ trên Desktop) */}
             <NavLink to="/sell" className="flex items-center">
               <Button className="hidden md:flex h-9 px-6 rounded-full !bg-yellow-500 text-white hover:!bg-yellow-600 transition-colors !border-0 !outline-none shadow-sm cursor-pointer">
                 Đăng bán
@@ -209,12 +233,13 @@ export default function Header() {
                     <Menu className="w-6 h-6" />
                   </button>
                 </DropdownMenuTrigger>
+
+                {/* Đã thêm max-h-[80vh] và overflow-y-auto vào Mobile Menu */}
                 <DropdownMenuContent
-                  className="w-64 mt-2"
+                  className="w-64 mt-2 max-h-[80vh] overflow-y-auto"
                   align="end"
                   forceMount
                 >
-                  {/* Thanh tìm kiếm bên trong Mobile Menu */}
                   <div className="p-2">
                     <form
                       onSubmit={handleSearch}
@@ -239,7 +264,6 @@ export default function Header() {
                   </div>
                   <DropdownMenuSeparator />
 
-                  {/* Các lựa chọn cá nhân */}
                   {user ? (
                     <>
                       <DropdownMenuLabel className="font-normal flex items-center gap-2">
@@ -259,28 +283,9 @@ export default function Header() {
                         </div>
                       </DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => navigate("/profile")}>
-                        <UserCircle className="mr-2 h-4 w-4" /> Thông tin cá
-                        nhân
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/verify")}>
-                        <ShieldCheck className="mr-2 h-4 w-4" /> Xác minh tài
-                        khoản
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => navigate("/orders")}>
-                        <Package className="mr-2 h-4 w-4" /> Đơn hàng của tôi
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/wishlist")}>
-                        <Heart className="mr-2 h-4 w-4" /> Yêu thích
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={handleLogout}
-                        className="text-red-600"
-                      >
-                        <LogOut className="mr-2 h-4 w-4" /> Đăng xuất
-                      </DropdownMenuItem>
+
+                      {/* Tái sử dụng danh sách link bên trên để tránh sai sót */}
+                      {renderUserMenuLinks()}
                     </>
                   ) : (
                     <>

@@ -1,8 +1,8 @@
 import { useCreateProduct } from "@/hooks/productHooks/useCreateProduct";
 import React from "react";
 
-import ImageUploader from "@/components/product/ImageUploader";
-import ProductForm from "@/components/product/ProductForm";
+import ImageUploader from "@/components/product/createProduct/ImageUploader";
+import ProductForm from "@/components/product/createProduct/ProductForm";
 
 function CreateProduct() {
   const {

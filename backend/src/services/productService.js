@@ -13,9 +13,11 @@ exports.getAllProductsService = async (filters = {}) => {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .lean(), // Trả về JSON thuần, siêu nhẹ siêu nhanh
+        .lean(),
       Product.countDocuments({ status: "AVAILABLE" }),
     ]);
+
+    console.log("products", products);
 
     return {
       products,
@@ -225,5 +227,61 @@ exports.updateProductService = async (id, sellerId, updateData, files) => {
   } catch (error) {
     console.error("Lỗi tại updateProductService: ", error);
     throw new Error("Không thể cập nhật thông tin sản phẩm");
+  }
+};
+
+exports.getMyProductsService = async (sellerId, page, limit, status) => {
+  try {
+    let query = { sellerId };
+
+    if (status) {
+      query.status = status;
+    } else {
+      query.status = { $ne: "HIDDEN" }; // Ẩn đi những bài đã xóa mềm mặc định
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [products, total] = await Promise.all([
+      Product.find(query)
+        .populate("category", "name")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Product.countDocuments(query),
+    ]);
+
+    return {
+      products,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+      totalProducts: total,
+    };
+  } catch (error) {
+    console.error("Lỗi tại getMyProductsService: ", error);
+    throw new Error("Không thể tải danh sách sản phẩm của bạn");
+  }
+};
+
+exports.updateMyProductStatusService = async (id, sellerId, status) => {
+  try {
+    // Phải kiểm tra đúng sellerId thì mới được đổi trạng thái (tránh hack đổi bài người khác)
+    const updatedProduct = await Product.findOneAndUpdate(
+      { _id: id, sellerId: sellerId },
+      { $set: { status: status } },
+      { new: true, runValidators: true },
+    );
+
+    if (!updatedProduct) {
+      throw new Error(
+        "Sản phẩm không tồn tại hoặc bạn không có quyền thao tác",
+      );
+    }
+
+    return { updatedProduct };
+  } catch (error) {
+    console.error("Lỗi tại updateMyProductStatusService: ", error);
+    throw new Error("Không thể cập nhật trạng thái sản phẩm");
   }
 };

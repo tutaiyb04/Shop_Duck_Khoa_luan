@@ -11,7 +11,7 @@ function ProductPurchasePanel({
   return (
     <div className="flex flex-col h-full w-full lg:pl-4 xl:pl-6">
       {/* 1. TÊN & GIÁ SẢN PHẨM: Nhỏ lại một chút trên mobile */}
-      <h1 className="text-sm sm:text-2xl font-bold text-gray-800 leading-snug mb-2 sm:mb-4 break-words">
+      <h1 className="text-xl sm:text-2xl font-bold text-gray-800 leading-snug mb-2 sm:mb-4 break-words">
         {product.name}
       </h1>
       <p className="text-2xl sm:text-3xl font-bold text-yellow-600 mb-6 sm:mb-8">
@@ -71,7 +71,7 @@ function ProductPurchasePanel({
       </div>
 
       {/* 4. CAM KẾT: Đã sửa lỗi typo text-4sm thành text-xs sm:text-sm */}
-      <div className="space-y-3 sm:space-y-4 pt-4 sm:pt-6 border-t border-gray-100 mt-auto">
+      <div className="space-y-3 sm:space-y-4 pt-4 sm:pt-6 border-t border-gray-100">
         <div className="flex items-start gap-3">
           <div className="bg-green-100 text-green-600 rounded-full p-1 mt-0.5 shrink-0">
             <Check className="w-3.5 h-3.5 stroke-[3]" />
