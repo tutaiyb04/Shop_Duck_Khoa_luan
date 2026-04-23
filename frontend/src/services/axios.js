@@ -1,11 +1,15 @@
 import axios from "axios";
 
-const isLocal = window.location.hostname === "localhost";
+const isDevHost =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1";
+
+export const API_BASE_URL = isDevHost
+  ? "http://localhost:3000"
+  : "https://shop-duck-api.onrender.com";
 
 export const API = axios.create({
-  baseURL: isLocal
-    ? "http://localhost:3000"
-    : "https://shop-duck-api.onrender.com",
+  baseURL: API_BASE_URL,
 });
 
 // tự động đính kèm Token vào Header nếu có

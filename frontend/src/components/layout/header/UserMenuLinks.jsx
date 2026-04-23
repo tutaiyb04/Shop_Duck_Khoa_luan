@@ -11,17 +11,26 @@ import {
   Package,
   Heart,
   LogOut,
+  MessagesSquare,
 } from "lucide-react";
 
 function UserMenuLinks({ navigate, handleLogout }) {
   return (
     <>
+      <DropdownMenuLabel>Thông tin cơ bản</DropdownMenuLabel>
       <DropdownMenuItem
         onClick={() => navigate("/profile")}
         className="cursor-pointer"
       >
         <UserCircle className="mr-2 h-4 w-4" />
         <span>Thông tin cá nhân</span>
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onClick={() => navigate("/messages")}
+        className="cursor-pointer"
+      >
+        <MessagesSquare className="mr-2 h-4 w-4" />
+        <span>Tin nhắn</span>
       </DropdownMenuItem>
       <DropdownMenuSeparator />
 
