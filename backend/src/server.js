@@ -6,6 +6,7 @@ const { Server } = require("socket.io");
 
 const router = require("./routes/index");
 const connect = require("./config/db");
+const { setupSocketIO } = require("./utils/socketServer");
 
 // Bảo mật DB
 dotenv.config();
@@ -14,14 +15,14 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 function getSocketCorsOrigins() {
-  const raw = process.env.CLIENT_ORIGIN || process.env.FRONTEND_URL;
+  const raw = process.env.CLIENT_ORIGIN;
   if (raw) {
     return raw
       .split(",")
       .map((o) => o.trim())
       .filter(Boolean);
   }
-  return ["http://localhost:5173", "http://127.0.0.1:5173"];
+  return [raw];
 }
 
 // Mở cửa cho phép các nguồn ở ngoài truy cập vào -> giấy phép thông hành
@@ -43,29 +44,7 @@ const io = new Server(httpServer, {
   transports: ["websocket", "polling"],
 });
 
-io.on("connection", (socket) => {
-  console.log(`[socket] Kết nối: ${socket.id}`);
-
-  socket.on("addNewUser", (userId) => {
-    if (userId == null || userId === "") {
-      return;
-    }
-    const uid = String(userId);
-    socket.data.userId = uid;
-    socket.join(`user:${uid}`);
-    console.log(
-      `[socket] addNewUser: userId=${uid} (socket.id=${socket.id})`,
-    );
-  });
-
-  socket.on("disconnect", (reason) => {
-    const uid = socket.data?.userId;
-    console.log(
-      `[socket] Ngắt: ${socket.id} (${reason})` +
-        (uid ? ` userId=${uid}` : ""),
-    );
-  });
-});
+setupSocketIO(io);
 
 connect().then(() => {
   httpServer.listen(port, () => {

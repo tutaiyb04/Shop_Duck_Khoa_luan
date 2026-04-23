@@ -1,9 +1,48 @@
+import { useContext, useState } from "react";
 import { Check, Globe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
+import { API } from "@/services/axios";
+import { AuthContext } from "@/context/AuthContext";
 
 function ProductPurchasePanel({ product, maxQuantity }) {
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
+  const [openingChat, setOpeningChat] = useState(false);
+
+  const handleChatSeller = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) {
+      toast.error("Vui lòng đăng nhập để chat với người bán");
+      navigate("/login", {
+        state: { from: `/product/${product._id}` },
+      });
+      return;
+    }
+    setOpeningChat(true);
+    try {
+      const { data } = await API.post("/chat/open", {
+        productId: product._id,
+      });
+      const convId = data?.conversation?.id;
+      if (convId) {
+        navigate(`/messages?c=${convId}`);
+      } else {
+        navigate("/messages");
+        toast.error("Không lấy được mã hội thoại");
+      }
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Không mở được hội thoại";
+      toast.error(msg);
+    } finally {
+      setOpeningChat(false);
+    }
+  };
 
   return (
     <div className="flex flex-col h-full w-full lg:pl-4 xl:pl-6">
@@ -32,14 +71,11 @@ function ProductPurchasePanel({ product, maxQuantity }) {
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8">
         <Button
           type="button"
-          className="flex-1 h-11 sm:h-12 text-sm sm:text-base font-medium !bg-yellow-600 hover:!bg-yellow-700 text-white shadow-sm cursor-pointer !border-0 !ring-0 !outline-none !transition-colors"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            navigate("/messages");
-          }}
+          disabled={openingChat}
+          className="flex-1 h-11 sm:h-12 text-sm sm:text-base font-medium !bg-yellow-600 hover:!bg-yellow-700 text-white shadow-sm cursor-pointer !border-0 !ring-0 !outline-none !transition-colors disabled:opacity-60"
+          onClick={handleChatSeller}
         >
-          Chat với người bán để mua
+          {openingChat ? "Đang mở chat…" : "Chat với người bán để mua"}
         </Button>
       </div>
 
