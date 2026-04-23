@@ -1,4 +1,5 @@
 import { API } from "@/services/axios";
+import { disconnectSocket } from "@/services/socket";
 import { useCallback, useEffect } from "react";
 import { useState } from "react";
 import { createContext } from "react";
@@ -39,10 +40,12 @@ export const AuthProvider = ({ children }) => {
 
   const login = (userData) => {
     localStorage.setItem("token", userData.token);
+    disconnectSocket();
     setUser(userData.user);
   };
 
   const logout = () => {
+    disconnectSocket();
     localStorage.removeItem("token");
     setUser(null);
   };

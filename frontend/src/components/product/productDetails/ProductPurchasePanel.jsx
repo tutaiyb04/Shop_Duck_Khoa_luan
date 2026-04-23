@@ -1,7 +1,10 @@
 import { Check, Globe } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 function ProductPurchasePanel({ product, maxQuantity }) {
+  const navigate = useNavigate();
+
   return (
     <div className="flex flex-col h-full w-full lg:pl-4 xl:pl-6">
       {/* 1. TÊN & GIÁ SẢN PHẨM: Nhỏ lại một chút trên mobile */}
@@ -27,7 +30,15 @@ function ProductPurchasePanel({ product, maxQuantity }) {
 
       {/* 3. CÁC NÚT MUA HÀNG: Xếp dọc trên mobile, ngang trên tablet/PC */}
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8">
-        <Button className="flex-1 h-11 sm:h-12 text-sm sm:text-base font-medium !bg-yellow-600 hover:!bg-yellow-700 text-white shadow-sm cursor-pointer !border-0 !ring-0 !outline-none !transition-colors">
+        <Button
+          type="button"
+          className="flex-1 h-11 sm:h-12 text-sm sm:text-base font-medium !bg-yellow-600 hover:!bg-yellow-700 text-white shadow-sm cursor-pointer !border-0 !ring-0 !outline-none !transition-colors"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            navigate("/messages");
+          }}
+        >
           Chat với người bán để mua
         </Button>
       </div>

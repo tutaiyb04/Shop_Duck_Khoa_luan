@@ -5,10 +5,12 @@ import { AuthContext } from "@/context/AuthContext";
 import {
   ClipboardList,
   User,
+  MessageCircle,
   PlusCircle,
   Heart,
   ShieldCheck,
   List,
+  MessagesSquare,
 } from "lucide-react";
 import UserAvatar from "./UserAvatar";
 
@@ -19,8 +21,11 @@ function UserSidebar() {
   // Danh sách Menu theo từng nhóm trang trong khu vực quản lý
   const navGroups = [
     {
-      title: "", // Nhóm không có tiêu đề, tự động nằm trên cùng
-      items: [{ path: "/profile", label: "Thông tin cá nhân", icon: User }],
+      title: "Thông tin cơ bản",
+      items: [
+        { path: "/profile", label: "Thông tin cá nhân", icon: User },
+        { path: "/messages", label: "Tin nhắn", icon: MessagesSquare },
+      ],
     },
     {
       title: "Bán hàng",

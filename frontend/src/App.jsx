@@ -23,6 +23,7 @@ import VerifyEmail from "./pages/auth/VerifiEmail";
 import AccountVerification from "./pages/AccountVerification";
 import ManageProducts from "./pages/products/ManageProducts";
 import EditProduct from "./pages/products/EditProduct";
+import Messages from "./pages/messages/Messages";
 
 function App() {
   return (
@@ -53,6 +54,9 @@ function App() {
 
               {/* Profile Page */}
               <Route path="/profile" element={<Profile />} />
+
+              {/* Tin nhắn */}
+              <Route path="/messages" element={<Messages />} />
 
               {/* Trang Đăng bán sản phẩm */}
               <Route path="/sell" element={<CreateProduct />} />
