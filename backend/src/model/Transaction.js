@@ -1,28 +1,31 @@
 const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
 
-const transactionSchema = new Schema(
+const transactionSchema = new mongoose.Schema(
   {
-    orderId: { type: Schema.Types.ObjectId, ref: "Order", required: true },
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    amount: { type: Number, required: true },
-    paymentMethod: {
-      type: String,
-      enum: ["VNPAY", "MOMO", "WALLET"],
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
-    providerTransactionId: { type: String, required: true },
+    productId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      required: true,
+    },
+    amount: { type: Number, required: true },
+    orderCode: { type: Number, required: true },
     status: {
       type: String,
-      enum: ["PENDING", "SUCCESS", "FAILED", "REFUNDED"],
+      enum: ["PENDING", "SUCCESS", "CANCELLED"],
       default: "PENDING",
     },
-    gatewayResponse: { type: Schema.Types.Mixed },
   },
   { timestamps: true },
 );
 
-transactionSchema.index({ orderId: 1 });
-transactionSchema.index({ providerTransactionId: 1 }, { unique: true });
+transactionSchema.index({ orderCode: 1 }, { unique: true });
+transactionSchema.index({ status: 1 });
+/** Tối ưu lọc webhook { orderCode, status: PENDING } khi tải cao */
+transactionSchema.index({ orderCode: 1, status: 1 });
 
 module.exports = mongoose.model("Transaction", transactionSchema);

@@ -1,0 +1,40 @@
+const paymentService = require("../services/paymentService");
+
+/**
+ * POST /payment/create-vip-link (auth) — tạo link PayOS, logic nằm ở paymentService.
+ */
+exports.createVipPaymentLink = async (req, res) => {
+  try {
+    const result = await paymentService.createVipPaymentLink({
+      userId: req.user._id,
+      productId: req.body?.productId,
+    });
+
+    if (!result.ok) {
+      return res.status(result.status).json({ message: result.message });
+    }
+    return res.status(200).json(result.data);
+  } catch (error) {
+    console.error("Lỗi createVipPaymentLink:", error);
+    return res.status(500).json({
+      message: error?.message || "Không thể tạo link thanh toán",
+    });
+  }
+};
+
+/**
+ * POST /payment/webhook — lưu lượng cao: nghiệp vụ + DB trong service, controller chỉ trả JSON.
+ */
+exports.handlePayOSWebhook = async (req, res) => {
+  try {
+    const { response, httpStatus } = await paymentService.processPayosVipWebhook(
+      req.body,
+    );
+    return res.status(httpStatus).json(response);
+  } catch (error) {
+    console.error("Lỗi handlePayOSWebhook:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error" });
+  }
+};

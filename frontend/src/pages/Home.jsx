@@ -24,6 +24,13 @@ function Home() {
       : "Không có sản phẩm nào trong bán kính đã chọn.";
   }
 
+  const vipProducts = products.filter((p) => p.isVIP);
+  const regularProducts = products.filter((p) => !p.isVIP);
+  const showVipBlock = !isLoading && vipProducts.length > 0;
+  const listForMainSection = showVipBlock ? regularProducts : products;
+  const showMainSection =
+    !isLoading && products.length > 0 && listForMainSection.length > 0;
+
   return (
     <div className="min-h-screen bg-amber-50 w-full pb-10 sm:pb-20">
       {/* Banner Duck Shop */}
@@ -39,25 +46,43 @@ function Home() {
       </div>
 
       <div className="container mx-auto px-2 sm:px-4 mt-4 sm:mt-8 max-w-7xl">
-        <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 sm:mb-6 pl-2 sm:pl-0">
-          {sectionTitle}
-        </h2>
+        {showVipBlock && (
+          <section className="mb-8 sm:mb-10" aria-label="Sản phẩm VIP nổi bật">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 pl-2 sm:pl-0 flex items-center gap-2">
+              <span aria-hidden>🔥</span>
+              Sản phẩm VIP nổi bật
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 px-1 sm:px-0">
+              {vipProducts.map((product) => (
+                <ProductCard key={product._id} product={product} />
+              ))}
+            </div>
+          </section>
+        )}
 
-        {isLoading ? (
+        {isLoading && (
           <div className="text-center py-10 sm:py-20 text-gray-400 animate-pulse text-sm sm:text-base">
             Đang tải sản phẩm...
           </div>
-        ) : products.length === 0 ? (
+        )}
+
+        {!isLoading && products.length === 0 && (
           <div className="text-center py-10 sm:py-20 bg-white rounded-xl border border-dashed text-gray-400 mx-2 sm:mx-0 text-sm sm:text-base">
             {emptyMessage}
           </div>
-        ) : (
-          /* Tối ưu Gap trên Mobile: dùng gap-2 hoặc gap-3 thay vì gap-4 */
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 px-1 sm:px-0">
-            {products.map((product) => (
-              <ProductCard key={product._id} product={product} />
-            ))}
-          </div>
+        )}
+
+        {showMainSection && (
+          <>
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 sm:mb-6 pl-2 sm:pl-0">
+              {sectionTitle}
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 px-1 sm:px-0">
+              {listForMainSection.map((product) => (
+                <ProductCard key={product._id} product={product} />
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>

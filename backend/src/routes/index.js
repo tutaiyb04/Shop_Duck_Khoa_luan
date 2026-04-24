@@ -4,6 +4,7 @@ const productRouter = require("./productRouter");
 const categoryRouter = require("./categoryRouter");
 const reportRouter = require("./reportRouter");
 const chatRouter = require("./chatRouter");
+const paymentRouter = require("./paymentRouter");
 function Route(app) {
   app.use("/user", userRouter);
   app.use("/products", productRouter);
@@ -11,6 +12,7 @@ function Route(app) {
   app.use("/categories", categoryRouter);
   app.use("/reports", reportRouter);
   app.use("/chat", chatRouter);
+  app.use("/payment", paymentRouter);
 }
 
 module.exports = Route;

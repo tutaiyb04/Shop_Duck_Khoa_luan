@@ -24,7 +24,10 @@ function ProductFilter({ filters, setFilters }) {
         <option value="">Tất cả trạng thái</option>
         <option value="PENDING">Chờ duyệt</option>
         <option value="AVAILABLE">Đang bán</option>
+        <option value="REJECTED">Bị từ chối</option>
         <option value="LOCKED">Bị khóa</option>
+        <option value="SOLD">Đã bán</option>
+        <option value="HIDDEN">Đã ẩn</option>
       </select>
     </div>
   );
