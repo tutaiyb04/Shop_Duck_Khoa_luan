@@ -20,6 +20,26 @@ function parseCategoryObjectIdFilter(category) {
 }
 
 /**
+ * Sản phẩm thường gắn danh mục **con**. Khi lọc theo ID **cha** (parentId = null),
+ * cần khớp mọi sản phẩm thuộc danh mục con (và chính id cha nếu có bản ghi trỏ thẳng).
+ */
+async function buildCategoryFilterQuery(categoryObjectId) {
+  if (!categoryObjectId) return null;
+  const cat = await Category.findById(categoryObjectId).select("parentId").lean();
+  if (!cat) {
+    return { $in: [] };
+  }
+  if (cat.parentId == null) {
+    const children = await Category.find({ parentId: categoryObjectId })
+      .select("_id")
+      .lean();
+    const ids = [categoryObjectId, ...children.map((c) => c._id)];
+    return { $in: ids };
+  }
+  return categoryObjectId;
+}
+
+/**
  * Gắn tên danh mục cho danh sách admin, không dùng populate (tránh CastError
  * nếu DB có `category: "khac"` / chuỗi thay vì ref ObjectId).
  */
@@ -72,6 +92,10 @@ exports.getAllProductsService = async (filters = {}) => {
         ? new mongoose.Types.ObjectId(categoryStr)
         : null;
 
+    const categoryMongoFilter = categoryId
+      ? await buildCategoryFilterQuery(categoryId)
+      : null;
+
     const limitN = parseInt(limit, 10) || 20;
     const pageN = parseInt(page, 10) || 1;
     const skip = (pageN - 1) * limitN;
@@ -89,8 +113,8 @@ exports.getAllProductsService = async (filters = {}) => {
           $options: "i",
         };
       }
-      if (categoryId) {
-        geoQuery.category = categoryId;
+      if (categoryMongoFilter) {
+        geoQuery.category = categoryMongoFilter;
       }
 
       const geoNearStage = {
@@ -158,8 +182,8 @@ exports.getAllProductsService = async (filters = {}) => {
         $options: "i",
       };
     }
-    if (categoryId) {
-      query.category = categoryId;
+    if (categoryMongoFilter) {
+      query.category = categoryMongoFilter;
     }
 
     const [products, total] = await Promise.all([
@@ -202,8 +226,13 @@ exports.getAdminProductsService = async (filters) => {
         $options: "i",
       };
     }
-    const categoryId = parseCategoryObjectIdFilter(category);
-    if (categoryId) query.category = categoryId;
+    const categoryStr = parseCategoryObjectIdFilter(category);
+    if (categoryStr) {
+      const categoryMongoFilter = await buildCategoryFilterQuery(
+        new mongoose.Types.ObjectId(categoryStr),
+      );
+      if (categoryMongoFilter) query.category = categoryMongoFilter;
+    }
     if (status) query.status = status;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
