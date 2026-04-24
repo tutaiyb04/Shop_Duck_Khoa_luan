@@ -30,7 +30,7 @@ function ProductCard({ product }) {
             className="absolute top-2 left-2 z-10 border-0 bg-gradient-to-r from-red-600 to-red-700 px-2 py-0.5 text-[10px] font-extrabold text-amber-100 shadow-md sm:text-xs"
             variant="destructive"
           >
-            <span aria-hidden>🔥</span> VIP
+            <span aria-hidden>🔥</span> HOT
           </Badge>
         )}
         <div className="absolute top-2 right-2 bg-black/60 text-white text-s font-bold px-2 py-1 rounded backdrop-blur-sm">

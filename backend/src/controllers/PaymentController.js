@@ -8,6 +8,7 @@ exports.createVipPaymentLink = async (req, res) => {
     const result = await paymentService.createVipPaymentLink({
       userId: req.user._id,
       productId: req.body?.productId,
+      plan: req.body?.plan,
     });
 
     if (!result.ok) {
@@ -36,5 +37,27 @@ exports.handlePayOSWebhook = async (req, res) => {
     return res
       .status(500)
       .json({ success: false, message: "Server error" });
+  }
+};
+
+/**
+ * POST /payment/confirm-vip (auth) — xác nhận VIP sau khi về từ PayOS (bù khi webhook không tới).
+ * Body: { orderCode: number }
+ */
+exports.confirmVipAfterReturn = async (req, res) => {
+  try {
+    const result = await paymentService.confirmVipAfterReturn({
+      userId: req.user._id,
+      orderCode: req.body?.orderCode,
+    });
+    if (!result.ok) {
+      return res.status(result.status).json({ message: result.message });
+    }
+    return res.status(200).json(result.data);
+  } catch (error) {
+    console.error("Lỗi confirmVipAfterReturn:", error);
+    return res.status(500).json({
+      message: error?.message || "Không thể xác nhận thanh toán",
+    });
   }
 };

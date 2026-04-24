@@ -9,7 +9,9 @@ function useMyProducts() {
   const fetchMyProducts = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await API.get("/products/my-products/all");
+      const response = await API.get("/products/my-products/all", {
+        params: { page: 1, limit: 200 },
+      });
       setProducts(response.data.products);
     } catch (error) {
       toast.error(error.response?.data?.message || "Không thể tải sản phẩm");
