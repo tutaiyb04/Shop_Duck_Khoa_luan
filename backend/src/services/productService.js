@@ -154,7 +154,7 @@ exports.getAllProductsService = async (filters = {}) => {
       Product.find(query)
         .populate("sellerId", "username avatar")
         .populate("category", "name")
-        .sort({ isVIP: -1, createdAt: -1 })
+        .sort({ isVIP: -1, updatedAt: -1 })
         .skip(skip)
         .limit(limitN)
         .lean(),
@@ -200,7 +200,7 @@ exports.getAdminProductsService = async (filters) => {
     const [products, total] = await Promise.all([
       Product.find(query)
         .populate("sellerId", "username email avatar")
-        .sort({ isVIP: -1, createdAt: -1 })
+        .sort({ isVIP: -1, updatedAt: -1 })
         .skip(skip)
         .limit(parseInt(limit))
         .lean(),

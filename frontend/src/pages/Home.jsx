@@ -47,10 +47,10 @@ function Home() {
 
       <div className="container mx-auto px-2 sm:px-4 mt-4 sm:mt-8 max-w-7xl">
         {showVipBlock && (
-          <section className="mb-8 sm:mb-10" aria-label="Sản phẩm VIP nổi bật">
+          <section className="mb-8 sm:mb-10" aria-label="Sản phẩm HOT nổi bật">
             <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 pl-2 sm:pl-0 flex items-center gap-2">
               <span aria-hidden>🔥</span>
-              Sản phẩm VIP nổi bật
+              Sản phẩm HOT nổi bật
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 px-1 sm:px-0">
               {vipProducts.map((product) => (

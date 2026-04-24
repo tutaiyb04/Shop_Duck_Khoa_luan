@@ -107,7 +107,7 @@ function ProductTable({ products, loading, handleUpdateStatus }) {
                         variant="destructive"
                         className="h-5 shrink-0 border-0 bg-amber-500 px-1.5 text-[10px] font-bold uppercase text-white"
                       >
-                        VIP
+                        HOT
                       </Badge>
                     )}
                   </span>

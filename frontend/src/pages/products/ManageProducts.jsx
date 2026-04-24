@@ -16,14 +16,15 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, CheckCircle, Trash2, Sparkles, Loader2 } from "lucide-react";
+import { Edit, CheckCircle, Trash2, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { API } from "@/services/axios";
 import { getSocket } from "@/services/socket";
+import { API } from "@/services/axios";
 import { AuthContext } from "@/context/AuthContext";
 import useMyProducts from "@/hooks/productHooks/useMyProducts";
 import UserSidebar from "@/components/shared/UserSidebar";
+import VipUpgradeModal from "@/components/product/VipUpgradeModal";
 
 /** Nhãn + style badge trạng thái sản phẩm (đủ enum backend) */
 const PRODUCT_STATUS = {
@@ -43,39 +44,26 @@ function getStatusInfo(status) {
   };
 }
 
-/** Gói VIP: chỉ khi còn đang Chờ duyệt hoặc Đang bán (đồng bộ backend) */
-function canPayVip(product) {
-  if (product.isVIP) return false;
-  return product.status === "PENDING" || product.status === "AVAILABLE";
+/**
+ * Chưa VIP, hoặc đã VIP nhưng còn ≤7 ngày sắp hết hạn.
+ * (Đồng bộ: backend chỉ PENDING/AVAILABLE mới tạo link.)
+ */
+function shouldShowVipUpgrade(product) {
+  if (product.status !== "PENDING" && product.status !== "AVAILABLE") {
+    return false;
+  }
+  if (!product.isVIP) return true;
+  if (!product.vipUntil) return true;
+  const end = new Date(product.vipUntil);
+  const daysLeft = (end.getTime() - Date.now()) / 86_400_000;
+  return daysLeft <= 7;
 }
 
 function ManageProducts() {
   const { user } = useContext(AuthContext);
   const { products, loading, handleUpdateStatus, refresh } = useMyProducts();
   const navigate = useNavigate();
-  const [vipLoadingId, setVipLoadingId] = useState(null);
-
-  const handleBuyVip = async (productId) => {
-    setVipLoadingId(productId);
-    try {
-      const { data } = await API.post("/payment/create-vip-link", {
-        productId,
-      });
-      if (data.checkoutUrl) {
-        window.location.assign(data.checkoutUrl);
-        return;
-      }
-      toast.error("Không nhận được link thanh toán từ PayOS");
-    } catch (err) {
-      const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Không tạo được link (kiểm tra cấu hình PayOS trên server)";
-      toast.error(msg);
-    } finally {
-      setVipLoadingId(null);
-    }
-  };
+  const [vipTarget, setVipTarget] = useState(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -89,21 +77,78 @@ function ManageProducts() {
       `${window.location.pathname}${next ? `?${next}` : ""}`,
     );
     if (vip === "success") {
-      toast.success(
-        "Thanh toán đã ghi nhận. Gói VIP sẽ cập nhật sau vài giây khi PayOS xác nhận.",
-      );
-      refresh();
+      const raw = (() => {
+        try {
+          return sessionStorage.getItem("vip_checkout_order_code");
+        } catch {
+          return null;
+        }
+      })();
+      const orderCode = raw != null && raw !== "" ? Number(raw) : NaN;
+
+      if (user && Number.isFinite(orderCode)) {
+        (async () => {
+          for (let attempt = 0; attempt < 8; attempt += 1) {
+            if (attempt > 0) {
+              await new Promise((r) => setTimeout(r, 1500 + attempt * 500));
+            }
+            try {
+              const { data } = await API.post("/payment/confirm-vip", {
+                orderCode,
+              });
+              try {
+                sessionStorage.removeItem("vip_checkout_order_code");
+              } catch {
+                // ignore
+              }
+              if (data?.already) {
+                toast.success("Gói VIP đã kích hoạt.");
+              } else {
+                toast.success("Gói VIP đã kích hoạt. Tin hiển thị nổi bật trên trang chủ.");
+              }
+              await refresh();
+              return;
+            } catch (e) {
+              const status = e?.response?.status;
+              const msg = e?.response?.data?.message;
+              if (status === 409) {
+                continue;
+              }
+              if (status === 404) {
+                break;
+              }
+              toast.error(msg || "Chưa đồng bộ được VIP. Tải lại trang sau vài phút.");
+              await refresh();
+              return;
+            }
+          }
+          try {
+            sessionStorage.removeItem("vip_checkout_order_code");
+          } catch {
+            // ignore
+          }
+          toast(
+            "Nếu đã trừ tiền mà trạng thái chưa đổi, hãy tải lại trang sau 1 phút (PayOS có thể trễ vài giây).",
+            { icon: "ℹ️" },
+          );
+          await refresh();
+        })();
+      } else {
+        toast(
+          "Thanh toán đã ghi nhận. Tải lại trang nếu gói VIP chưa cập nhật (cần webhook PayOS công khai).",
+        );
+        refresh();
+      }
     } else {
       toast("Bạn đã hủy thanh toán gói VIP.", { icon: "ℹ️" });
     }
-  }, [refresh]);
+  }, [refresh, user]);
 
   useEffect(() => {
     if (!user) return;
     const socket = getSocket();
     if (!socket) return;
     const onVip = () => {
-      toast.success("Gói VIP đã kích hoạt cho một sản phẩm!");
       refresh();
     };
     socket.on("payment:vip_success", onVip);
@@ -145,11 +190,9 @@ function ManageProducts() {
                   Gói hiển thị VIP
                 </p>
                 <p className="mt-1 text-xs sm:text-sm text-amber-900/90 leading-relaxed">
-                  Với sản phẩm ở trạng thái <strong>Chờ duyệt</strong> hoặc{" "}
-                  <strong>Đang bán</strong>, bạn có thể thanh toán qua PayOS để
-                  tin nổi bật trên trang chủ (có nhãn VIP) và{" "}
-                  <strong>được ưu tiên hiển thị ở trang quản trị sản phẩm</strong>{" "}
-                  của Admin.
+                  Chọn <strong>Nâng cấp VIP</strong> ở bảng dưới: gói 7 hoặc 30
+                  ngày, quét mã / thanh toán PayOS. Tin VIP nổi bật trên trang chủ
+                  và ưu tiên tại bảng quản trị.
                 </p>
               </div>
 
@@ -160,7 +203,7 @@ function ManageProducts() {
                       <TableHead>Sản phẩm</TableHead>
                       <TableHead>Giá</TableHead>
                       <TableHead>Trạng thái</TableHead>
-                      <TableHead className="min-w-[140px]">VIP</TableHead>
+                      <TableHead className="min-w-[140px]">HOT / VIP</TableHead>
                       <TableHead className="text-right">Hành động</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -188,44 +231,41 @@ function ManageProducts() {
                             {getStatusInfo(product.status).label}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-sm align-top">
-                          {product.isVIP ? (
-                            <div className="space-y-0.5">
-                              <Badge
-                                variant="destructive"
-                                className="!bg-amber-500 text-white border-0"
+                        <TableCell className="text-sm align-top max-w-[200px]">
+                          <div className="flex flex-col gap-2">
+                            {product.isVIP && (
+                              <div className="space-y-0.5">
+                                <Badge
+                                  variant="destructive"
+                                  className="!bg-amber-500 text-white border-0 w-fit"
+                                >
+                                  HOT
+                                </Badge>
+                                {product.vipUntil && (
+                                  <p className="text-[11px] text-gray-500">
+                                    Hạn:{" "}
+                                    {new Date(
+                                      product.vipUntil,
+                                    ).toLocaleString("vi-VN")}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                            {shouldShowVipUpgrade(product) && (
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => setVipTarget(product)}
+                                className="!h-8 w-fit text-xs !bg-gradient-to-r !from-red-600 !to-amber-600 hover:!from-red-700 hover:!to-amber-700 text-white !border-0"
                               >
-                                VIP
-                              </Badge>
-                              {product.vipUntil && (
-                                <p className="text-[11px] text-gray-500 max-w-[11rem]">
-                                  Hạn:{" "}
-                                  {new Date(
-                                    product.vipUntil,
-                                  ).toLocaleString("vi-VN")}
-                                </p>
+                                {product.isVIP ? "Gia hạn / VIP" : "Nâng cấp VIP"}
+                              </Button>
+                            )}
+                            {!product.isVIP &&
+                              !shouldShowVipUpgrade(product) && (
+                                <span className="text-gray-400 text-xs">—</span>
                               )}
-                            </div>
-                          ) : canPayVip(product) ? (
-                            <Button
-                              type="button"
-                              size="sm"
-                              disabled={vipLoadingId === product._id}
-                              onClick={() => handleBuyVip(product._id)}
-                              className="!h-8 text-xs !bg-gradient-to-r !from-red-600 !to-amber-600 hover:!from-red-700 hover:!to-amber-700 text-white !border-0"
-                            >
-                              {vipLoadingId === product._id ? (
-                                <>
-                                  <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
-                                  Đang tạo link…
-                                </>
-                              ) : (
-                                "Thanh toán VIP"
-                              )}
-                            </Button>
-                          ) : (
-                            <span className="text-gray-400 text-xs">—</span>
-                          )}
+                          </div>
                         </TableCell>
                         <TableCell className="text-right space-x-2 whitespace-nowrap">
                           {/* Sửa thông tin */}
@@ -279,6 +319,14 @@ function ManageProducts() {
           </Card>
         </div>
       </div>
+      <VipUpgradeModal
+        open={!!vipTarget}
+        onOpenChange={(v) => {
+          if (!v) setVipTarget(null);
+        }}
+        product={vipTarget}
+        onPaidRefresh={refresh}
+      />
     </div>
   );
 }

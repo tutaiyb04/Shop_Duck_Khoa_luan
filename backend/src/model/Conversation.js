@@ -14,10 +14,6 @@ const conversationSchema = new Schema(
       default: null,
     },
     unreadCount: { type: Map, of: Number, default: {} },
-    /**
-     * Xóa mềm theo user: key = ObjectId string, value = true → ẩn khỏi danh sách của user đó.
-     * Dùng Map thay vì mảng thứ hai cạnh `participants` để tránh lỗi MongoDB parallel arrays (171).
-     */
     userHidden: { type: Map, of: Boolean, default: {} },
   },
   { timestamps: true },
