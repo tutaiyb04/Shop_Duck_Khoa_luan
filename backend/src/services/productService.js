@@ -63,8 +63,14 @@ exports.getAllProductsService = async (filters = {}) => {
       radius = 5000,
       page = 1,
       limit = 20,
+      category: rawCategory,
     } = filters;
     const search = (rawSearch || "").trim();
+    const categoryStr = (rawCategory || "").toString().trim();
+    const categoryId =
+      categoryStr && mongoose.isValidObjectId(categoryStr)
+        ? new mongoose.Types.ObjectId(categoryStr)
+        : null;
 
     const limitN = parseInt(limit, 10) || 20;
     const pageN = parseInt(page, 10) || 1;
@@ -82,6 +88,9 @@ exports.getAllProductsService = async (filters = {}) => {
           $regex: escapeRegexForSearch(search),
           $options: "i",
         };
+      }
+      if (categoryId) {
+        geoQuery.category = categoryId;
       }
 
       const geoNearStage = {
@@ -148,6 +157,9 @@ exports.getAllProductsService = async (filters = {}) => {
         $regex: escapeRegexForSearch(search),
         $options: "i",
       };
+    }
+    if (categoryId) {
+      query.category = categoryId;
     }
 
     const [products, total] = await Promise.all([

@@ -7,6 +7,7 @@ exports.getAllProducts = async (req, res) => {
       lat: req.query.lat, // Vĩ độ
       lng: req.query.lng, // Kinh độ
       radius: req.query.radius, // Bán kính (mét)
+      category: req.query.category || "",
       page: parseInt(req.query.page) || 1,
       limit: parseInt(req.query.limit) || 20,
     };
