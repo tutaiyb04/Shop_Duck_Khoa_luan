@@ -61,3 +61,25 @@ exports.confirmVipAfterReturn = async (req, res) => {
     });
   }
 };
+
+/**
+ * GET /payment/admin/vip-transactions?status=&page=&limit= — admin: giao dịch VIP + tổng doanh thu
+ */
+exports.getAdminVipTransactions = async (req, res) => {
+  try {
+    const result = await paymentService.getAdminVipTransactions({
+      page: req.query.page,
+      limit: req.query.limit,
+      status: req.query.status,
+    });
+    return res.status(200).json({
+      message: "Lấy giao dịch VIP thành công",
+      result,
+    });
+  } catch (error) {
+    console.error("Lỗi getAdminVipTransactions:", error);
+    return res.status(500).json({
+      message: error?.message || "Không thể tải giao dịch",
+    });
+  }
+};
