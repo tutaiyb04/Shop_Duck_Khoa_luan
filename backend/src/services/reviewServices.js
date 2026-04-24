@@ -5,7 +5,8 @@ const Order = require("../model/Order");
 
 exports.createReviewService = async (buyerId, sellerId, productId, rating, comment) => {
   // Kiểm tra đơn hàng đã hoàn tất chưa (Bạn có thể comment đoạn này lại nếu chưa có data Order để test)
-  const order = await Order.findOne({ buyerId, productId, status: "COMPLETED" });
+  const order = await Order.findOne({ buyerId, productId, status: "COMPLETED" })
+    .sort({ createdAt: -1 });
   if (!order) {
     throw new Error("Chỉ được đánh giá khi giao dịch thành công");
   }
@@ -22,7 +23,14 @@ exports.createReviewService = async (buyerId, sellerId, productId, rating, comme
 
   try {
     // 1. Tạo Review mới
-    const newReview = new Review({ buyerId, sellerId, productId, rating, comment });
+    const newReview = new Review({
+      buyerId,
+      sellerId,
+      productId,
+      orderId: order._id,
+      rating,
+      comment,
+    });
     await newReview.save({ session });
 
     // 2. Tính lại điểm trung bình

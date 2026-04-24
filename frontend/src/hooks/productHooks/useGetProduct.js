@@ -9,6 +9,7 @@ export function useGetProduct() {
   const [isLoading, setIsLoading] = useState(false);
 
   const search = (searchParams.get("search") || "").trim();
+  const category = (searchParams.get("category") || "").trim();
   const lat = searchParams.get("lat") || "";
   const lng = searchParams.get("lng") || "";
   const radius = searchParams.get("radius") || "";
@@ -18,11 +19,15 @@ export function useGetProduct() {
       setIsLoading(true);
       const params = {};
       if (search) params.search = search;
+      if (category) params.category = category;
       if (lat && lng) {
         params.lat = lat;
         params.lng = lng;
         params.radius = radius || "5000";
       }
+      const narrow =
+        Boolean(search) || Boolean(category) || (Boolean(lat) && Boolean(lng));
+      params.limit = narrow ? 24 : 48;
       const response = await API.get("/products", { params });
       setProducts(response.data.products || []);
     } catch (error) {
@@ -31,7 +36,7 @@ export function useGetProduct() {
     } finally {
       setIsLoading(false);
     }
-  }, [search, lat, lng, radius]);
+  }, [search, category, lat, lng, radius]);
 
   useEffect(() => {
     fetchProducts();
@@ -43,6 +48,8 @@ export function useGetProduct() {
     refresh: fetchProducts,
     /** Từ khóa đang lọc (từ URL), dùng cho UI */
     activeSearch: search,
+    /** Lọc theo ObjectId danh mục (?category=) */
+    activeCategory: category,
     /** Đang lọc theo vị trí gần đây */
     hasLocationFilter: Boolean(lat && lng),
   };
