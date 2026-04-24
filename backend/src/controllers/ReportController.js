@@ -28,6 +28,31 @@ exports.createReport = async (req, res) => {
   }
 };
 
+exports.createChatReport = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res
+        .status(401)
+        .json({ message: "Vui lòng đăng nhập để báo cáo!" });
+    }
+    const reporterId = req.user._id || req.user.id;
+    const { report } = await reportService.createChatReportService(
+      reporterId,
+      req.body,
+    );
+    return res.status(201).json({
+      message: "Đã gửi tố cáo. Đội ngũ quản trị sẽ xem xét.",
+      report,
+    });
+  } catch (error) {
+    console.error("Lỗi createChatReport:", error);
+    const status = error.status || 500;
+    return res.status(status).json({
+      message: error.message || "Lỗi server khi gửi tố cáo",
+    });
+  }
+};
+
 exports.getAdminReports = async (req, res) => {
   try {
     const filters = {

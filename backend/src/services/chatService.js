@@ -55,7 +55,9 @@ exports.openOrGetConversation = async (buyerId, productId) => {
     throw err;
   }
 
-  const product = await Product.findById(productId).select("sellerId name").lean();
+  const product = await Product.findById(productId)
+    .select("sellerId name")
+    .lean();
   if (!product) {
     const err = new Error("Sản phẩm không tồn tại");
     err.status = 404;
@@ -64,7 +66,9 @@ exports.openOrGetConversation = async (buyerId, productId) => {
 
   const sellerId = product.sellerId;
   if (String(sellerId) === String(buyerId)) {
-    const err = new Error("Bạn là người bán sản phẩm này, không thể chat với chính mình");
+    const err = new Error(
+      "Bạn là người bán sản phẩm này, không thể chat với chính mình",
+    );
     err.status = 400;
     throw err;
   }
@@ -114,7 +118,12 @@ exports.listConversations = async (userId) => {
     throw err;
   }
   const uid = new mongoose.Types.ObjectId(String(userId));
-  const rows = await Conversation.find({ participants: uid })
+  const uidStr = String(userId);
+  const rows = await Conversation.find({
+    participants: uid,
+    [`userHidden.${uidStr}`]: { $ne: true },
+    hiddenFromUsers: { $nin: [uid] },
+  })
     .select(
       "participants productId lastMessage lastMessageSenderId unreadCount updatedAt",
     )
@@ -128,7 +137,9 @@ exports.listConversations = async (userId) => {
     const me = String(userId);
     const other = (c.participants || []).find((p) => String(p._id) !== me);
     const product = c.productId;
-    const lastSid = c.lastMessageSenderId ? String(c.lastMessageSenderId) : null;
+    const lastSid = c.lastMessageSenderId
+      ? String(c.lastMessageSenderId)
+      : null;
     const lastSenderDoc =
       lastSid != null
         ? (c.participants || []).find((p) => String(p._id) === lastSid)
@@ -189,11 +200,15 @@ exports.getMessages = async (conversationId, userId) => {
     throw err;
   }
 
-  // Reset unread cho user hiện tại (idempotent: nhiều tab cùng mở vẫn chỉ về 0).
-  normalizeUnreadCountOnConv(conv);
-  conv.unreadCount.set(String(userId), 0);
-  conv.markModified("unreadCount");
-  await conv.save();
+  const uidKey = String(userId);
+  await Conversation.updateOne(
+    { _id: conv._id },
+    { $unset: { [`userHidden.${uidKey}`]: "" } },
+  );
+  await Conversation.updateOne(
+    { _id: conv._id },
+    { $set: { [`unreadCount.${uidKey}`]: 0 } },
+  );
 
   const messages = await Message.find({ conversationId: conv._id })
     .select("text images isRead createdAt senderId")
@@ -301,6 +316,17 @@ exports.sendMessage = async (userId, { conversationId, text, images = [] }) => {
   conv.markModified("unreadCount");
   await conv.save();
 
+  const recipientIds = conv.participants.filter(
+    (p) => String(p) !== String(userId),
+  );
+  if (recipientIds.length > 0) {
+    const $unset = {};
+    for (const p of recipientIds) {
+      $unset[`userHidden.${String(p)}`] = "";
+    }
+    await Conversation.updateOne({ _id: conv._id }, { $unset });
+  }
+
   await message.populate("senderId", "username avatar");
 
   const pop = message.senderId;
@@ -326,4 +352,32 @@ exports.sendMessage = async (userId, { conversationId, text, images = [] }) => {
     conversationId: String(conv._id),
     sender,
   };
+};
+
+/**
+ * Xóa mềm: ẩn hội thoại khỏi danh sách của user hiện tại (không xóa tin nhắn).
+ */
+exports.softHideConversationForUser = async (userId, conversationId) => {
+  if (!mongoose.isValidObjectId(conversationId)) {
+    const err = new Error("ID hội thoại không hợp lệ");
+    err.status = 400;
+    throw err;
+  }
+  const uid = new mongoose.Types.ObjectId(String(userId));
+  const exists = await Conversation.findOne({
+    _id: conversationId,
+    participants: uid,
+  })
+    .select("_id")
+    .lean();
+  if (!exists) {
+    const err = new Error("Không tìm thấy hội thoại hoặc bạn không tham gia");
+    err.status = 404;
+    throw err;
+  }
+  await Conversation.updateOne(
+    { _id: new mongoose.Types.ObjectId(String(conversationId)) },
+    { $set: { [`userHidden.${String(userId)}`]: true } },
+  );
+  return { ok: true };
 };

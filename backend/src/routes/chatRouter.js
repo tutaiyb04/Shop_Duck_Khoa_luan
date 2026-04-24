@@ -18,6 +18,11 @@ router.post(
   chatController.postUploadChatImages,
 );
 router.post("/message", protect, chatMessageLimiter, chatController.postMessage);
+router.delete(
+  "/conversations/:conversationId",
+  protect,
+  chatController.softDeleteConversation,
+);
 router.get("/:conversationId", protect, chatController.getConversationMessages);
 
 module.exports = router;

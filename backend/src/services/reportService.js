@@ -1,6 +1,8 @@
+const mongoose = require("mongoose");
 const Report = require("../model/Report");
 const Product = require("../model/Product");
 const User = require("../model/User");
+const Conversation = require("../model/Conversation");
 
 exports.getAllReportsService = async (filters) => {
   try {
@@ -102,17 +104,99 @@ exports.resolveReportService = async (reportId, action, adminNote) => {
 
 exports.createReportService = async (reporterId, reportData) => {
   try {
+    const imgs = Array.isArray(reportData.evidenceImages)
+      ? reportData.evidenceImages.filter(Boolean)
+      : [];
     const newReport = await Report.create({
       reporterId: reporterId,
       targetType: reportData.targetType,
       targetId: reportData.targetId,
       reason: reportData.reason,
       description: reportData.description || "",
-      // evidenceImages: [] - Xử lý sau
+      evidenceImages: imgs,
     });
-    return { newReport };
+    return { report: newReport };
   } catch (error) {
     console.error("Lỗi tại createReportService:", error);
     throw new Error("Không thể tạo báo cáo vi phạm");
   }
+};
+
+/**
+ * Tố cáo người dùng từ ngữ cảnh chat — prefix conversationId trong description cho Admin.
+ */
+exports.createChatReportService = async (reporterId, body) => {
+  const {
+    targetUserId,
+    reason,
+    description,
+    evidenceImages,
+    conversationId,
+  } = body || {};
+
+  if (!conversationId || !mongoose.isValidObjectId(String(conversationId))) {
+    const err = new Error("ID hội thoại không hợp lệ");
+    err.status = 400;
+    throw err;
+  }
+  if (!targetUserId || !mongoose.isValidObjectId(String(targetUserId))) {
+    const err = new Error("ID người bị tố cáo không hợp lệ");
+    err.status = 400;
+    throw err;
+  }
+  if (!reason) {
+    const err = new Error("Thiếu lý do báo cáo");
+    err.status = 400;
+    throw err;
+  }
+  const descTrim = typeof description === "string" ? description.trim() : "";
+  if (!descTrim) {
+    const err = new Error("Vui lòng nhập mô tả chi tiết");
+    err.status = 400;
+    throw err;
+  }
+
+  const conv = await Conversation.findById(conversationId)
+    .select("participants")
+    .lean();
+  if (!conv) {
+    const err = new Error("Không tìm thấy hội thoại");
+    err.status = 404;
+    throw err;
+  }
+  const me = String(reporterId);
+  const parts = (conv.participants || []).map((p) => String(p));
+  if (!parts.includes(me)) {
+    const err = new Error("Bạn không tham gia hội thoại này");
+    err.status = 403;
+    throw err;
+  }
+  const targetStr = String(targetUserId);
+  if (!parts.includes(targetStr)) {
+    const err = new Error("Người bị tố cáo không thuộc hội thoại này");
+    err.status = 400;
+    throw err;
+  }
+  if (targetStr === me) {
+    const err = new Error("Không thể tố cáo chính mình");
+    err.status = 400;
+    throw err;
+  }
+
+  const imgs = Array.isArray(evidenceImages)
+    ? evidenceImages.map((s) => String(s).trim()).filter(Boolean)
+    : [];
+
+  const prefixedDescription = `[Conversation ID: ${String(conversationId)}]\n\n${descTrim}`;
+
+  const report = await Report.create({
+    reporterId,
+    targetType: "User",
+    targetId: targetUserId,
+    reason,
+    description: prefixedDescription,
+    evidenceImages: imgs,
+  });
+
+  return { report };
 };

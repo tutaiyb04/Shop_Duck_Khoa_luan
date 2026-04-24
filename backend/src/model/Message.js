@@ -9,7 +9,6 @@ const messageSchema = new Schema(
       required: true,
     },
     senderId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    /** Rỗng được phép khi tin chỉ có ảnh; quy tắc “có chữ hoặc ảnh” kiểm tra ở chatService. */
     text: { type: String, default: "" },
     images: [{ type: String }],
     isRead: { type: Boolean, default: false },

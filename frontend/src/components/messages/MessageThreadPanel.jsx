@@ -1,13 +1,13 @@
-import { useEffect, useRef, useState } from "react";
-import { ImagePlus, Send, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ImagePlus, Send, ShieldAlert, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { API } from "@/services/axios";
+import ReportDialog from "@/components/product/productDetails/ReportDialog";
+import toast from "react-hot-toast";
 
 const MAX_ATTACH = 5;
 
-/**
- * Khung chat: tiêu đề thread, danh sách tin, ô gửi (text + ảnh).
- */
 export default function MessageThreadPanel({
   selectedId,
   thread,
@@ -17,6 +17,9 @@ export default function MessageThreadPanel({
   sending,
   sendError,
   sendMessage,
+  hideConversation,
+  /** Khi API thread lỗi: vẫn có productId / đối phương từ danh sách trái */
+  selectedSummary = null,
 }) {
   const [draft, setDraft] = useState("");
   /** { file, url }[] — url là object URL để preview */
@@ -59,8 +62,52 @@ export default function MessageThreadPanel({
     });
   };
 
-  const canSend =
-    Boolean(String(draft).trim()) || attachments.length > 0;
+  const canSend = Boolean(String(draft).trim()) || attachments.length > 0;
+
+  const [isReportOpen, setIsReportOpen] = useState(false);
+  const [isReporting, setIsReporting] = useState(false);
+
+  const opponentUserId = useMemo(() => {
+    const parts = thread?.conversation?.participants;
+    if (Array.isArray(parts) && currentUid) {
+      const other = parts.find((p) => String(p) !== String(currentUid));
+      if (other != null) return String(other);
+    }
+    if (selectedSummary?.otherUserId) {
+      return String(selectedSummary.otherUserId);
+    }
+    return null;
+  }, [thread, currentUid, selectedSummary]);
+
+  const headerProductId = useMemo(() => {
+    const fromThread = thread?.conversation?.productId;
+    if (fromThread != null && String(fromThread)) return String(fromThread);
+    if (selectedSummary?.productId) return String(selectedSummary.productId);
+    return null;
+  }, [thread, selectedSummary]);
+
+  const handleChatReportSend = async ({ reason, description }) => {
+    if (!opponentUserId || !selectedId) return false;
+    setIsReporting(true);
+    try {
+      await API.post("/reports/chat", {
+        targetUserId: opponentUserId,
+        reason,
+        description,
+        evidenceImages: [],
+        conversationId: selectedId,
+      });
+      toast.success("Đã gửi tố cáo. Cảm ơn bạn đã giúp cộng đồng an toàn hơn.");
+      return true;
+    } catch (e) {
+      toast.error(
+        e?.response?.data?.message || e?.message || "Gửi tố cáo thất bại",
+      );
+      return false;
+    } finally {
+      setIsReporting(false);
+    }
+  };
 
   return (
     <section className="flex min-h-0 min-w-0 flex-1 flex-col bg-transparent">
@@ -72,20 +119,75 @@ export default function MessageThreadPanel({
 
       {selectedId && (
         <>
-          <div className="border-b border-gray-100 p-3">
-            {loadingThread ? (
-              <span className="text-sm text-gray-500">Đang tải…</span>
-            ) : (
-              <span className="text-sm font-medium text-gray-800">
-                {thread?.conversation
-                  ? `Hội thoại · sản phẩm #${String(thread.conversation.productId).slice(-6)}`
-                  : "—"}
-              </span>
-            )}
-            {errorThread && (
-              <p className="mt-1 text-sm text-red-600">{errorThread}</p>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 p-3">
+            <div className="min-w-0 flex-1">
+              {loadingThread ? (
+                <span className="text-sm text-gray-500">Đang tải…</span>
+              ) : (
+                <span className="text-sm font-medium text-gray-800">
+                  {headerProductId
+                    ? `Hội thoại · sản phẩm #${headerProductId.slice(-6)}`
+                    : selectedId
+                      ? `Hội thoại #${String(selectedId).slice(-6)}`
+                      : "—"}
+                </span>
+              )}
+              {errorThread && (
+                <p className="mt-1 text-sm text-red-600">{errorThread}</p>
+              )}
+            </div>
+            {!loadingThread && (
+              <div className="flex shrink-0 flex-wrap items-center gap-2">
+                {opponentUserId && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 !border-amber-200 !bg-amber-200 text-amber-800 hover:!bg-amber-300 !transition-colors"
+                    onClick={() => setIsReportOpen(true)}
+                    title="Tố cáo người dùng"
+                  >
+                    <ShieldAlert className="h-4 w-4" />
+                    Tố cáo
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 !border-gray-200 !bg-gray-200 text-gray-700 hover:!bg-red-100 hover:text-red-700 !transition-colors"
+                  title="Ẩn hội thoại khỏi danh sách (xóa mềm)"
+                  onClick={async () => {
+                    if (
+                      !selectedId ||
+                      !window.confirm(
+                        "Ẩn hội thoại này khỏi danh sách của bạn? Tin nhắn vẫn được giữ; đối phương không bị ảnh hưởng. Bạn có thể thấy lại khi có tin mới hoặc mở chat từ trang sản phẩm.",
+                      )
+                    ) {
+                      return;
+                    }
+                    const ok = await hideConversation(selectedId);
+                    if (ok) {
+                      toast.success("Đã ẩn hội thoại.");
+                    } else {
+                      toast.error("Không ẩn được hội thoại.");
+                    }
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Xóa
+                </Button>
+              </div>
             )}
           </div>
+
+          <ReportDialog
+            open={isReportOpen}
+            onOpenChange={setIsReportOpen}
+            onSend={handleChatReportSend}
+            isReporting={isReporting}
+            variant="chat"
+          />
 
           <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
             {thread?.messages?.map((m) => {
@@ -99,8 +201,8 @@ export default function MessageThreadPanel({
                   <div
                     className={`max-w-[85%] rounded-xl px-3 py-2 text-sm shadow-sm ${
                       mine
-                        ? "bg-amber-500 text-white"
-                        : "border border-gray-100 bg-white text-gray-900"
+                        ? "bg-yellow-600 text-white"
+                        : "border-1 border-gray-300 bg-white text-gray-900"
                     }`}
                   >
                     {!mine && (
@@ -109,7 +211,9 @@ export default function MessageThreadPanel({
                       </p>
                     )}
                     {m.text ? (
-                      <p className="whitespace-pre-wrap break-words">{m.text}</p>
+                      <p className="whitespace-pre-wrap break-words">
+                        {m.text}
+                      </p>
                     ) : null}
                     {imgs.length > 0 && (
                       <div
@@ -196,11 +300,11 @@ export default function MessageThreadPanel({
                   variant="outline"
                   size="icon"
                   disabled={sending || attachments.length >= MAX_ATTACH}
-                  className="shrink-0 border-gray-200 bg-white hover:bg-amber-50"
+                  className="shrink-0 !bg-amber-200 hover:!bg-amber-300 !border-0 !ring-0 !outline-none !transition-colors"
                   onClick={() => fileInputRef.current?.click()}
                   title="Đính kèm ảnh"
                 >
-                  <ImagePlus className="h-4 w-4 text-amber-600" />
+                  <ImagePlus className="h-4 w-4 text-black" />
                 </Button>
                 <Input
                   value={draft}
@@ -213,7 +317,7 @@ export default function MessageThreadPanel({
               <Button
                 type="submit"
                 disabled={sending || !canSend}
-                className="shrink-0 gap-1.5 bg-amber-500 text-white hover:bg-amber-600 sm:min-w-[88px]"
+                className="shrink-0 gap-1.5 !bg-amber-500 text-white hover:!bg-amber-600 sm:min-w-[88px] !border-0 !ring-0 !outline-none !transition-colors"
               >
                 {sending ? (
                   "…"

@@ -41,10 +41,8 @@ export default function ConversationList({
               <button
                 type="button"
                 onClick={() => onSelectId(c.id)}
-                className={`flex w-full gap-3 border-b border-slate-100 px-3 py-3 text-left transition-colors ${
-                  active
-                    ? "bg-amber-50/90 ring-1 ring-inset ring-amber-200/80"
-                    : "hover:bg-slate-50"
+                className={`flex w-full gap-3 !border-0 !ring-0 !outline-none px-3 py-3 text-left !transition-colors ${
+                  active ? "!bg-yellow-100" : "!bg-gray-200 hover:!bg-amber-100"
                 }`}
               >
                 <div
@@ -67,7 +65,7 @@ export default function ConversationList({
                 <div className="min-w-0 flex-1 py-0.5">
                   <div className="flex items-start justify-between gap-2">
                     <p className="truncate text-sm font-semibold leading-tight text-slate-900">
-                      {c.product?.name || "Sản phẩm"}
+                      Sản phẩm: {c.product?.name || "Sản phẩm"}
                     </p>
                     {unread && (
                       <span className="mt-0.5 flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-amber-500 px-1.5 text-[10px] font-bold text-white shadow-sm">

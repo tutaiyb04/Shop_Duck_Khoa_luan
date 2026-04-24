@@ -47,6 +47,27 @@ exports.getConversations = async (req, res) => {
   }
 };
 
+exports.softDeleteConversation = async (req, res) => {
+  try {
+    const uid = userIdOf(req);
+    if (!uid) {
+      return res.status(401).json({ message: "Chưa đăng nhập" });
+    }
+    const { conversationId } = req.params;
+    await chatService.softHideConversationForUser(uid, conversationId);
+    notifyConversationUpdated(conversationId).catch(() => {});
+    return res.json({ message: "Đã ẩn hội thoại khỏi danh sách của bạn." });
+  } catch (error) {
+    if (error.status) {
+      return res.status(error.status).json({ message: error.message });
+    }
+    console.error("Lỗi softDeleteConversation:", error);
+    return res
+      .status(500)
+      .json({ message: error.message || "Lỗi khi ẩn hội thoại" });
+  }
+};
+
 exports.getConversationMessages = async (req, res) => {
   try {
     const uid = userIdOf(req);

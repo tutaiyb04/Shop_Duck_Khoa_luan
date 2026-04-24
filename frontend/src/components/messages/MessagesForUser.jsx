@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useMemo } from "react";
 import UserSidebar from "@/components/shared/UserSidebar";
 import { AuthContext } from "@/context/AuthContext";
 import { useChatInbox } from "@/hooks/chatHooks/useChatInbox";
@@ -20,9 +20,20 @@ export default function MessagesForUser() {
     sending,
     sendError,
     sendMessage,
+    hideConversation,
   } = useChatInbox();
 
   const currentUid = String(user?._id ?? user?.id ?? "");
+
+  const selectedSummary = useMemo(() => {
+    if (!selectedId) return null;
+    const c = conversations.find((x) => x.id === selectedId);
+    if (!c) return null;
+    return {
+      productId: c.product?.id ?? null,
+      otherUserId: c.otherParticipant?.id ?? null,
+    };
+  }, [conversations, selectedId]);
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-20">
@@ -57,6 +68,8 @@ export default function MessagesForUser() {
                 sending={sending}
                 sendError={sendError}
                 sendMessage={sendMessage}
+                hideConversation={hideConversation}
+                selectedSummary={selectedSummary}
               />
             </CardContent>
           </Card>

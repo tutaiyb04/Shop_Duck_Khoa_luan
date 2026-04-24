@@ -128,6 +128,23 @@ export function useChatInbox() {
     return res.data.urls || [];
   }, []);
 
+  const hideConversation = useCallback(
+    async (conversationId) => {
+      if (!conversationId) return false;
+      try {
+        await API.delete(`/chat/conversations/${conversationId}`);
+        if (selectedId === conversationId) {
+          setSelectedId(null);
+        }
+        await loadConversations({ silent: true });
+        return true;
+      } catch (e) {
+        return false;
+      }
+    },
+    [selectedId, loadConversations],
+  );
+
   const sendMessage = useCallback(
     async ({ text = "", files = [] }) => {
       if (!selectedId) return false;
@@ -180,5 +197,6 @@ export function useChatInbox() {
     sending,
     sendError,
     sendMessage,
+    hideConversation,
   };
 }

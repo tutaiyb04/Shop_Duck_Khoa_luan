@@ -19,7 +19,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ShieldAlert } from "lucide-react";
 
-function ReportDialog({ open, onOpenChange, onSend, isReporting }) {
+/** @param {"product" | "chat"} [variant] — chat: copy phù hợp tố cáo người trong tin nhắn */
+function ReportDialog({
+  open,
+  onOpenChange,
+  onSend,
+  isReporting,
+  variant = "product",
+}) {
   const [reason, setReason] = useState("");
   const [desc, setDesc] = useState("");
 
@@ -41,8 +48,18 @@ function ReportDialog({ open, onOpenChange, onSend, isReporting }) {
             Báo cáo vi phạm
           </DialogTitle>
           <DialogDescription className="text-[1.4rem] text-gray-500 leading-relaxed">
-            Giúp hệ thống giữ môi trường giao dịch an toàn bằng cách báo cáo tin
-            đăng có dấu hiệu lừa đảo hoặc vi phạm quy định.
+            {variant === "chat" ? (
+              <>
+                Báo cáo hành vi vi phạm của người dùng trong cuộc trò chuyện
+                này. Hệ thống ghi nhận kèm mã hội thoại để quản trị viên tra cứu
+                tin nhắn làm bằng chứng.
+              </>
+            ) : (
+              <>
+                Giúp hệ thống giữ môi trường giao dịch an toàn bằng cách báo cáo
+                tin đăng có dấu hiệu lừa đảo hoặc vi phạm quy định.
+              </>
+            )}
           </DialogDescription>
         </DialogHeader>
 
@@ -129,7 +146,7 @@ function ReportDialog({ open, onOpenChange, onSend, isReporting }) {
           </Button>
           <Button
             className="h-[4rem] px-[2.4rem] text-[1.4rem] !bg-yellow-600 hover:!bg-yellow-700 text-white font-bold transition-colors rounded-[0.8rem] shadow-sm !border-1 !border-gray-200 !ring-0 !outline-none"
-            disabled={!reason || isReporting}
+            disabled={!reason || !String(desc).trim() || isReporting}
             onClick={handleConfirm}
           >
             {isReporting ? "Đang gửi..." : "Gửi báo cáo"}

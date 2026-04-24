@@ -14,6 +14,11 @@ const conversationSchema = new Schema(
       default: null,
     },
     unreadCount: { type: Map, of: Number, default: {} },
+    /**
+     * Xóa mềm theo user: key = ObjectId string, value = true → ẩn khỏi danh sách của user đó.
+     * Dùng Map thay vì mảng thứ hai cạnh `participants` để tránh lỗi MongoDB parallel arrays (171).
+     */
+    userHidden: { type: Map, of: Boolean, default: {} },
   },
   { timestamps: true },
 );
@@ -21,5 +26,6 @@ const conversationSchema = new Schema(
 conversationSchema.index({ participants: 1, productId: 1 });
 /** Danh sách hội thoại theo user + sort updatedAt (tải cao). */
 conversationSchema.index({ participants: 1, updatedAt: -1 });
+/** Không dùng compound index trên 2 mảng (MongoDB không index parallel arrays). */
 
 module.exports = mongoose.model("Conversation", conversationSchema);
