@@ -397,8 +397,85 @@ async function confirmVipAfterReturn({ userId, orderCode }) {
   };
 }
 
+const VIP_TX_STATUSES = ["PENDING", "SUCCESS", "CANCELLED"];
+
+/**
+ * Danh sách giao dịch mua gói VIP (admin) + tổng doanh thu các giao dịch thành công.
+ * @param {{ page?: number|string, limit?: number|string, status?: string }} query
+ */
+async function getAdminVipTransactions({ page = 1, limit = 20, status } = {}) {
+  const safeLimit = Math.min(100, Math.max(1, parseInt(String(limit), 10) || 20));
+  const safePage = Math.max(1, parseInt(String(page), 10) || 1);
+  const skip = (safePage - 1) * safeLimit;
+
+  const filter = {};
+  if (status && VIP_TX_STATUSES.includes(String(status).toUpperCase())) {
+    filter.status = String(status).toUpperCase();
+  }
+
+  const [rawList, total, revenueAgg, successCount] = await Promise.all([
+    Transaction.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(safeLimit)
+      .populate({ path: "userId", select: "username email" })
+      .populate({ path: "productId", select: "name" })
+      .lean(),
+    Transaction.countDocuments(filter),
+    Transaction.aggregate([
+      { $match: { status: "SUCCESS" } },
+      { $group: { _id: null, total: { $sum: "$amount" } } },
+    ]),
+    Transaction.countDocuments({ status: "SUCCESS" }),
+  ]);
+
+  const totalRevenue =
+    Array.isArray(revenueAgg) && revenueAgg[0] && Number.isFinite(revenueAgg[0].total)
+      ? revenueAgg[0].total
+      : 0;
+
+  const transactions = rawList.map((doc) => {
+    const u = doc.userId;
+    const p = doc.productId;
+    const hasUser = u && typeof u === "object" && u._id;
+    const hasProduct = p && typeof p === "object" && p._id;
+    return {
+      _id: doc._id,
+      orderCode: doc.orderCode,
+      amount: doc.amount,
+      vipPlanDays: doc.vipPlanDays,
+      status: doc.status,
+      createdAt: doc.createdAt,
+      updatedAt: doc.updatedAt,
+      user: hasUser
+        ? {
+            _id: u._id,
+            username: u.username,
+            email: u.email,
+          }
+        : null,
+      product: hasProduct
+        ? {
+            _id: p._id,
+            name: p.name,
+          }
+        : null,
+    };
+  });
+
+  return {
+    transactions,
+    total,
+    currentPage: safePage,
+    totalPages: Math.max(1, Math.ceil(total / safeLimit)),
+    totalRevenue,
+    successCount,
+  };
+}
+
 module.exports = {
   createVipPaymentLink,
   processPayosVipWebhook,
   confirmVipAfterReturn,
+  getAdminVipTransactions,
 };

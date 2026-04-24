@@ -1,5 +1,5 @@
 import { Toaster } from "react-hot-toast";
-import { Routes, Route, BrowserRouter } from "react-router-dom";
+import { Routes, Route, BrowserRouter, Navigate } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
 import Home from "./pages/Home";
@@ -18,6 +18,8 @@ import UserManagement from "./pages/admin/UserManagement";
 import ProductManagement from "./pages/admin/ProductManagement";
 import ProductDetails from "./pages/products/ProductDetails";
 import ReportManagement from "./pages/admin/ReportManagement";
+import Revenue from "./pages/admin/Revenue";
+import Dashboard from "./pages/admin/Dashboard";
 import Wishlist from "./pages/products/Wishlist";
 import VerifyEmail from "./pages/auth/VerifiEmail";
 import AccountVerification from "./pages/AccountVerification";
@@ -86,9 +88,11 @@ function App() {
 
             {/* Khu admin: không dùng Footer */}
             <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<Navigate to="dashboard" replace />} />
+
               <Route path="profile" element={<AdminProfile />} />
 
-              <Route path="dashboard" element={<div>Trang tổng quan</div>} />
+              <Route path="dashboard" element={<Dashboard />} />
 
               <Route path="categories" element={<CategoryManagement />} />
 
@@ -97,6 +101,8 @@ function App() {
               <Route path="products" element={<ProductManagement />} />
 
               <Route path="reports" element={<ReportManagement />} />
+
+              <Route path="revenue" element={<Revenue />} />
             </Route>
           </Routes>
         </main>
