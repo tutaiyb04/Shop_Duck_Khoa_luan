@@ -1,7 +1,58 @@
+const mongoose = require("mongoose");
 const Product = require("../model/Product");
 const User = require("../model/User");
 const Category = require("../model/Category");
 const { escapeRegexForSearch } = require("../utils/escapeRegex");
+
+/** Lọc query admin: category chỉ khi đúng ObjectId (bỏ slug "khac", mảng lỗi, …) */
+function parseCategoryObjectIdFilter(category) {
+  if (category == null) return null;
+  if (Array.isArray(category)) {
+    for (const item of category) {
+      const s = String(item ?? "").trim();
+      if (s && mongoose.isValidObjectId(s)) return s;
+    }
+    return null;
+  }
+  const s = String(category).trim();
+  if (!s || !mongoose.isValidObjectId(s)) return null;
+  return s;
+}
+
+/**
+ * Gắn tên danh mục cho danh sách admin, không dùng populate (tránh CastError
+ * nếu DB có `category: "khac"` / chuỗi thay vì ref ObjectId).
+ */
+async function attachCategoryNamesToAdminProducts(products) {
+  if (!products?.length) return;
+  const idSet = new Set();
+  for (const p of products) {
+    const c = p.category;
+    if (c == null) continue;
+    const idStr = typeof c === "object" && c?._id != null ? String(c._id) : String(c);
+    if (mongoose.isValidObjectId(idStr)) idSet.add(idStr);
+  }
+  const byId = new Map();
+  if (idSet.size > 0) {
+    const rows = await Category.find({ _id: { $in: [...idSet] } })
+      .select("name")
+      .lean();
+    for (const r of rows) byId.set(String(r._id), r);
+  }
+  for (const p of products) {
+    const c = p.category;
+    if (c == null) {
+      p.category = { name: "Khác" };
+      continue;
+    }
+    const idStr = typeof c === "object" && c?._id != null ? String(c._id) : String(c);
+    if (mongoose.isValidObjectId(idStr) && byId.has(idStr)) {
+      p.category = byId.get(idStr);
+    } else {
+      p.category = { name: "Khác" };
+    }
+  }
+}
 
 exports.getAllProductsService = async (filters = {}) => {
   try {
@@ -46,6 +97,7 @@ exports.getAllProductsService = async (filters = {}) => {
 
       const pipeline = [
         geoNearStage,
+        { $sort: { isVIP: -1, distance: 1 } },
         { $skip: skip },
         { $limit: limitN },
         {
@@ -102,7 +154,7 @@ exports.getAllProductsService = async (filters = {}) => {
       Product.find(query)
         .populate("sellerId", "username avatar")
         .populate("category", "name")
-        .sort({ createdAt: -1 })
+        .sort({ isVIP: -1, createdAt: -1 })
         .skip(skip)
         .limit(limitN)
         .lean(),
@@ -138,22 +190,23 @@ exports.getAdminProductsService = async (filters) => {
         $options: "i",
       };
     }
-    if (category) query.category = category;
+    const categoryId = parseCategoryObjectIdFilter(category);
+    if (categoryId) query.category = categoryId;
     if (status) query.status = status;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    // Chạy song song lệnh đếm và lệnh tìm
+    // Chạy song song lệnh đếm và lệnh tìm (category gắn tay — xem attachCategoryNamesToAdminProducts)
     const [products, total] = await Promise.all([
       Product.find(query)
-        .populate("category", "name")
         .populate("sellerId", "username email avatar")
-        .sort({ createdAt: -1 })
+        .sort({ isVIP: -1, createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit))
         .lean(),
       Product.countDocuments(query),
     ]);
+    await attachCategoryNamesToAdminProducts(products);
 
     return {
       products,

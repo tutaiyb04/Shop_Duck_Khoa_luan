@@ -1,30 +1,43 @@
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Lock, Unlock, XCircle } from "lucide-react";
 
 const StatusBadge = ({ status }) => {
   switch (status) {
     case "PENDING":
       return (
-        <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full text-xs font-bold">
+        <span className="bg-amber-100 text-amber-800 px-2 py-1 rounded-full text-xs font-bold">
           Chờ duyệt
         </span>
       );
     case "AVAILABLE":
       return (
-        <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-bold">
+        <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-bold">
           Đang bán
         </span>
       );
     case "REJECTED":
       return (
-        <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs font-bold">
+        <span className="bg-gray-200 text-gray-800 px-2 py-1 rounded-full text-xs font-bold">
           Bị từ chối
         </span>
       );
     case "LOCKED":
       return (
-        <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-bold">
+        <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-bold">
           Bị khóa
+        </span>
+      );
+    case "SOLD":
+      return (
+        <span className="bg-slate-200 text-slate-800 px-2 py-1 rounded-full text-xs font-bold">
+          Đã bán
+        </span>
+      );
+    case "HIDDEN":
+      return (
+        <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs font-bold">
+          Đã xóa
         </span>
       );
     default:
@@ -87,8 +100,16 @@ function ProductTable({ products, loading, handleUpdateStatus }) {
                     alt={product.name}
                     className="w-12 h-12 rounded object-cover border"
                   />
-                  <span className="font-semibold text-gray-800 line-clamp-2 max-w-[200px] whitespace-normal">
+                  <span className="font-semibold text-gray-800 line-clamp-2 max-w-[200px] whitespace-normal flex flex-wrap items-center gap-1.5">
                     {product.name}
+                    {product.isVIP && (
+                      <Badge
+                        variant="destructive"
+                        className="h-5 shrink-0 border-0 bg-amber-500 px-1.5 text-[10px] font-bold uppercase text-white"
+                      >
+                        VIP
+                      </Badge>
+                    )}
                   </span>
                 </td>
                 <td className="p-4 text-gray-600 whitespace-nowrap">

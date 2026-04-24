@@ -1,12 +1,12 @@
 import toast from "react-hot-toast";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { API } from "@/services/axios";
 
 function useMyProducts() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchMyProducts = async () => {
+  const fetchMyProducts = useCallback(async () => {
     try {
       setLoading(true);
       const response = await API.get("/products/my-products/all");
@@ -16,7 +16,7 @@ function useMyProducts() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const handleUpdateStatus = async (id, status) => {
     try {
@@ -33,7 +33,7 @@ function useMyProducts() {
 
   useEffect(() => {
     fetchMyProducts();
-  }, []);
+  }, [fetchMyProducts]);
 
   return { products, loading, handleUpdateStatus, refresh: fetchMyProducts };
 }

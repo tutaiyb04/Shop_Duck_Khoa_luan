@@ -34,6 +34,8 @@ const productSchema = new mongoose.Schema(
       of: String,
     },
     address: { type: String, required: true },
+    isVIP: { type: Boolean, default: false },
+    vipUntil: { type: Date, default: null },
     location: {
       type: {
         type: String,
@@ -52,5 +54,7 @@ const productSchema = new mongoose.Schema(
 productSchema.index({ location: "2dsphere" });
 
 productSchema.index({ sellerId: 1 }); // Load trang cá nhân của người bán nhanh hơn
+
+productSchema.index({ isVIP: -1 });
 
 module.exports = mongoose.model("Product", productSchema);
