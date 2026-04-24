@@ -7,6 +7,7 @@ const { Server } = require("socket.io");
 const router = require("./routes/index");
 const connect = require("./config/db");
 const { setupSocketIO } = require("./utils/socketServer");
+const { setIO } = require("./utils/ioRegistry");
 
 // Bảo mật DB
 dotenv.config();
@@ -45,6 +46,7 @@ const io = new Server(httpServer, {
 });
 
 setupSocketIO(io);
+setIO(io);
 
 connect().then(() => {
   httpServer.listen(port, () => {

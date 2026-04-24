@@ -193,44 +193,44 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-// exports.createSuperAdmin = async (req, res) => {
-//   try {
-//     // 1. Kiểm tra xem tài khoản admin này đã tồn tại chưa để tránh tạo trùng
-//     const adminExists = await User.findOne({ username: "superadmin" });
-//     if (adminExists) {
-//       return res
-//         .status(400)
-//         .json({ message: "Tài khoản Super Admin đã tồn tại!" });
-//     }
+exports.createSuperAdmin = async (req, res) => {
+  try {
+    // 1. Kiểm tra xem tài khoản admin này đã tồn tại chưa để tránh tạo trùng
+    const adminExists = await User.findOne({ username: "superadmin" });
+    if (adminExists) {
+      return res
+        .status(400)
+        .json({ message: "Tài khoản Super Admin đã tồn tại!" });
+    }
 
-//     // 2. Khởi tạo tài khoản Admin
-//     const newAdmin = new User({
-//       username: "Admin",
-//       phone: "0344076552",
-//       email: "tutai241104@gmail.com",
-//       password: "Admin@1234",
-//       role: "admin",
-//       authType: "local",
-//     });
+    // 2. Khởi tạo tài khoản Admin
+    const newAdmin = new User({
+      username: "Admin",
+      phone: "0344076552",
+      email: "tutai241104@gmail.com",
+      password: "Admin@1234",
+      role: "admin",
+      authType: "local",
+    });
 
-//     // 3. Lưu vào Database
-//     await newAdmin.save();
+    // 3. Lưu vào Database
+    await newAdmin.save();
 
-//     return res.status(201).json({
-//       message: "Khởi tạo Super Admin thành công!",
-//       admin: {
-//         username: newAdmin.username,
-//         email: newAdmin.email,
-//         role: newAdmin.role,
-//       },
-//     });
-//   } catch (error) {
-//     console.error("Lỗi tạo Super Admin:", error);
-//     return res
-//       .status(500)
-//       .json({ message: "Lỗi server", error: error.message });
-//   }
-// };
+    return res.status(201).json({
+      message: "Khởi tạo Super Admin thành công!",
+      admin: {
+        username: newAdmin.username,
+        email: newAdmin.email,
+        role: newAdmin.role,
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi tạo Super Admin:", error);
+    return res
+      .status(500)
+      .json({ message: "Lỗi server", error: error.message });
+  }
+};
 
 exports.getUsersAdmin = async (req, res) => {
   try {

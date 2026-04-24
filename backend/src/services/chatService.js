@@ -6,10 +6,38 @@ const Product = require("../model/Product");
 const MAX_MESSAGE_LENGTH = 5000;
 const MAX_IMAGE_URLS = 5;
 const MAX_URL_LENGTH = 2000;
+/** Giới hạn số hội thoại trả về mỗi user (tránh payload lớn khi scale). */
+const LIST_CONVERSATIONS_CAP = 200;
+
+/** Chuỗi hiển thị trong danh sách hội thoại (text rút gọn hoặc placeholder ảnh). */
+function lastMessagePreviewForList(text, images) {
+  const t = (text && String(text).trim()) || "";
+  const nImg = Array.isArray(images) ? images.filter(Boolean).length : 0;
+  if (t) {
+    return t.length > 200 ? `${t.slice(0, 197)}...` : t;
+  }
+  if (nImg > 0) {
+    return nImg === 1 ? "[Ảnh]" : `[${nImg} ảnh]`;
+  }
+  return "";
+}
 
 function isParticipant(conversation, userId) {
   const uid = String(userId);
   return conversation.participants.some((p) => String(p) === uid);
+}
+
+/** Đảm bảo conv.unreadCount là Map (mongoose có thể trả object thường). */
+function normalizeUnreadCountOnConv(conv) {
+  if (!conv.unreadCount) {
+    conv.set("unreadCount", new Map());
+  } else if (!(conv.unreadCount instanceof Map)) {
+    const o =
+      conv.unreadCount && typeof conv.unreadCount === "object"
+        ? { ...conv.unreadCount }
+        : {};
+    conv.set("unreadCount", new Map(Object.entries(o)));
+  }
 }
 
 /**
@@ -87,7 +115,11 @@ exports.listConversations = async (userId) => {
   }
   const uid = new mongoose.Types.ObjectId(String(userId));
   const rows = await Conversation.find({ participants: uid })
+    .select(
+      "participants productId lastMessage lastMessageSenderId unreadCount updatedAt",
+    )
     .sort({ updatedAt: -1 })
+    .limit(LIST_CONVERSATIONS_CAP)
     .populate("productId", "name images price")
     .populate("participants", "username avatar")
     .lean();
@@ -96,6 +128,17 @@ exports.listConversations = async (userId) => {
     const me = String(userId);
     const other = (c.participants || []).find((p) => String(p._id) !== me);
     const product = c.productId;
+    const lastSid = c.lastMessageSenderId ? String(c.lastMessageSenderId) : null;
+    const lastSenderDoc =
+      lastSid != null
+        ? (c.participants || []).find((p) => String(p._id) === lastSid)
+        : null;
+    const lastMessageSenderUsername =
+      lastSenderDoc &&
+      typeof lastSenderDoc === "object" &&
+      lastSenderDoc.username != null
+        ? lastSenderDoc.username
+        : null;
     return {
       id: String(c._id),
       product: product
@@ -114,6 +157,8 @@ exports.listConversations = async (userId) => {
           }
         : null,
       lastMessage: c.lastMessage || "",
+      lastMessageSenderId: lastSid,
+      lastMessageSenderUsername,
       unreadForMe: getUnreadForUser(c, userId),
       updatedAt: c.updatedAt,
     };
@@ -144,7 +189,14 @@ exports.getMessages = async (conversationId, userId) => {
     throw err;
   }
 
+  // Reset unread cho user hiện tại (idempotent: nhiều tab cùng mở vẫn chỉ về 0).
+  normalizeUnreadCountOnConv(conv);
+  conv.unreadCount.set(String(userId), 0);
+  conv.markModified("unreadCount");
+  await conv.save();
+
   const messages = await Message.find({ conversationId: conv._id })
+    .select("text images isRead createdAt senderId")
     .sort({ createdAt: 1 })
     .limit(MESSAGE_CAP)
     .populate("senderId", "username avatar")
@@ -191,9 +243,15 @@ exports.sendMessage = async (userId, { conversationId, text, images = [] }) => {
     err.status = 400;
     throw err;
   }
-  const body = (text && String(text).trim()) || "";
-  if (!body) {
-    const err = new Error("Nội dung tin nhắn không được để trống");
+  const body = text != null ? String(text).trim() : "";
+  let imageUrls = Array.isArray(images) ? images : [];
+  imageUrls = imageUrls
+    .map((s) => String(s).trim())
+    .filter(Boolean)
+    .map((s) => (s.length > MAX_URL_LENGTH ? s.slice(0, MAX_URL_LENGTH) : s));
+
+  if (!body && imageUrls.length === 0) {
+    const err = new Error("Nhập nội dung hoặc đính kèm ít nhất một ảnh");
     err.status = 400;
     throw err;
   }
@@ -203,16 +261,11 @@ exports.sendMessage = async (userId, { conversationId, text, images = [] }) => {
     throw err;
   }
 
-  let imageUrls = Array.isArray(images) ? images : [];
   if (imageUrls.length > MAX_IMAGE_URLS) {
     const err = new Error(`Tối đa ${MAX_IMAGE_URLS} ảnh đính kèm`);
     err.status = 400;
     throw err;
   }
-  imageUrls = imageUrls
-    .map((s) => String(s).trim())
-    .filter(Boolean)
-    .map((s) => (s.length > MAX_URL_LENGTH ? s.slice(0, MAX_URL_LENGTH) : s));
 
   const conv = await Conversation.findById(conversationId);
   if (!conv) {
@@ -229,21 +282,14 @@ exports.sendMessage = async (userId, { conversationId, text, images = [] }) => {
   const message = await Message.create({
     conversationId: conv._id,
     senderId: userId,
-    text: body,
+    text: body || "",
     images: imageUrls,
   });
 
-  if (!conv.unreadCount) {
-    conv.set("unreadCount", new Map());
-  } else if (!(conv.unreadCount instanceof Map)) {
-    const o =
-      conv.unreadCount && typeof conv.unreadCount === "object"
-        ? { ...conv.unreadCount }
-        : {};
-    conv.set("unreadCount", new Map(Object.entries(o)));
-  }
+  normalizeUnreadCountOnConv(conv);
 
-  conv.lastMessage = body.length > 200 ? `${body.slice(0, 197)}...` : body;
+  conv.lastMessage = lastMessagePreviewForList(body, imageUrls);
+  conv.lastMessageSenderId = userId;
   for (const p of conv.participants) {
     if (String(p) === String(userId)) {
       continue;

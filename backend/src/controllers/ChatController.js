@@ -1,4 +1,5 @@
 const chatService = require("../services/chatService");
+const { notifyConversationUpdated } = require("../utils/chatSocketNotify");
 
 function userIdOf(req) {
   return req.user?._id || req.user?.id;
@@ -66,18 +67,42 @@ exports.getConversationMessages = async (req, res) => {
   }
 };
 
+exports.postUploadChatImages = async (req, res) => {
+  try {
+    const uid = userIdOf(req);
+    if (!uid) {
+      return res.status(401).json({ message: "Chưa đăng nhập" });
+    }
+    const files = req.files || [];
+    if (!files.length) {
+      return res.status(400).json({ message: "Chọn ít nhất một ảnh" });
+    }
+    const urls = files.map((f) => f.path).filter(Boolean);
+    return res.json({ urls });
+  } catch (error) {
+    console.error("Lỗi postUploadChatImages:", error);
+    return res
+      .status(500)
+      .json({ message: error.message || "Lỗi tải ảnh lên" });
+  }
+};
+
 exports.postMessage = async (req, res) => {
   try {
     const uid = userIdOf(req);
     if (!uid) {
       return res.status(401).json({ message: "Chưa đăng nhập" });
     }
-    const { conversationId, text, images } = req.body;
+    const { conversationId } = req.body;
+    const text =
+      typeof req.body?.text === "string" ? req.body.text : "";
+    const images = Array.isArray(req.body?.images) ? req.body.images : [];
     const message = await chatService.sendMessage(uid, {
       conversationId,
       text,
       images,
     });
+    notifyConversationUpdated(conversationId).catch(() => {});
     return res.status(201).json({
       message: "Đã gửi tin nhắn",
       data: message,
