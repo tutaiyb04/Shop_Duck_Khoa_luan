@@ -33,6 +33,7 @@ function App() {
 
         <main className="w-full min-h-screen overflow-x-hidden bg-amber-50">
           <Routes>
+            {/* Site khách: Header + trang + Footer (xem ClientLayout) */}
             <Route element={<ClientLayout />}>
               {/* Home Page */}
               <Route path="/" element={<Home />} />
@@ -83,6 +84,7 @@ function App() {
               <Route path="/edit-product/:id" element={<EditProduct />} />
             </Route>
 
+            {/* Khu admin: không dùng Footer */}
             <Route path="/admin" element={<AdminLayout />}>
               <Route path="profile" element={<AdminProfile />} />
 
