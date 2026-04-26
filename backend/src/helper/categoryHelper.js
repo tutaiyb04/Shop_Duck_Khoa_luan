@@ -98,9 +98,9 @@ async function attachCategoryNamesToAdminProducts(products) {
     }
 
     const idStr =
-      typeof category === "object" && c?._id != null
-        ? String(c._id)
-        : String(c);
+      typeof category === "object" && category?._id != null
+        ? String(category._id)
+        : String(category);
 
     if (mongoose.isValidObjectId(idStr) && byId.has(idStr)) {
       product.category = byId.get(idStr);

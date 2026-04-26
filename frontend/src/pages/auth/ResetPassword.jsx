@@ -3,7 +3,7 @@ import { Controller } from "react-hook-form";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import useResetPassword from "@/hooks/userHooks/useResetPassword";
+import useResetPassword from "@/hooks/userHooks/authHooks/useResetPassword";
 
 function ResetPassword() {
   const { form, isLoading, isSuccess, onSubmit, error } = useResetPassword();

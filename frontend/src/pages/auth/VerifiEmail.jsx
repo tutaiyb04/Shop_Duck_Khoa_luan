@@ -1,6 +1,6 @@
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useVerifyEmail } from "@/hooks/userHooks/useVerifyEmail";
+import { useVerifyEmail } from "@/hooks/userHooks/authHooks/useVerifyEmail";
 
 function VerifyEmail() {
   const { status, message, navigate } = useVerifyEmail();

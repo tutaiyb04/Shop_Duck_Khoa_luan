@@ -105,7 +105,7 @@ function ProductTable({ products, loading, handleUpdateStatus }) {
                     {product.isVIP && (
                       <Badge
                         variant="destructive"
-                        className="h-5 shrink-0 border-0 bg-amber-500 px-1.5 text-[10px] font-bold uppercase text-white"
+                        className="h-5 shrink-0 border-0 bg-amber-500 px-1.5 text-s font-bold uppercase text-white"
                       >
                         HOT
                       </Badge>

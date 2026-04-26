@@ -1,6 +1,5 @@
 import { Flame, Clock } from "lucide-react";
 import HomeVipBanner from "./HomeVipBanner";
-import HomeLoadingBlock from "./HomeLoadingBlock";
 import HomeProductSection from "./HomeProductSection";
 import HomeCategoryRows from "./HomeCategoryRows";
 import HomeEmptyState from "./HomeEmptyState";
@@ -19,7 +18,9 @@ export default function HomeDiscoveryView({
       <HomeVipBanner />
 
       {isLoading && (
-        <HomeLoadingBlock message="Đang tải sản phẩm…" />
+        <div className="py-16 text-center text-sm text-muted-foreground animate-pulse">
+          Đang tải sản phẩm ...
+        </div>
       )}
 
       {showDiscovery && vipProducts.length > 0 && (

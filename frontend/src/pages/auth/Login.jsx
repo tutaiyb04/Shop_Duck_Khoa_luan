@@ -8,8 +8,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-import useLogin from "@/hooks/userHooks/useLogin";
-import useLoginGoogle from "@/hooks/userHooks/useLoginGoogle";
+import useLogin from "@/hooks/userHooks/authHooks/useLogin";
+import useLoginGoogle from "@/hooks/userHooks/authHooks/useLoginGoogle";
 import logoImage from "@/assets/logo3.png";
 import LoginForm from "@/components/auth/LoginForm";
 import SocialForm from "@/components/auth/SocialForm";
