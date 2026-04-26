@@ -4,75 +4,11 @@ const User = require("../model/User");
 const Category = require("../model/Category");
 const { escapeRegexForSearch } = require("../utils/escapeRegex");
 
-/** Lọc query admin: category chỉ khi đúng ObjectId (bỏ slug "khac", mảng lỗi, …) */
-function parseCategoryObjectIdFilter(category) {
-  if (category == null) return null;
-  if (Array.isArray(category)) {
-    for (const item of category) {
-      const s = String(item ?? "").trim();
-      if (s && mongoose.isValidObjectId(s)) return s;
-    }
-    return null;
-  }
-  const s = String(category).trim();
-  if (!s || !mongoose.isValidObjectId(s)) return null;
-  return s;
-}
-
-/**
- * Sản phẩm thường gắn danh mục **con**. Khi lọc theo ID **cha** (parentId = null),
- * cần khớp mọi sản phẩm thuộc danh mục con (và chính id cha nếu có bản ghi trỏ thẳng).
- */
-async function buildCategoryFilterQuery(categoryObjectId) {
-  if (!categoryObjectId) return null;
-  const cat = await Category.findById(categoryObjectId).select("parentId").lean();
-  if (!cat) {
-    return { $in: [] };
-  }
-  if (cat.parentId == null) {
-    const children = await Category.find({ parentId: categoryObjectId })
-      .select("_id")
-      .lean();
-    const ids = [categoryObjectId, ...children.map((c) => c._id)];
-    return { $in: ids };
-  }
-  return categoryObjectId;
-}
-
-/**
- * Gắn tên danh mục cho danh sách admin, không dùng populate (tránh CastError
- * nếu DB có `category: "khac"` / chuỗi thay vì ref ObjectId).
- */
-async function attachCategoryNamesToAdminProducts(products) {
-  if (!products?.length) return;
-  const idSet = new Set();
-  for (const p of products) {
-    const c = p.category;
-    if (c == null) continue;
-    const idStr = typeof c === "object" && c?._id != null ? String(c._id) : String(c);
-    if (mongoose.isValidObjectId(idStr)) idSet.add(idStr);
-  }
-  const byId = new Map();
-  if (idSet.size > 0) {
-    const rows = await Category.find({ _id: { $in: [...idSet] } })
-      .select("name")
-      .lean();
-    for (const r of rows) byId.set(String(r._id), r);
-  }
-  for (const p of products) {
-    const c = p.category;
-    if (c == null) {
-      p.category = { name: "Khác" };
-      continue;
-    }
-    const idStr = typeof c === "object" && c?._id != null ? String(c._id) : String(c);
-    if (mongoose.isValidObjectId(idStr) && byId.has(idStr)) {
-      p.category = byId.get(idStr);
-    } else {
-      p.category = { name: "Khác" };
-    }
-  }
-}
+const {
+  parseCategoryObjectIdFilter,
+  buildCategoryFilterQuery,
+  attachCategoryNamesToAdminProducts,
+} = require("../helper/categoryHelper");
 
 exports.getAllProductsService = async (filters = {}) => {
   try {
@@ -85,13 +21,14 @@ exports.getAllProductsService = async (filters = {}) => {
       limit = 20,
       category: rawCategory,
     } = filters;
+
     const search = (rawSearch || "").trim();
+
     const categoryStr = (rawCategory || "").toString().trim();
     const categoryId =
       categoryStr && mongoose.isValidObjectId(categoryStr)
         ? new mongoose.Types.ObjectId(categoryStr)
         : null;
-
     const categoryMongoFilter = categoryId
       ? await buildCategoryFilterQuery(categoryId)
       : null;
@@ -117,6 +54,7 @@ exports.getAllProductsService = async (filters = {}) => {
         geoQuery.category = categoryMongoFilter;
       }
 
+      // Khách có bật định vị (Tìm đồ quanh đây)
       const geoNearStage = {
         $geoNear: {
           key: "location",
@@ -175,6 +113,7 @@ exports.getAllProductsService = async (filters = {}) => {
       };
     }
 
+    // Khách lướt web bình thường (Không dùng định vị)
     let query = { status: "AVAILABLE" };
     if (search) {
       query.name = {
