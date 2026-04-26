@@ -1,8 +1,6 @@
 const paymentService = require("../services/paymentService");
 
-/**
- * POST /payment/create-vip-link (auth) — tạo link PayOS, logic nằm ở paymentService.
- */
+// Tạo link thanh toán VIP
 exports.createVipPaymentLink = async (req, res) => {
   try {
     const result = await paymentService.createVipPaymentLink({
@@ -14,6 +12,7 @@ exports.createVipPaymentLink = async (req, res) => {
     if (!result.ok) {
       return res.status(result.status).json({ message: result.message });
     }
+
     return res.status(200).json(result.data);
   } catch (error) {
     console.error("Lỗi createVipPaymentLink:", error);
@@ -23,36 +22,31 @@ exports.createVipPaymentLink = async (req, res) => {
   }
 };
 
-/**
- * POST /payment/webhook — lưu lượng cao: nghiệp vụ + DB trong service, controller chỉ trả JSON.
- */
+// "lắng nghe" hoạt dộng từ PayOS: KH quét mã QR -> chuyển khoản thành công -> PayOS tự động và gọi vào API này để báo về
 exports.handlePayOSWebhook = async (req, res) => {
   try {
-    const { response, httpStatus } = await paymentService.processPayosVipWebhook(
-      req.body,
-    );
+    const { response, httpStatus } =
+      await paymentService.processPayosVipWebhook(req.body);
+
     return res.status(httpStatus).json(response);
   } catch (error) {
     console.error("Lỗi handlePayOSWebhook:", error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Server error" });
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-/**
- * POST /payment/confirm-vip (auth) — xác nhận VIP sau khi về từ PayOS (bù khi webhook không tới).
- * Body: { orderCode: number }
- */
+// xác nhận VIP sau khi về từ PayOS (dự phòng khi webhook ở handlePayOSWebhook không tới).
 exports.confirmVipAfterReturn = async (req, res) => {
   try {
     const result = await paymentService.confirmVipAfterReturn({
       userId: req.user._id,
       orderCode: req.body?.orderCode,
     });
+
     if (!result.ok) {
       return res.status(result.status).json({ message: result.message });
     }
+
     return res.status(200).json(result.data);
   } catch (error) {
     console.error("Lỗi confirmVipAfterReturn:", error);
@@ -62,9 +56,7 @@ exports.confirmVipAfterReturn = async (req, res) => {
   }
 };
 
-/**
- * GET /payment/admin/vip-transactions?status=&page=&limit= — admin: giao dịch VIP + tổng doanh thu
- */
+// xem báo cáo doanh thu và danh sách lịch sử mua VIP của Admin
 exports.getAdminVipTransactions = async (req, res) => {
   try {
     const result = await paymentService.getAdminVipTransactions({
@@ -72,6 +64,7 @@ exports.getAdminVipTransactions = async (req, res) => {
       limit: req.query.limit,
       status: req.query.status,
     });
+
     return res.status(200).json({
       message: "Lấy giao dịch VIP thành công",
       result,

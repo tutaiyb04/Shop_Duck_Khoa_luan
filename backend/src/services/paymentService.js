@@ -1,113 +1,39 @@
-const crypto = require("crypto");
 const mongoose = require("mongoose");
-const { getPayOS } = require("../config/payos");
 const Transaction = require("../model/Transaction");
 const Product = require("../model/Product");
+const { getPayOS } = require("../config/payos");
 const { getIO } = require("../utils/ioRegistry");
+const {
+  vipDurationDays,
+  resolveVipPlan,
+  frontendBase,
+  generateOrderCode,
+  buildPayosPaymentDescription,
+} = require("../helper/paymentHelper");
 
-const vipDurationDays = () =>
-  Math.max(1, parseInt(process.env.PAYOS_VIP_DURATION_DAYS || "30", 10) || 30);
-
-/** Gói cố định: 7 ngày 50.000₫, 30 ngày 150.000₫ (đồng bộ UI) */
-const VIP_PLANS = {
-  7: { days: 7, amount: 50_000 },
-  30: { days: 30, amount: 150_000 },
-};
-
-function resolveVipPlan(plan) {
-  const key = plan === "7" || plan === 7 ? 7 : plan === "30" || plan === 30 ? 30 : null;
-  if (key == null) return null;
-  return VIP_PLANS[key];
-}
-
-let _frontendBase;
-const frontendBase = () => {
-  if (_frontendBase) return _frontendBase;
-  _frontendBase = (process.env.FRONTEND_URL || "http://localhost:5173").replace(
-    /\/$/,
-    "",
-  );
-  return _frontendBase;
-};
-
-/**
- * Mã giao dịch số, phân tán tốt khi tải cao: ms * 1000 + 0..999 (tránh trùng cùng millisecond).
- * Giữ dạng Number an toàn với Number.MAX_SAFE_INTEGER.
- */
-function generateOrderCode() {
-  return Date.now() * 1000 + crypto.randomInt(0, 1000);
-}
-
-/**
- * PayOS: trường `description` tối đa 25 ký tự (lỗi code 20 nếu vượt).
- */
-function buildPayosPaymentDescription(productName, vipPlanDays) {
-  const name = (productName || "SP")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 18);
-  const base = `VIP${vipPlanDays}d ${name}`.trim();
-  return base.slice(0, 25) || "Duck Shop VIP";
-}
-
-/**
- * Gửi socket sau khi xử lý (không chặn phản hồi HTTP — phù hợp tải rất lớn trên connection PayOS).
- */
 function emitVipSuccess(userId, productId) {
+  // chạy ngầm socket
   setImmediate(() => {
     const io = getIO();
+
     if (io) {
       void io.to(`user:${userId}`).emit("payment:vip_success", { productId });
     }
   });
 }
 
-/**
- * Gia hạn VIP trên sản phẩm (gọi sau khi giao dịch chuyển sang SUCCESS: webhook hoặc xác nhận từ PayOS).
- * @param {{ productId: import("mongoose").Types.ObjectId, userId: import("mongoose").Types.ObjectId, vipPlanDays?: number }} tx
- */
-async function applyVipToProductAfterPayment(tx) {
-  const daysToAdd =
-    Number(tx.vipPlanDays) > 0
-      ? Number(tx.vipPlanDays)
-      : vipDurationDays();
-
-  const product = await Product.findById(tx.productId).select("vipUntil").lean();
-  const now = new Date();
-  let base = now;
-  if (product?.vipUntil) {
-    const v = new Date(product.vipUntil);
-    if (v > now) {
-      base = v;
-    }
-  }
-  const until = new Date(base);
-  until.setDate(until.getDate() + daysToAdd);
-
-  await Product.updateOne(
-    { _id: tx.productId },
-    {
-      $set: { isVIP: true, vipUntil: until, updatedAt: new Date() },
-    },
-  );
-
-  emitVipSuccess(String(tx.userId), String(tx.productId));
-}
-
-/**
- * @param {{ userId: import('mongoose').Types.ObjectId, productId: string, plan?: string|number }} param0
- * @returns {Promise<
- *   | { ok: true; data: { message: string; checkoutUrl: string; qrCode: string; orderCode: number } }
- *   | { ok: false; status: number; message: string }
- * >}
- */
+// tạo mã QR thanh toán
 async function createVipPaymentLink({ userId, productId, plan }) {
   if (!productId) {
     return { ok: false, status: 400, message: "Thiếu productId" };
   }
+
+  // kiểm tra ID theo chuẩn mongoose
   if (!mongoose.isValidObjectId(String(productId))) {
     return { ok: false, status: 400, message: "productId không hợp lệ" };
   }
+
+  // kiểm tra gói VIP
   const resolved = resolveVipPlan(plan);
   if (!resolved) {
     return {
@@ -124,6 +50,8 @@ async function createVipPaymentLink({ userId, productId, plan }) {
   if (!product) {
     return { ok: false, status: 404, message: "Sản phẩm không tồn tại" };
   }
+
+  // Kiểm tra chính chủ
   if (String(product.sellerId) !== String(userId)) {
     return {
       ok: false,
@@ -131,6 +59,7 @@ async function createVipPaymentLink({ userId, productId, plan }) {
       message: "Bạn không phải chủ sở hữu sản phẩm này",
     };
   }
+
   const canVip = product.status === "PENDING" || product.status === "AVAILABLE";
   if (!canVip) {
     return {
@@ -141,15 +70,22 @@ async function createVipPaymentLink({ userId, productId, plan }) {
     };
   }
 
+  // tạo mã số hóa đơn độc nhất
   const orderCode = generateOrderCode();
+
+  // biết chính xác đường dẫn của KH
   const base = frontendBase();
+
   const returnUrl = `${base}/my-products?vip_payment=success`;
   const cancelUrl = `${base}/my-products?vip_payment=cancel`;
+
+  // tạo nội dung chuyển khoản
   const description = buildPayosPaymentDescription(product.name, vipPlanDays);
 
-  let createdTxId = null;
+  let createdTransactionId = null;
   try {
-    const tx = await Transaction.create({
+    // Viết hoá đơn nháp (Tạo Transaction)
+    const transaction = await Transaction.create({
       userId,
       productId: product._id,
       amount,
@@ -157,14 +93,18 @@ async function createVipPaymentLink({ userId, productId, plan }) {
       orderCode,
       status: "PENDING",
     });
-    createdTxId = tx._id;
+    createdTransactionId = transaction._id;
 
+    // gọi payOS
     let payos;
     try {
       payos = getPayOS();
     } catch (e) {
-      await Transaction.deleteOne({ _id: createdTxId }).catch(() => {});
-      createdTxId = null;
+      // nếu goi PayOS fail -> lấy id đã nhớ ở createdTransactionId -> xóa sạch hóa đơn nháp trong db
+      await Transaction.deleteOne({ _id: createdTransactionId }).catch(
+        () => {},
+      );
+      createdTransactionId = null;
       if (e?.code === "PAYOS_NOT_CONFIGURED") {
         return { ok: false, status: 503, message: e.message };
       }
@@ -189,8 +129,10 @@ async function createVipPaymentLink({ userId, productId, plan }) {
       },
     };
   } catch (error) {
-    if (createdTxId) {
-      await Transaction.deleteOne({ _id: createdTxId }).catch(() => {});
+    if (createdTransactionId) {
+      await Transaction.deleteOne({ _id: createdTransactionId }).catch(
+        () => {},
+      );
     }
     if (error?.code === "PAYOS_NOT_CONFIGURED") {
       return { ok: false, status: 503, message: error.message };
@@ -199,59 +141,57 @@ async function createVipPaymentLink({ userId, productId, plan }) {
   }
 }
 
-/**
- * Xử lý webhook PayOS: verify chữ ký, idempotency (findOneAndUpdate PENDING),
- * cập nhật Product bằng updateOne, socket tách luồng.
- *
- * @param {object} body — req.body từ PayOS
- * @returns {Promise<{
- *   response: { success: boolean; message?: string };
- *   httpStatus: number;
- * }>}
- */
+// theo dõi và trả về thông báo KH đã thanh toán thành công
 async function processPayosVipWebhook(body) {
+  // gọi cấu hình PayOS
   let payos;
   try {
     payos = getPayOS();
   } catch (e) {
     return {
-      response: { success: false, message: "PayOS not configured" },
+      response: { success: false, message: "PayOS chưa được cấu hình" },
       httpStatus: 503,
     };
   }
 
+  // Kiểm tra an ninh (Chữ ký điện tử)
   let data;
   try {
+    // verify dùng mã bí mật này để giải mã cục dữ liệu -> bị sai lệch -> báo lỗi
     data = await payos.webhooks.verify(body);
   } catch (err) {
     console.error("PayOS webhook verify failed:", err);
     return {
-      response: { success: false, message: "Invalid signature" },
+      response: { success: false, message: "Cấu hình không tồn tại" },
       httpStatus: 400,
     };
   }
 
+  // Kiểm tra trạng thái giao dịch
   if (String(data.code) !== "00") {
     return {
-      response: { success: true, message: "Ignored non-success code" },
+      response: { success: true, message: "Mã không thành công bị bỏ qua" },
       httpStatus: 200,
     };
   }
 
-  const tx = await Transaction.findOneAndUpdate(
+  // chốt sổ sách cộng số VIP
+  // Tìm tờ hoá đơn mang mã đó VÀ VẪN CÒN CHỮ PENDING, sau đó đóng mộc SUCCESS lên
+  const transaction = await Transaction.findOneAndUpdate(
     { orderCode: data.orderCode, status: "PENDING" },
     { $set: { status: "SUCCESS" } },
     { new: true, lean: true },
   );
 
-  if (!tx) {
+  if (!transaction) {
     return {
-      response: { success: true, message: "Ignored" },
+      response: { success: true, message: "Bỏ qua" },
       httpStatus: 200,
     };
   }
 
-  await applyVipToProductAfterPayment(tx);
+  // cập nhập ngày hết hạn
+  await applyVipToProductAfterPayment(transaction);
 
   return {
     response: { success: true },
@@ -259,10 +199,47 @@ async function processPayosVipWebhook(body) {
   };
 }
 
-/**
- * Khi người dùng trả về từ PayOS (returnUrl) mà webhook chưa chạy / không tới (localhost, chưa công khai),
- * gọi API này: đối chiếu trạng thái PAID từ PayOS rồi kích hoạt VIP (idempotent nếu đã SUCCESS).
- */
+// nâng cấp bài đăng lên vip sau khi thanh toán
+async function applyVipToProductAfterPayment(transaction) {
+  // tính toán cần cộng thêm bao nhiêu ngày
+  const daysToAdd =
+    Number(transaction.vipPlanDays) > 0
+      ? Number(transaction.vipPlanDays)
+      : vipDurationDays();
+
+  // Kiểm tra tình trạng hiện tại của tin đăng hàng
+  const product = await Product.findById(transaction.productId)
+    .select("vipUntil")
+    .lean();
+
+  const now = new Date();
+  let base = now;
+  // kiểm tra xem còn hạn vip hay đã hết
+  if (product?.vipUntil) {
+    // nếu hết hạn hoặc chưa có VIP lấy ngày hiện tại làm mốc
+    const vipDate = new Date(product.vipUntil);
+    // nếu vẫn còn -> lấy làm mốc
+    if (vipDate > now) {
+      base = vipDate;
+    }
+  }
+  // Cộng thêm số ngày
+  const until = new Date(base);
+  until.setDate(until.getDate() + daysToAdd);
+
+  await Product.updateOne(
+    { _id: transaction.productId },
+    {
+      $set: { isVIP: true, vipUntil: until, updatedAt: new Date() },
+    },
+  );
+
+  // báo về màn hình KH
+  emitVipSuccess(String(transaction.userId), String(transaction.productId));
+}
+
+// Khi người dùng trả về từ PayOS (returnUrl) mà webhook chưa chạy / không tới (localhost, chưa công khai),
+
 async function confirmVipAfterReturn({ userId, orderCode }) {
   if (orderCode === undefined || orderCode === null || orderCode === "") {
     return { ok: false, status: 400, message: "Thiếu orderCode" };
@@ -272,10 +249,11 @@ async function confirmVipAfterReturn({ userId, orderCode }) {
     return { ok: false, status: 400, message: "orderCode không hợp lệ" };
   }
 
-  /** `orderCode` unique — tìm theo mã, rồi so `userId` dạng chuỗi (tránh lệch ObjectId/string) */
+  // Tìm lại hoá đơn và Kiểm tra chủ quyền
   const rec = await Transaction.findOne({ orderCode: code })
     .select("productId status _id userId amount vipPlanDays")
     .lean();
+
   if (!rec) {
     return {
       ok: false,
@@ -283,6 +261,7 @@ async function confirmVipAfterReturn({ userId, orderCode }) {
       message: "Không tìm thấy giao dịch tương ứng orderCode",
     };
   }
+
   if (String(rec.userId) !== String(userId)) {
     return {
       ok: false,
@@ -290,6 +269,8 @@ async function confirmVipAfterReturn({ userId, orderCode }) {
       message: "Giao dịch không thuộc tài khoản hiện tại",
     };
   }
+
+  // Đề phòng Webhook nhanh chân hơn
   if (String(rec.status) === "SUCCESS") {
     return {
       ok: true,
@@ -307,7 +288,8 @@ async function confirmVipAfterReturn({ userId, orderCode }) {
       message: "Giao dịch không ở trạng thái chờ thanh toán",
     };
   }
-  const tx = rec;
+
+  const transaction = rec;
 
   let payos;
   try {
@@ -320,6 +302,7 @@ async function confirmVipAfterReturn({ userId, orderCode }) {
     };
   }
 
+  // báo lên payos để xác nhận đã nhận được tiền chưa
   let info;
   try {
     info = await payos.paymentRequests.get(code);
@@ -332,8 +315,8 @@ async function confirmVipAfterReturn({ userId, orderCode }) {
     };
   }
 
-  const st = String(info?.status || "").toUpperCase();
-  if (st !== "PAID") {
+  const status = String(info?.status || "").toUpperCase();
+  if (status !== "PAID") {
     return {
       ok: false,
       status: 409,
@@ -342,15 +325,17 @@ async function confirmVipAfterReturn({ userId, orderCode }) {
     };
   }
 
-  const expectAmt = Number(tx.amount);
-  const gotAmt = Number(info?.amount);
-  const gotPaid = Number(info?.amountPaid);
+  // kiểm tra lại số tiền
+  const expectAmt = Number(transaction.amount); // Số tiền web yêu cầu
+  const gotAmt = Number(info?.amount); // Số tiền PayOS báo
+  const gotPaid = Number(info?.amountPaid); // Số tiền khách thực chuyển
+
   const amountMatch =
     (Number.isFinite(gotAmt) && gotAmt === expectAmt) ||
     (Number.isFinite(gotPaid) && gotPaid === expectAmt) ||
-    (Number.isFinite(gotAmt) &&
-      Math.abs(gotAmt - expectAmt) < 1) ||
+    (Number.isFinite(gotAmt) && Math.abs(gotAmt - expectAmt) < 1) ||
     (Number.isFinite(gotPaid) && Math.abs(gotPaid - expectAmt) < 1);
+
   if (!amountMatch) {
     return {
       ok: false,
@@ -359,16 +344,22 @@ async function confirmVipAfterReturn({ userId, orderCode }) {
     };
   }
 
+  // tránh đụng độ với applyVipToProductAfterPayment
+  // tìm hoá đơn PENDING và đổi thành SUCCESS -> ngắn Race Condition (đụng độ dữ liệu)
   const updated = await Transaction.findOneAndUpdate(
-    { _id: tx._id, status: "PENDING" },
+    { _id: transaction._id, status: "PENDING" },
     { $set: { status: "SUCCESS" } },
     { new: true, lean: true },
   );
 
   if (!updated) {
-    const again = await Transaction.findOne({ orderCode: code, status: "SUCCESS" })
+    const again = await Transaction.findOne({
+      orderCode: code,
+      status: "SUCCESS",
+    })
       .select("productId")
       .lean();
+
     if (again) {
       return {
         ok: true,
@@ -379,6 +370,7 @@ async function confirmVipAfterReturn({ userId, orderCode }) {
         },
       };
     }
+
     return {
       ok: false,
       status: 409,
@@ -398,16 +390,16 @@ async function confirmVipAfterReturn({ userId, orderCode }) {
 }
 
 const VIP_TX_STATUSES = ["PENDING", "SUCCESS", "CANCELLED"];
-
-/**
- * Danh sách giao dịch mua gói VIP (admin) + tổng doanh thu các giao dịch thành công.
- * @param {{ page?: number|string, limit?: number|string, status?: string }} query
- */
 async function getAdminVipTransactions({ page = 1, limit = 20, status } = {}) {
-  const safeLimit = Math.min(100, Math.max(1, parseInt(String(limit), 10) || 20));
+  // Bảo vệ Server (Phân trang an toàn)
+  const safeLimit = Math.min(
+    100,
+    Math.max(1, parseInt(String(limit), 10) || 20),
+  );
   const safePage = Math.max(1, parseInt(String(page), 10) || 1);
   const skip = (safePage - 1) * safeLimit;
 
+  // Tạo bộ lọc (Filter)
   const filter = {};
   if (status && VIP_TX_STATUSES.includes(String(status).toUpperCase())) {
     filter.status = String(status).toUpperCase();
@@ -429,16 +421,21 @@ async function getAdminVipTransactions({ page = 1, limit = 20, status } = {}) {
     Transaction.countDocuments({ status: "SUCCESS" }),
   ]);
 
+  // tránh crash nếu csdl lỗi, chưa ai mua hàng
   const totalRevenue =
-    Array.isArray(revenueAgg) && revenueAgg[0] && Number.isFinite(revenueAgg[0].total)
+    Array.isArray(revenueAgg) &&
+    revenueAgg[0] &&
+    Number.isFinite(revenueAgg[0].total)
       ? revenueAgg[0].total
       : 0;
 
+  // lấy dữ liệu cần thiết
   const transactions = rawList.map((doc) => {
-    const u = doc.userId;
-    const p = doc.productId;
-    const hasUser = u && typeof u === "object" && u._id;
-    const hasProduct = p && typeof p === "object" && p._id;
+    const userID = doc.userId;
+    const productId = doc.productId;
+    const hasUser = userId && typeof userId === "object" && userId._id;
+    const hasProduct =
+      productId && typeof productId === "object" && productId._id;
     return {
       _id: doc._id,
       orderCode: doc.orderCode,
@@ -449,15 +446,15 @@ async function getAdminVipTransactions({ page = 1, limit = 20, status } = {}) {
       updatedAt: doc.updatedAt,
       user: hasUser
         ? {
-            _id: u._id,
+            _id: userId._id,
             username: u.username,
-            email: u.email,
+            email: userId.email,
           }
         : null,
       product: hasProduct
         ? {
-            _id: p._id,
-            name: p.name,
+            _id: productId._id,
+            name: productId.name,
           }
         : null,
     };
