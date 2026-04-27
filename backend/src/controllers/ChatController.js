@@ -108,6 +108,34 @@ exports.postUploadChatImages = async (req, res) => {
   }
 };
 
+// danh sách tất cả những người đã từng nhắn tin hỏi mua món hàng này
+exports.getProductSaleCandidates = async (req, res) => {
+  try {
+    // Xác thực người dùng
+    const sellerId = userIdOf(req);
+
+    if (!sellerId) {
+      return res.status(401).json({ message: "Chưa đăng nhập" });
+    }
+
+    // Lấy productId từ params
+    const { productId } = req.params;
+
+    // Lấy danh sách người mua
+    const data = await chatService.listChatBuyersForProduct(sellerId, productId);
+    
+    return res.json(data);
+  } catch (error) {
+    if (error.status) {
+      return res.status(error.status).json({ message: error.message });
+    }
+    console.error("Lỗi getProductSaleCandidates:", error);
+    return res
+      .status(500)
+      .json({ message: error.message || "Lỗi lấy danh sách người mua" });
+  }
+};
+
 exports.postMessage = async (req, res) => {
   try {
     const uid = userIdOf(req);

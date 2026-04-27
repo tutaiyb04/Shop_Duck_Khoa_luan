@@ -2,12 +2,15 @@ const mongoose = require("mongoose");
 const Conversation = require("../model/Conversation");
 const Message = require("../model/Message");
 const Product = require("../model/Product");
+const User = require("../model/User");
 
 const MAX_MESSAGE_LENGTH = 5000;
 const MAX_IMAGE_URLS = 5;
 const MAX_URL_LENGTH = 2000;
 /** Giới hạn số hội thoại trả về mỗi user (tránh payload lớn khi scale). */
 const LIST_CONVERSATIONS_CAP = 200;
+/** Số ứng viên tối đa khi người bán chọn "bán cho ai" (lọc theo đã chat). */
+const SALE_CANDIDATES_CAP = 50;
 
 /** Chuỗi hiển thị trong danh sách hội thoại (text rút gọn hoặc placeholder ảnh). */
 function lastMessagePreviewForList(text, images) {
@@ -75,7 +78,7 @@ exports.openOrGetConversation = async (buyerId, productId) => {
 
   const b = new mongoose.Types.ObjectId(buyerId);
   const s = new mongoose.Types.ObjectId(sellerId);
-  const pid = new mongoose.Types.ObjectId(productId);
+  const pid = new mongoose.Types.ObjectId(String(productId));
 
   let conv = await Conversation.findOne({
     productId: pid,
@@ -95,6 +98,98 @@ exports.openOrGetConversation = async (buyerId, productId) => {
       id: String(conv._id),
       productId: String(conv.productId),
     },
+  };
+};
+
+exports.listChatBuyersForProduct = async (sellerId, productId) => {
+  if (!productId || !mongoose.isValidObjectId(String(productId))) {
+    const err = new Error("ID sản phẩm không hợp lệ");
+    err.status = 400;
+    throw err;
+  }
+
+  if (!sellerId || !mongoose.isValidObjectId(String(sellerId))) {
+    const err = new Error("ID người bán không hợp lệ");
+    err.status = 400;
+    throw err;
+  }
+
+  const product = await Product.findById(productId).select("sellerId").lean();
+  
+  if (!product) {
+    const err = new Error("Sản phẩm không tồn tại");
+    err.status = 404;
+    throw err;
+  }
+
+  if (String(product.sellerId) !== String(sellerId)) {
+    const err = new Error("Bạn không phải người bán sản phẩm này");
+    err.status = 403;
+    throw err;
+  }
+
+  const sId = new mongoose.Types.ObjectId(String(sellerId));
+
+  const pId = new mongoose.Types.ObjectId(String(productId));
+
+  // tìm các cuộc hội thoại
+  const convs = await Conversation.find({
+    productId: pId,
+    participants: sId,
+  })
+    .select("participants")
+    .limit(SALE_CANDIDATES_CAP)
+    .lean();
+
+  // Lọc ra danh sách Người mua
+  const seen = new Set();
+  const buyers = [];
+  for (const c of convs) {
+    for (const p of c.participants || []) {
+      const idStr = String(p);
+
+      if (idStr === String(sellerId) || seen.has(idStr)) continue;
+
+      seen.add(idStr);
+      buyers.push(new mongoose.Types.ObjectId(idStr));
+    }
+  }
+
+  if (buyers.length === 0) {
+    return { buyers: [] };
+  }
+
+  const buyerToConv = new Map();
+  for (const c of convs) {
+    const other = (c.participants || []).find(
+      (p) => String(p) !== String(sellerId),
+    );
+
+    if (other) {
+      buyerToConv.set(String(other), c._id);
+    }
+  }
+
+  // tìm thông tin người mua
+  const userDocs = await User.find({ _id: { $in: buyers } })
+    .select("username avatar")
+    .lean();
+
+  const byId = new Map(userDocs.map((u) => [String(u._id), u]));
+
+  return {
+    buyers: buyers.map((bid) => {
+      const u = byId.get(String(bid));
+      const convId = buyerToConv.get(String(bid));
+      return {
+        user: {
+          _id: bid,
+          username: u?.username ?? "?",
+          avatar: u?.avatar ?? null,
+        },
+        conversationId: convId ? String(convId) : null,
+      };
+    }),
   };
 };
 
