@@ -1,11 +1,11 @@
 import LoadingBlock from "@/components/shared/LoadingBlock";
 
-function formatVnd(n) {
+const formatVnd = (n) => {
   if (n == null || Number.isNaN(Number(n))) return "—";
   return `${Number(n).toLocaleString("vi-VN")} ₫`;
 }
 
-function formatDate(iso) {
+const formatDate = (iso) => {
   if (!iso) return "—";
   try {
     return new Date(iso).toLocaleString("vi-VN", {
@@ -17,7 +17,7 @@ function formatDate(iso) {
   }
 }
 
-function TxStatusBadge({ status }) {
+const TxStatusBadge = ({ status }) => {
   const map = {
     PENDING: { label: "Chờ thanh toán", className: "bg-amber-100 text-amber-900" },
     SUCCESS: { label: "Thành công", className: "bg-green-100 text-green-800" },

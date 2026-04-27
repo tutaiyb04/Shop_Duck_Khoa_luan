@@ -390,7 +390,7 @@ async function confirmVipAfterReturn({ userId, orderCode }) {
 }
 
 const VIP_TX_STATUSES = ["PENDING", "SUCCESS", "CANCELLED"];
-async function getAdminVipTransactions({ page = 1, limit = 20, status } = {}) {
+async function  getAdminVipTransactions({ page = 1, limit = 20, status } = {}) {
   // Bảo vệ Server (Phân trang an toàn)
   const safeLimit = Math.min(
     100,
@@ -431,7 +431,7 @@ async function getAdminVipTransactions({ page = 1, limit = 20, status } = {}) {
 
   // lấy dữ liệu cần thiết
   const transactions = rawList.map((doc) => {
-    const userID = doc.userId;
+    const userId = doc.userId;
     const productId = doc.productId;
     const hasUser = userId && typeof userId === "object" && userId._id;
     const hasProduct =
@@ -447,7 +447,7 @@ async function getAdminVipTransactions({ page = 1, limit = 20, status } = {}) {
       user: hasUser
         ? {
             _id: userId._id,
-            username: u.username,
+            username: userId.username,
             email: userId.email,
           }
         : null,

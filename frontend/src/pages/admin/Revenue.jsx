@@ -28,10 +28,9 @@ function Revenue() {
     <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm sm:p-6">
       <div className="mb-6">
         <h1 className="flex items-center gap-2 text-xl font-bold text-yellow-600 sm:text-2xl">
-          <BarChart3 className="h-7 w-7" />
           Doanh thu — gói VIP
         </h1>
-        <p className="mt-2 text-sm text-gray-500 sm:text-base">
+        <p className="mt-2.5 text-sm text-gray-500 sm:text-base">
           Theo dõi các giao dịch thanh toán gói hiển thị VIP (PayOS) và tổng
           doanh thu từ giao dịch thành công. Hai ô thống kê phía dưới là tổng
           toàn hệ thống; bảng có thể lọc theo trạng thái từng giao dịch.

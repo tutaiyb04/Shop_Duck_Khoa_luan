@@ -283,6 +283,7 @@ exports.updateProfileService = async (
   address,
   description,
   file,
+  storeName,
 ) => {
   try {
     // Khởi tạo object chứa dữ liệu cần cập nhật
@@ -292,6 +293,9 @@ exports.updateProfileService = async (
 
     if (description !== undefined)
       updateData["sellerProfile.description"] = description;
+
+    if (storeName !== undefined)
+      updateData["sellerProfile.storeName"] = storeName;
 
     if (address !== undefined)
       updateData["buyerProfile.shippingAddresses"] = [address];

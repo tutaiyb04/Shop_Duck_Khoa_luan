@@ -8,6 +8,7 @@ import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import Profile from "./pages/Profile";
+import SellerProfile from "./pages/SellerProfile";
 import CreateProduct from "./pages/products/CreateProduct";
 import Orders from "./pages/products/Orders";
 import AdminLayout from "./components/admin/AdminLayout";
@@ -60,6 +61,9 @@ function App() {
 
               {/* Profile Page */}
               <Route path="/profile" element={<Profile />} />
+
+              {/* Thông tin người bán (gian hàng) */}
+              <Route path="/seller-profile" element={<SellerProfile />} />
 
               {/* Tin nhắn */}
               <Route path="/messages" element={<Messages />} />

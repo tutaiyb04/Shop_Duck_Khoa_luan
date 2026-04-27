@@ -1,5 +1,30 @@
 const User = require("../model/User");
+const Product = require("../model/Product");
 const userService = require("../services/userServices");
+
+async function buildProfileUserPayload(userDoc) {
+  const uid = userDoc._id;
+  const [totalProducts, totalSold] = await Promise.all([
+    Product.countDocuments({ sellerId: uid }),
+    Product.countDocuments({ sellerId: uid, status: "SOLD" }),
+  ]);
+  return {
+    id: userDoc._id,
+    username: userDoc.username,
+    email: userDoc.email,
+    phone: userDoc.phone,
+    avatar: userDoc.avatar,
+    authType: userDoc.authType,
+    isEmailVerified: userDoc.isEmailVerified,
+    address: userDoc.buyerProfile?.shippingAddresses[0] || "",
+    description: userDoc.sellerProfile?.description,
+    role: userDoc.role,
+    sellerProfile: userDoc.sellerProfile,
+    buyerProfile: userDoc.buyerProfile,
+    rating: userDoc.rating,
+    sellerStats: { totalProducts, totalSold },
+  };
+}
 
 exports.register = async (req, res) => {
   try {
@@ -91,26 +116,13 @@ exports.googleLogin = async (req, res) => {
   }
 };
 
-exports.getProfile = (req, res) => {
+exports.getProfile = async (req, res) => {
   try {
     const user = req.user;
-
+    const payload = await buildProfileUserPayload(user);
     res.status(200).json({
       message: "Lấy thông tin thành công",
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        phone: user.phone,
-        avatar: user.avatar,
-        authType: user.authType,
-        isEmailVerified: user.isEmailVerified,
-        address: user.buyerProfile?.shippingAddresses[0] || "",
-        description: user.sellerProfile?.description,
-        role: user.role,
-        sellerProfile: user.sellerProfile,
-        buyerProfile: user.buyerProfile,
-      },
+      user: payload,
     });
   } catch (error) {
     console.log("Lỗi khi gọi getProfile: ", error);
@@ -161,31 +173,27 @@ exports.updateProfile = async (req, res) => {
 
     // lấy req.user đã đc giải mã từ middleware protect
     const userId = req.user._id || req.user.id;
-    const { username, phone, address, description } = req.body;
+    const { username, phone, address, description, storeName } = req.body;
 
     // Lấy file ảnh Multer đã xử lý
     const file = req.file;
 
-    const { updateUser } = await userService.updateProfileService(
+    await userService.updateProfileService(
       userId,
       username,
       phone,
       address,
       description,
       file,
+      storeName,
     );
+
+    const freshUser = await User.findById(userId).select("-password");
+    const userPayload = await buildProfileUserPayload(freshUser);
 
     res.status(200).json({
       message: "Cập nhật hồ sơ thành công",
-      user: {
-        id: updateUser._id,
-        username: updateUser.username,
-        email: updateUser.email,
-        phone: updateUser.phone,
-        avatar: updateUser.avatar,
-        address: updateUser.buyerProfile?.shippingAddresses[0] || "",
-        role: updateUser.role,
-      },
+      user: userPayload,
     });
   } catch (error) {
     console.log("Lỗi khi updateProfile: ", error);
