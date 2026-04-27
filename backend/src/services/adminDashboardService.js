@@ -4,9 +4,6 @@ const Category = require("../model/Category");
 const Report = require("../model/Report");
 const Transaction = require("../model/Transaction");
 
-/**
- * Số liệu tổng quan cho trang Admin Dashboard (một vòng gọi DB song song).
- */
 async function getAdminDashboardStats() {
   const userFilter = { role: "user" };
 
@@ -22,23 +19,24 @@ async function getAdminDashboardStats() {
     vipRevenueAgg,
     vipSuccessCount,
   ] = await Promise.all([
-    User.countDocuments(userFilter),
-    User.countDocuments({ ...userFilter, status: "active" }),
-    User.countDocuments({ ...userFilter, status: "locked" }),
-    Product.countDocuments(),
+    User.countDocuments(userFilter), // tìm tổng số user (role: user)
+    User.countDocuments({ ...userFilter, status: "active" }), // tìm tổng số user (role: user) và status: active
+    User.countDocuments({ ...userFilter, status: "locked" }), // tìm tổng số user (role: user) và bị khóa tài khoản
+    Product.countDocuments(), // tìm tổng số sản phẩm
     Product.aggregate([
-      { $group: { _id: "$status", count: { $sum: 1 } } },
+      { $group: { _id: "$status", count: { $sum: 1 } } },   // tìm tổng số sản phẩm theo trạng thái
     ]),
-    Category.countDocuments(),
-    Report.countDocuments(),
-    Report.countDocuments({ status: "PENDING" }),
+    Category.countDocuments(), // tìm tổng số danh mục
+    Report.countDocuments(), // tìm tổng số báo cáo
+    Report.countDocuments({ status: "PENDING" }), // tìm tổng số báo cáo và trạng thái là PENDING
     Transaction.aggregate([
-      { $match: { status: "SUCCESS" } },
-      { $group: { _id: null, total: { $sum: "$amount" } } },
+      { $match: { status: "SUCCESS" } }, // tìm tổng số giao dịch và trạng thái là SUCCESS
+      { $group: { _id: null, total: { $sum: "$amount" } } }, // tìm tổng số giao dịch và trạng thái là SUCCESS
     ]),
-    Transaction.countDocuments({ status: "SUCCESS" }),
+    Transaction.countDocuments({ status: "SUCCESS" }), // tìm tổng số giao dịch và trạng thái là SUCCESS
   ]);
 
+  // tạo object để lưu trữ tổng số sản phẩm theo trạng thái
   const productByStatus = {
     PENDING: 0,
     AVAILABLE: 0,
@@ -53,6 +51,7 @@ async function getAdminDashboardStats() {
     }
   }
 
+  // tìm tổng số giao dịch và trạng thái là SUCCESS
   const totalRevenue =
     Array.isArray(vipRevenueAgg) &&
     vipRevenueAgg[0] &&

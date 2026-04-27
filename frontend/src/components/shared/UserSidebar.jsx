@@ -5,12 +5,12 @@ import { AuthContext } from "@/context/AuthContext";
 import {
   ClipboardList,
   User,
-  MessageCircle,
   PlusCircle,
   Heart,
   ShieldCheck,
   List,
   MessagesSquare,
+  Store,
 } from "lucide-react";
 import UserAvatar from "./UserAvatar";
 
@@ -30,6 +30,11 @@ function UserSidebar() {
     {
       title: "Bán hàng",
       items: [
+        {
+          path: "/seller-profile",
+          label: "Thông tin người bán",
+          icon: Store,
+        },
         { path: "/sell", label: "Đăng tin bán", icon: PlusCircle },
         { path: "/my-products", label: "Tất cả sản phẩm", icon: List },
         {

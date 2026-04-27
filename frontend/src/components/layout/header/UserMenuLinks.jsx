@@ -12,6 +12,7 @@ import {
   Heart,
   LogOut,
   MessagesSquare,
+  Store,
 } from "lucide-react";
 
 function UserMenuLinks({ navigate, handleLogout }) {
@@ -35,6 +36,13 @@ function UserMenuLinks({ navigate, handleLogout }) {
       <DropdownMenuSeparator />
 
       <DropdownMenuLabel>Bán hàng</DropdownMenuLabel>
+      <DropdownMenuItem
+        onClick={() => navigate("/seller-profile")}
+        className="cursor-pointer"
+      >
+        <Store className="mr-2 h-4 w-4" />
+        <span>Thông tin người bán</span>
+      </DropdownMenuItem>
       <DropdownMenuItem
         onClick={() => navigate("/sell")}
         className="cursor-pointer"

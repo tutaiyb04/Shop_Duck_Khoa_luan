@@ -4,15 +4,14 @@ import toast from "react-hot-toast";
 
 const initialPagination = { totalPages: 1, currentPage: 1, total: 0 };
 
-/**
- * Giao dịch mua gói VIP (admin) + tổng doanh thu thành công.
- */
+
+// Giao dịch mua gói VIP (admin) + tổng doanh thu thành công.
 function useVipRevenue() {
-  const [transactions, setTransactions] = useState([]);
+  const [transactions, setTransactions] = useState([]); // Lưu danh sách các giao dịch
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState(initialPagination);
-  const [totalRevenue, setTotalRevenue] = useState(0);
-  const [successCount, setSuccessCount] = useState(0);
+  const [totalRevenue, setTotalRevenue] = useState(0);  // Lưu tổng doanh thu
+  const [successCount, setSuccessCount] = useState(0);  // Lưu tổng số lượt nạp VIP thành công
   const [status, setStatus] = useState("");
 
   const fetchList = useCallback(
@@ -26,19 +25,19 @@ function useVipRevenue() {
             ...(status ? { status } : {}),
           },
         });
-        const r = res.data?.result;
-        if (!r) {
+        const response = res.data?.result;
+        if (!response) {
           setTransactions([]);
           setPagination(initialPagination);
           return;
         }
-        setTransactions(r.transactions || []);
-        setTotalRevenue(Number(r.totalRevenue) || 0);
-        setSuccessCount(Number(r.successCount) || 0);
+        setTransactions(response.transactions || []);
+        setTotalRevenue(Number(response.totalRevenue) || 0);
+        setSuccessCount(Number(response.successCount) || 0);
         setPagination({
-          totalPages: r.totalPages || 1,
-          currentPage: r.currentPage || 1,
-          total: r.total ?? 0,
+          totalPages: response.totalPages || 1,
+          currentPage: response.currentPage || 1,
+          total: response.total ?? 0,
         });
       } catch (error) {
         toast.error(
