@@ -42,7 +42,7 @@ const reviewSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-/** Một đơn chỉ một đánh giá (khớp logic `createReviewService`) */
+/** Một đơn chỉ một đánh giá */
 reviewSchema.index({ orderId: 1 }, { unique: true });
 
 /** Danh sách đánh giá theo thời gian */

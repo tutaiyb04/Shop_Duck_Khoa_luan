@@ -9,6 +9,12 @@ const {
 } = require("../middleware/chatRateLimit");
 
 router.get("/conversations", protect, chatController.getConversations);
+/** Phải khai báo trước /:conversationId (tránh coi "product" là id hội thoại) */
+router.get(
+  "/product/:productId/sale-candidates",
+  protect,
+  chatController.getProductSaleCandidates,
+);
 router.post("/open", protect, chatController.postOpen);
 router.post(
   "/upload-images",
