@@ -101,6 +101,12 @@ export function useHomePage() {
     return [...nonVip].sort(sortByNewest);
   }, [products]);
 
+  /** Chỉ hiển thị 10 tin mới nhất trên trang chủ (2 hàng × 5 cột trên desktop) */
+  const newProductsPreview = useMemo(
+    () => newProducts.slice(0, 10),
+    [newProducts],
+  );
+
   const sectionTitle = useMemo(() => {
     let title = "Sản phẩm mới đăng";
     if (activeSearch && hasLocationFilter) {
@@ -150,6 +156,7 @@ export function useHomePage() {
     isFiltered,
     vipProducts,
     newProducts,
+    newProductsPreview,
     showDiscovery,
     sectionTitle,
     emptyMessage,

@@ -15,6 +15,7 @@ function Home() {
     isFiltered,
     vipProducts,
     newProducts,
+    newProductsPreview,
     showDiscovery,
     sectionTitle,
     emptyMessage,
@@ -36,7 +37,7 @@ function Home() {
             isLoading={isLoading}
             showDiscovery={showDiscovery}
             vipProducts={vipProducts}
-            newProducts={newProducts}
+            newProductsPreview={newProductsPreview}
             categoryRows={categoryRows}
             products={products}
             emptyMessage={emptyMessage}

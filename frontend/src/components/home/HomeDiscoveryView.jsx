@@ -8,7 +8,7 @@ export default function HomeDiscoveryView({
   isLoading,
   showDiscovery,
   vipProducts,
-  newProducts,
+  newProductsPreview,
   categoryRows,
   products,
   emptyMessage,
@@ -24,6 +24,7 @@ export default function HomeDiscoveryView({
           id="home-hot-heading"
           ariaLabelledBy="home-hot-heading"
           title="Sản phẩm HOT nổi bật"
+          seeAllTo="/products?vip=1"
           icon={
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-amber-500 text-lg text-white shadow-md">
               <Flame className="h-5 w-5" aria-hidden />
@@ -33,17 +34,18 @@ export default function HomeDiscoveryView({
         />
       )}
 
-      {showDiscovery && newProducts.length > 0 && (
+      {showDiscovery && newProductsPreview.length > 0 && (
         <HomeProductSection
           id="home-new-heading"
           ariaLabelledBy="home-new-heading"
           title="Sản phẩm mới đăng"
+          seeAllTo="/products"
           icon={
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-amber-600 shadow border border-amber-200">
               <Clock className="h-5 w-5" aria-hidden />
             </span>
           }
-          products={newProducts}
+          products={newProductsPreview}
         />
       )}
 

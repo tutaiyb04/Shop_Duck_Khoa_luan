@@ -21,7 +21,7 @@ export default function HomeCategoryRows({ rows }) {
               {row.name}
             </h2>
             <NavLink
-              to={`/?category=${row._id}`}
+              to={`/products?category=${row._id}`}
               className="inline-flex items-center gap-0.5 text-sm font-medium !text-amber-700 hover:!underline"
             >
               Xem tất cả

@@ -17,6 +17,7 @@ import AdminProfile from "./pages/admin/AdminProfile";
 import UserManagement from "./pages/admin/UserManagement";
 import ProductManagement from "./pages/admin/ProductManagement";
 import ProductDetails from "./pages/products/ProductDetails";
+import ProductsCatalog from "./pages/products/ProductsCatalog";
 import ReportManagement from "./pages/admin/ReportManagement";
 import Revenue from "./pages/admin/Revenue";
 import Dashboard from "./pages/admin/Dashboard";
@@ -26,11 +27,13 @@ import AccountVerification from "./pages/AccountVerification";
 import ManageProducts from "./pages/products/ManageProducts";
 import EditProduct from "./pages/products/EditProduct";
 import Messages from "./pages/messages/Messages";
+import ScrollToTop from "./components/layout/ScrollToTop";
 
 function App() {
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <BrowserRouter basename={import.meta.env.BASE_URL}>
+        <ScrollToTop />
         <Toaster position="top-right" reverseOrder={false} />
 
         <main className="w-full min-h-screen overflow-x-hidden bg-amber-50">
@@ -66,6 +69,9 @@ function App() {
 
               {/* Chi Tiết Sản Phẩm */}
               <Route path="/product/:id" element={<ProductDetails />} />
+
+              {/* Danh sách tất cả sản phẩm + lọc */}
+              <Route path="/products" element={<ProductsCatalog />} />
 
               {/* Quản lý đơn hàng */}
               <Route path="/orders" element={<Orders />} />
