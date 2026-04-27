@@ -13,6 +13,7 @@ import {
   LogOut,
   MessagesSquare,
   Store,
+  History,
 } from "lucide-react";
 
 function UserMenuLinks({ navigate, handleLogout }) {
@@ -51,6 +52,13 @@ function UserMenuLinks({ navigate, handleLogout }) {
         <span>Đăng tin bán</span>
       </DropdownMenuItem>
       <DropdownMenuItem
+        onClick={() => navigate("/sales-history")}
+        className="cursor-pointer"
+      >
+        <History className="mr-2 h-4 w-4" />
+        <span>Lịch sử bán hàng</span>
+      </DropdownMenuItem>
+      <DropdownMenuItem
         onClick={() => navigate("/my-products")}
         className="cursor-pointer"
       >
@@ -72,7 +80,7 @@ function UserMenuLinks({ navigate, handleLogout }) {
         className="cursor-pointer"
       >
         <Package className="mr-2 h-4 w-4" />
-        <span>Đơn hàng của tôi</span>
+        <span>Lịch sử mua hàng</span>
       </DropdownMenuItem>
       <DropdownMenuItem
         onClick={() => navigate("/wishlist")}

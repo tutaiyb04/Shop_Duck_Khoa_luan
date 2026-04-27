@@ -35,7 +35,13 @@ const PRODUCT_STATUS = {
 
 function useManageProducts() {
   const { user } = useContext(AuthContext);
-  const { products, loading, handleUpdateStatus, refresh } = useMyProducts();
+  const {
+    products,
+    loading,
+    handleUpdateStatus,
+    markSoldToBuyer,
+    refresh,
+  } = useMyProducts();
   const [vipTarget, setVipTarget] = useState(null);
   const navigate = useNavigate();
 
@@ -168,6 +174,7 @@ function useManageProducts() {
     products,
     loading,
     handleUpdateStatus,
+    markSoldToBuyer,
     refresh,
     navigate,
     vipTarget,

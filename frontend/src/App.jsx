@@ -11,6 +11,7 @@ import Profile from "./pages/Profile";
 import SellerProfile from "./pages/SellerProfile";
 import CreateProduct from "./pages/products/CreateProduct";
 import Orders from "./pages/products/Orders";
+import SalesHistory from "./pages/products/SalesHistory";
 import AdminLayout from "./components/admin/AdminLayout";
 import CategoryManagement from "./pages/admin/CategoryManagement";
 import ClientLayout from "./components/layout/ClientLayout";
@@ -77,8 +78,11 @@ function App() {
               {/* Danh sách tất cả sản phẩm + lọc */}
               <Route path="/products" element={<ProductsCatalog />} />
 
-              {/* Quản lý đơn hàng */}
+              {/* Lịch sử mua hàng */}
               <Route path="/orders" element={<Orders />} />
+
+              {/* Lịch sử bán hàng */}
+              <Route path="/sales-history" element={<SalesHistory />} />
 
               {/* Yêu thích */}
               <Route path="/wishlist" element={<Wishlist />} />

@@ -5,7 +5,28 @@ const Conversation = require("../model/Conversation");
 
 const SELLABLE_STATUSES = ["AVAILABLE"];
 
-// Xác nhận đã bán hàng
+/**
+ * Đặt lại trạng thái tin khi tạo Order thất bại (chỉ khi vẫn là SOLD và đúng seller).
+ */
+async function rollbackProductAfterFailedOrder(productObjectId, sellerObjectId) {
+  await Product.updateOne(
+    {
+      _id: productObjectId,
+      sellerId: sellerObjectId,
+      status: "SOLD",
+    },
+    { $set: { status: "AVAILABLE" } },
+  );
+}
+
+/**
+ * Xác nhận đã bán (không dùng MongoDB transaction — chạy được standalone).
+ *
+ * Chống race / gánh cao:
+ * - Một phép findOneAndUpdate nguyên tử: chỉ tin AVAILABLE + đúng sellerId mới đổi SOLD (một luồng thắng).
+ * - Index unique partial Order(productId)+COMPLETED chặn trùng đơn.
+ * - Order.create sau claim — lỗi thì rollback tin về AVAILABLE.
+ */
 exports.completeOfflineSale = async (sellerId, productId, buyerId) => {
   if (!mongoose.isValidObjectId(String(productId))) {
     const err = new Error("ID sản phẩm không hợp lệ");
@@ -25,116 +46,103 @@ exports.completeOfflineSale = async (sellerId, productId, buyerId) => {
     throw err;
   }
 
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  const pid = new mongoose.Types.ObjectId(String(productId));
+  const sid = new mongoose.Types.ObjectId(String(sellerId));
+  const bid = new mongoose.Types.ObjectId(String(buyerId));
 
-  try {
-    const product = await Product.findById(productId)
-      .select("sellerId status price quantity")
-      .session(session);
+  const conv = await Conversation.findOne({
+    productId: pid,
+    participants: { $all: [sid, bid] },
+  })
+    .select("_id")
+    .lean();
 
-    if (!product) {
+  if (!conv) {
+    const err = new Error(
+      "Chưa có hội thoại với tài khoản này về sản phẩm. Hãy chat trước khi xác nhận đã bán.",
+    );
+    err.status = 400;
+    throw err;
+  }
+
+  const alreadySoldOrder = await Order.exists({
+    productId: pid,
+    status: "COMPLETED",
+  });
+  if (alreadySoldOrder) {
+    const err = new Error("Sản phẩm này đã có đơn hoàn tất trước đó");
+    err.status = 400;
+    throw err;
+  }
+
+  const claimed = await Product.findOneAndUpdate(
+    {
+      _id: pid,
+      sellerId: sid,
+      status: "AVAILABLE",
+    },
+    { $set: { status: "SOLD" } },
+    {
+      new: true,
+      select: "price quantity sellerId status",
+    },
+  ).lean();
+
+  if (!claimed) {
+    const peek = await Product.findById(pid).select("sellerId status").lean();
+    if (!peek) {
       const err = new Error("Sản phẩm không tồn tại");
       err.status = 404;
       throw err;
     }
-
-    if (String(product.sellerId) !== String(sellerId)) {
+    if (String(peek.sellerId) !== String(sellerId)) {
       const err = new Error("Bạn không phải người bán sản phẩm này");
       err.status = 403;
       throw err;
     }
-
-    if (product.status === "SOLD") {
-      const err = new Error("Sản phẩm đã được đánh dấu bán");
-      err.status = 400;
-      throw err;
-    }
-
-    if (!SELLABLE_STATUSES.includes(product.status)) {
+    if (peek.status === "SOLD") {
       const err = new Error(
-        "Sản phẩm ở trạng thái không thể bán (chỉ bán khi còn hàng/đang hiển thị hợp lệ)",
+        "Tin đã được xác nhận bán (có thể do người khác vừa thao tác).",
       );
-      err.status = 400;
+      err.status = 409;
       throw err;
     }
+    const err = new Error(
+      !SELLABLE_STATUSES.includes(peek.status)
+        ? "Sản phẩm ở trạng thái không thể bán (chỉ khi đang hiển thị Đang bán)."
+        : "Không thể xác nhận bán lúc này.",
+    );
+    err.status = 400;
+    throw err;
+  }
 
-    // tìm cuộc hội thoại giữa người bán và người mua
-    const conv = await Conversation.findOne({
-      productId: new mongoose.Types.ObjectId(String(productId)),
-      participants: {
-        $all: [
-          new mongoose.Types.ObjectId(String(sellerId)),
-          new mongoose.Types.ObjectId(String(buyerId)),
-        ],
+  const quantity = Math.max(1, Number(claimed.quantity) || 1);
+  const unitPrice = Number(claimed.price);
+  const totalAmount = unitPrice * quantity;
+
+  try {
+    const [order] = await Order.create([
+      {
+        buyerId: bid,
+        sellerId: sid,
+        productId: pid,
+        quantity,
+        unitPrice,
+        totalAmount,
+        status: "COMPLETED",
+        conversationId: conv._id,
       },
-    })
-      .select("_id")
-      .session(session);
-
-    if (!conv) {
-      const err = new Error(
-        "Chưa có hội thoại với tài khoản này về sản phẩm. Hãy chat trước khi xác nhận đã bán.",
-      );
-      err.status = 400;
-      throw err;
-    }
-
-    const existingCompleted = await Order.findOne({
-      productId: new mongoose.Types.ObjectId(String(productId)),
-      status: "COMPLETED",
-    })
-      .select("_id")
-      .session(session)
-      .lean();
-    if (existingCompleted) {
-      const err = new Error("Sản phẩm này đã có đơn hoàn tất trước đó");
-      err.status = 400;
-      throw err;
-    }
-
-    const quantity = Math.max(1, Number(product.quantity) || 1);
-    const unitPrice = Number(product.price);
-    const totalAmount = unitPrice * quantity;
-
-    // tạo đơn hàng và đổi trạng thái
-    const [order] = await Order.create(
-      [
-        {
-          buyerId: new mongoose.Types.ObjectId(String(buyerId)),
-          sellerId: new mongoose.Types.ObjectId(String(sellerId)),
-          productId: new mongoose.Types.ObjectId(String(productId)),
-          quantity,
-          unitPrice,
-          totalAmount,
-          status: "COMPLETED",
-          conversationId: conv._id,
-        },
-      ],
-      { session },
-    );
-
-    await Product.updateOne(
-      { _id: product._id, status: { $ne: "SOLD" } },
-      { $set: { status: "SOLD" } },
-      { session },
-    );
-
-    await session.commitTransaction();
-
+    ]);
     return { order };
   } catch (error) {
-    await session.abortTransaction();
+    await rollbackProductAfterFailedOrder(pid, sid);
 
     if (error.code === 11000) {
       const err = new Error("Sản phẩm này đã có giao dịch hoàn tất");
-      err.status = 400;
+      err.status = 409;
       throw err;
     }
-
     throw error;
-  } finally {
-    session.endSession();
   }
 };
 

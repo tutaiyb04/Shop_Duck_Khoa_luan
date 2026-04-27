@@ -25,11 +25,11 @@ export const useReviewModal = () => {
   const submitReview = async () => {
     if (rating === 0) {
       toast.error("Vui lòng chọn số sao đánh giá (từ 1 đến 5 sao)!");
-      return;
+      return false;
     }
     if (!comment.trim()) {
       toast.error("Vui lòng nhập nội dung đánh giá!");
-      return;
+      return false;
     }
 
     setIsReviewLoading(true);
@@ -41,17 +41,13 @@ export const useReviewModal = () => {
         comment,
       });
 
-      // Giả lập chờ API
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
       toast.success("Đánh giá sản phẩm thành công!");
       closeReviewModal();
-
-      // Chú ý: Có thể bạn sẽ cần trigger một callback để refresh lại list order
-      // hoặc đổi trạng thái đơn hàng thành "Đã đánh giá" ở đây.
+      return true;
     } catch (error) {
       console.error(error);
       toast.error("Có lỗi xảy ra khi gửi đánh giá.");
+      return false;
     } finally {
       setIsReviewLoading(false);
     }
