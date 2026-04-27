@@ -1,4 +1,5 @@
 const productService = require("../services/productService");
+const { truthyQueryFlag } = require("../helper/productHelper");
 
 exports.getAllProducts = async (req, res) => {
   try {
@@ -10,6 +11,11 @@ exports.getAllProducts = async (req, res) => {
       category: req.query.category || "",
       page: parseInt(req.query.page) || 1,
       limit: parseInt(req.query.limit) || 20,
+      minPrice: req.query.minPrice,
+      maxPrice: req.query.maxPrice,
+      condition: req.query.condition || "",
+      province: req.query.province || "",
+      vipOnly: truthyQueryFlag(req.query.vip),
     };
 
     const { products, totalPages, currentPage } =

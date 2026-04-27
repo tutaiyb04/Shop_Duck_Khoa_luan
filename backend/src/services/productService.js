@@ -9,6 +9,9 @@ const {
   buildCategoryFilterQuery,
   attachCategoryNamesToAdminProducts,
 } = require("../helper/categoryHelper");
+const { applyExtraListingFilters } = require("../helper/productHelper");
+
+
 
 exports.getAllProductsService = async (filters = {}) => {
   try {
@@ -20,6 +23,11 @@ exports.getAllProductsService = async (filters = {}) => {
       page = 1,
       limit = 20,
       category: rawCategory,
+      minPrice,
+      maxPrice,
+      condition,
+      province,
+      vipOnly,
     } = filters;
 
     const search = (rawSearch || "").trim();
@@ -44,6 +52,10 @@ exports.getAllProductsService = async (filters = {}) => {
 
     if (hasValidGeo) {
       const geoQuery = { status: "AVAILABLE" };
+      if (vipOnly) {
+        geoQuery.isVIP = true;
+      }
+
       if (search) {
         geoQuery.name = {
           $regex: escapeRegexForSearch(search),
@@ -53,6 +65,12 @@ exports.getAllProductsService = async (filters = {}) => {
       if (categoryMongoFilter) {
         geoQuery.category = categoryMongoFilter;
       }
+      applyExtraListingFilters(geoQuery, {
+        minPrice,
+        maxPrice,
+        condition,
+        province,
+      });
 
       // Khách có bật định vị (Tìm đồ quanh đây)
       const geoNearStage = {
@@ -115,6 +133,10 @@ exports.getAllProductsService = async (filters = {}) => {
 
     // Khách lướt web bình thường (Không dùng định vị)
     let query = { status: "AVAILABLE" };
+    if (vipOnly) {
+      query.isVIP = true;
+    }
+    
     if (search) {
       query.name = {
         $regex: escapeRegexForSearch(search),
@@ -124,6 +146,12 @@ exports.getAllProductsService = async (filters = {}) => {
     if (categoryMongoFilter) {
       query.category = categoryMongoFilter;
     }
+    applyExtraListingFilters(query, {
+      minPrice,
+      maxPrice,
+      condition,
+      province,
+    });
 
     const [products, total] = await Promise.all([
       Product.find(query)

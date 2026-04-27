@@ -86,7 +86,7 @@ export default function HomeCategoryShowcase({
       ) : (
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3 md:grid-cols-5 lg:grid-cols-6">
           <CategoryTile
-            to="/"
+            to="/products"
             label="Tất cả"
             active={!activeCategory}
             Icon={LayoutGrid}
@@ -94,7 +94,7 @@ export default function HomeCategoryShowcase({
           {processedCategories.map((c) => (
             <CategoryTile
               key={c._id}
-              to={`/?category=${c._id}`}
+              to={`/products?category=${c._id}`}
               label={c.name}
               active={String(c._id) === activeCategory}
               Icon={c.Icon}
