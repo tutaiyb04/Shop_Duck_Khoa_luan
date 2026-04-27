@@ -1,5 +1,6 @@
 import ProductCard from "@/components/product/ProductCard";
 import UserSidebar from "@/components/shared/UserSidebar";
+import LoadingBlock from "@/components/shared/LoadingBlock";
 import { Card, CardContent } from "@/components/ui/card";
 import useWishlist from "@/hooks/productHooks/useWishlist";
 import { Heart, Search } from "lucide-react";
@@ -49,14 +50,8 @@ function Wishlist() {
             </CardContent>
           </Card>
 
-          {/* KHU VỰC HIỂN THỊ SẢN PHẨM (Hiển thị riêng lẻ từng khối) */}
           {loading ? (
-            <div className="py-20 flex flex-col items-center justify-center gap-3">
-              <div className="w-10 h-10 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-gray-400 font-medium">
-                Đang tải danh sách yêu thích...
-              </p>
-            </div>
+            <LoadingBlock message="Đang tải danh sách yêu thích…" className="py-12" />
           ) : filteredList.length === 0 ? (
             <div className="bg-white py-20 rounded-xl border border-dashed border-gray-200 text-center flex flex-col items-center">
               <Heart className="w-16 h-16 text-gray-200 mb-4" />

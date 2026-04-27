@@ -1,4 +1,5 @@
-import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
+import LoadingBlock from "@/components/shared/LoadingBlock";
 import { Button } from "@/components/ui/button";
 import { useVerifyEmail } from "@/hooks/userHooks/authHooks/useVerifyEmail";
 
@@ -10,16 +11,10 @@ function VerifyEmail() {
       <div className="max-w-md w-full bg-white p-8 rounded-3xl shadow-sm border border-gray-100 text-center">
         {/* TRẠNG THÁI 1: ĐANG LOAD */}
         {status === "loading" && (
-          <div className="flex flex-col items-center gap-4 py-6">
-            <Loader2 className="w-16 h-16 !text-yellow-500 animate-spin" />
-            <h2 className="text-xl font-bold text-gray-800">
-              Đang xác minh...
-            </h2>
-            <p className="text-gray-500 text-sm">
-              Vui lòng đợi trong giây lát, Duck Shop đang kiểm tra mã xác minh
-              của bạn.
-            </p>
-          </div>
+          <LoadingBlock
+            message="Đang xác minh. Vui lòng đợi trong giây lát — Duck Shop đang kiểm tra mã của bạn."
+            className="px-2 py-8 text-base font-medium text-foreground"
+          />
         )}
 
         {/* TRẠNG THÁI 2: THÀNH CÔNG */}

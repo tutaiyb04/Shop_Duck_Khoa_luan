@@ -44,7 +44,7 @@ function SellerInfoCard({ seller }) {
                 />
                 {seller?.isEmailVerified ||
                 seller?.authType === "google" ||
-                seller?.authType === "admin" ? (
+                seller?.role === "admin" ? (
                   <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-yellow-600 text-white text-sm font-medium px-2 py-1 rounded flex items-center gap-1 whitespace-nowrap z-10 border border-white">
                     <BadgeCheck className="w-4 h-4" /> Đã xác minh
                   </div>

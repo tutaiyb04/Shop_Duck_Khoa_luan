@@ -21,7 +21,7 @@ export default function HomeProductSection({
         </h2>
         <NavLink
           to={seeAllTo}
-          className="text-sm font-medium text-amber-700 hover:underline"
+          className="text-sm font-medium !text-amber-700 hover:!underline"
         >
           Xem tất cả
         </NavLink>

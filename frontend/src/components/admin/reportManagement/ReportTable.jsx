@@ -1,4 +1,5 @@
 import ReportTableRow from "./ReportTableRow";
+import LoadingBlock from "@/components/shared/LoadingBlock";
 
 function ReportTable({ reports, loading, onResolve }) {
   return (
@@ -29,11 +30,8 @@ function ReportTable({ reports, loading, onResolve }) {
         <tbody className="bg-white divide-y divide-gray-200">
           {loading ? (
             <tr>
-              <td
-                colSpan="6"
-                className="px-6 py-10 text-center text-sm text-gray-500"
-              >
-                Đang tải dữ liệu báo cáo...
+              <td colSpan="6" className="p-0">
+                <LoadingBlock message="Đang tải dữ liệu báo cáo…" className="py-10" />
               </td>
             </tr>
           ) : reports.length === 0 ? (

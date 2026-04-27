@@ -1,5 +1,6 @@
 import UserTable from "@/components/admin/usermanagement/UserTable";
 import CustomPagination from "@/components/shared/CustomPagination";
+import LoadingBlock from "@/components/shared/LoadingBlock";
 import useUserManagement from "@/hooks/adminHooks/userUserManagement";
 
 function UserManagement() {
@@ -8,9 +9,7 @@ function UserManagement() {
 
   if (isLoading && users.length === 0) {
     return (
-      <div className="p-8 text-center text-gray-500">
-        Đang tải dữ liệu người dùng...
-      </div>
+      <LoadingBlock message="Đang tải dữ liệu người dùng…" className="p-8 py-12" />
     );
   }
 

@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 export default function HomeVipBanner() {
   return (
     <section
-      className="relative overflow-hidden rounded-2xl border border-amber-300/50 bg-gradient-to-br from-amber-500 via-orange-500 to-red-600 p-6 sm:p-8 text-white shadow-lg"
+      className="relative overflow-hidden rounded-2xl border border-yellow-300/50 bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-600 p-6 sm:p-8 text-white shadow-lg"
       aria-label="Gói hiển thị VIP"
     >
       <div className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
       <div className="pointer-events-none absolute bottom-0 left-1/3 h-32 w-32 rounded-full bg-black/10 blur-xl" />
       <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="max-w-xl space-y-2">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-100">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">
             <Sparkles className="h-3.5 w-3.5" />
             Đẩy tin · Gói VIP
           </div>
@@ -29,7 +29,7 @@ export default function HomeVipBanner() {
           <Button
             asChild
             size="lg"
-            className="w-full bg-white text-amber-800 shadow-md hover:bg-amber-50 sm:w-auto"
+            className="w-full bg-white !text-yellow-700 !shadow-md hover:!bg-amber-50 sm:w-auto"
           >
             <NavLink to="/my-products">
               Nâng cấp VIP ngay

@@ -6,6 +6,7 @@ import CategoryFormModal from "@/components/admin/categoryManagement/CategoryFor
 import CategoryTable from "@/components/admin/categoryManagement/CategoryTable";
 
 import CustomPagination from "@/components/shared/CustomPagination";
+import LoadingBlock from "@/components/shared/LoadingBlock";
 
 function CategoryManagement() {
   const {
@@ -25,11 +26,8 @@ function CategoryManagement() {
     parentCategoriesForModal,
   } = useCategoryManagement();
 
-  // Hiển thị trạng thái tải dữ liệu
   if (isLoading && categories.length === 0)
-    return (
-      <div className="p-8 text-center text-gray-500">Đang tải dữ liệu...</div>
-    );
+    return <LoadingBlock message="Đang tải dữ liệu…" className="p-8 py-12" />;
 
   return (
     <div className="p-4 sm:p-6 bg-white rounded-xl shadow-sm border border-gray-100">

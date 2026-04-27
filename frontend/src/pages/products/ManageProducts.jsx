@@ -10,6 +10,7 @@ import VipUpgradeModal from "@/components/product/VipUpgradeModal";
 import useManageProducts from "@/hooks/productHooks/manageProduct/useManageProducts";
 import VipInfoBanner from "@/components/product/manageProducts/VipInfoBanner";
 import ManageProductsTable from "@/components/product/manageProducts/ManageProductsTable";
+import LoadingBlock from "@/components/shared/LoadingBlock";
 
 function ManageProducts() {
   const {
@@ -26,9 +27,7 @@ function ManageProducts() {
 
   if (loading) {
     return (
-      <div className="text-center mt-20 text-gray-500">
-        Đang tải dữ liệu hồ sơ...
-      </div>
+      <LoadingBlock message="Đang tải dữ liệu…" className="mt-20 py-12" />
     );
   }
 

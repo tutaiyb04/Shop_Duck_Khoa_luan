@@ -1,6 +1,6 @@
 import HomeProductGrid from "./HomeProductGrid";
-import HomeLoadingBlock from "./HomeLoadingBlock";
-import HomeEmptyState from "./HomeEmptyState";
+import LoadingBlock from "@/components/shared/LoadingBlock";
+import EmptyState from "../shared/EmptyState";
 
 export default function HomeFilteredView({
   isLoading,
@@ -10,10 +10,10 @@ export default function HomeFilteredView({
 }) {
   return (
     <>
-      {isLoading && <HomeLoadingBlock />}
+      {isLoading && <LoadingBlock />}
 
       {!isLoading && products.length === 0 && (
-        <HomeEmptyState message={emptyMessage} />
+        <EmptyState message={emptyMessage} />
       )}
 
       {!isLoading && products.length > 0 && (

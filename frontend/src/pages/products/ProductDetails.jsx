@@ -15,6 +15,7 @@ import ProductDescription from "@/components/product/productDetails/ProductDescr
 import RecommendedProducts from "@/components/product/productDetails/RecommendedProducts";
 import ReportDialog from "@/components/product/productDetails/ReportDialog";
 import RelatedProducts from "@/components/product/productDetails/RelatedProducts";
+import LoadingBlock from "@/components/shared/LoadingBlock";
 
 function ProductDetails() {
   const {
@@ -39,8 +40,8 @@ function ProductDetails() {
 
   if (isLoading)
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        Đang tải dữ liệu...
+      <div className="flex min-h-screen items-center justify-center">
+        <LoadingBlock message="Đang tải thông tin đơn hàng…" className="py-8" />
       </div>
     );
   if (!product)

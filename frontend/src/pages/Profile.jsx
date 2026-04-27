@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/card";
 import useProfile from "@/hooks/userHooks/useProfile";
 import UserSidebar from "@/components/shared/UserSidebar";
+import LoadingBlock from "@/components/shared/LoadingBlock";
 import ProfileForm from "@/components/profile/ProfileForm";
 
 function Profile() {
@@ -22,9 +23,10 @@ function Profile() {
 
   if (isLoadingData)
     return (
-      <div className="text-center mt-20 text-gray-500">
-        Đang tải dữ liệu hồ sơ...
-      </div>
+      <LoadingBlock
+        message="Đang tải dữ liệu hồ sơ…"
+        className="mt-20 py-12"
+      />
     );
 
   return (

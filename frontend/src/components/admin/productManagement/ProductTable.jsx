@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import LoadingBlock from "@/components/shared/LoadingBlock";
 import { CheckCircle, Lock, Unlock, XCircle } from "lucide-react";
 
 const StatusBadge = ({ status }) => {
@@ -78,8 +79,8 @@ function ProductTable({ products, loading, handleUpdateStatus }) {
         <tbody>
           {loading ? (
             <tr>
-              <td colSpan="6" className="p-8 text-center text-gray-500">
-                Đang tải dữ liệu...
+              <td colSpan="6" className="p-0">
+                <LoadingBlock message="Đang tải dữ liệu…" className="py-10" />
               </td>
             </tr>
           ) : products.length === 0 ? (

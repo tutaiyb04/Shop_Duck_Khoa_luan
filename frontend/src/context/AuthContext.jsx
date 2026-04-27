@@ -1,5 +1,6 @@
 import { API } from "@/services/axios";
 import { disconnectSocket } from "@/services/socket";
+import LoadingBlock from "@/components/shared/LoadingBlock";
 import { useCallback, useEffect } from "react";
 import { useState } from "react";
 import { createContext } from "react";
@@ -68,13 +69,8 @@ export const AuthProvider = ({ children }) => {
       {!isLoading ? (
         children
       ) : (
-        <div className="h-screen w-screen flex items-center justify-center bg-gray-50">
-          <div className="flex flex-col items-center gap-2">
-            <div className="w-8 h-8 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-gray-500 font-medium">
-              Đang khởi tạo Duck Shop...
-            </p>
-          </div>
+        <div className="flex h-screen w-screen items-center justify-center bg-gray-50">
+          <LoadingBlock message="Loading..." className="py-8" />
         </div>
       )}
     </AuthContext.Provider>

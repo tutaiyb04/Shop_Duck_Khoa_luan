@@ -1,3 +1,5 @@
+import LoadingBlock from "@/components/shared/LoadingBlock";
+
 function formatVnd(n) {
   if (n == null || Number.isNaN(Number(n))) return "—";
   return `${Number(n).toLocaleString("vi-VN")} ₫`;
@@ -63,8 +65,8 @@ export default function VipTransactionTable({ transactions, loading }) {
         <tbody>
           {loading ? (
             <tr>
-              <td colSpan={7} className="p-8 text-center text-muted-foreground">
-                Đang tải…
+              <td colSpan={7} className="p-0">
+                <LoadingBlock message="Đang tải…" className="py-10" />
               </td>
             </tr>
           ) : transactions.length === 0 ? (

@@ -22,7 +22,7 @@ export default function HomeCategoryRows({ rows }) {
             </h2>
             <NavLink
               to={`/?category=${row._id}`}
-              className="inline-flex items-center gap-0.5 text-sm font-medium text-amber-700 hover:underline"
+              className="inline-flex items-center gap-0.5 text-sm font-medium !text-amber-700 hover:!underline"
             >
               Xem tất cả
               <ChevronRight className="h-4 w-4" />

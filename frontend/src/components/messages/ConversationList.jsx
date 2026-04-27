@@ -10,6 +10,8 @@ function formatLastMessageLine(c, myId) {
   return `${label}: ${text}`;
 }
 
+import LoadingBlock from "@/components/shared/LoadingBlock";
+
 /**
  * Cột danh sách hội thoại (bên trái).
  */
@@ -26,7 +28,11 @@ export default function ConversationList({
       <div className="border-b border-slate-100 bg-slate-50/50 px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
         Hội thoại
       </div>
-      {loadingList && <p className="p-3 text-sm text-gray-500">Đang tải…</p>}
+      {loadingList && (
+        <div className="px-1">
+          <LoadingBlock message="Đang tải danh sách hội thoại…" className="py-6 text-left text-sm" />
+        </div>
+      )}
       {errorList && <p className="p-3 text-sm text-red-600">{errorList}</p>}
       {!loadingList && !errorList && conversations.length === 0 && (
         <p className="p-3 text-sm text-gray-500">Chưa có hội thoại.</p>

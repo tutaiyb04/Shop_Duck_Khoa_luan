@@ -204,7 +204,7 @@ exports.getProductByIdService = async (id) => {
     const product = await Product.findById(id)
       .populate(
         "sellerId",
-        "username email avatar phone isEmailVerified sellerProfile authType",
+        "username email avatar phone isEmailVerified sellerProfile authType role",
       )
       .populate("category", "name")
       .lean();

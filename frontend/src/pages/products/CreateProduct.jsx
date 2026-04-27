@@ -3,6 +3,7 @@ import React from "react";
 
 import ImageUploader from "@/components/product/createProduct/ImageUploader";
 import ProductForm from "@/components/product/createProduct/ProductForm";
+import LoadingBlock from "@/components/shared/LoadingBlock";
 
 function CreateProduct() {
   const {
@@ -24,9 +25,7 @@ function CreateProduct() {
 
   if (isLoadingData) {
     return (
-      <div className="text-center mt-20 text-gray-500">
-        Đang chuẩn bị biểu mẫu...
-      </div>
+      <LoadingBlock message="Đang chuẩn bị biểu mẫu…" className="mt-20 py-12" />
     );
   }
 

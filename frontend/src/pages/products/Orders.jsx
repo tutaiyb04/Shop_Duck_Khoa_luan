@@ -4,6 +4,7 @@ import OrderTab from "@/components/order/OrderTab";
 import OrderTable from "@/components/order/OrderTable";
 import { useOrder } from "@/hooks/orderHooks/useOrderList";
 import { useReviewModal } from "@/hooks/reviewHooks/useReviewModal";
+import LoadingBlock from "@/components/shared/LoadingBlock";
 
 function Orders() {
   const { activeTab, setActiveTab, tabs, filteredOrders, isLoadingData } =
@@ -23,9 +24,7 @@ function Orders() {
 
   if (isLoadingData) {
     return (
-      <div className="text-center mt-20 text-gray-500">
-        Đang tải danh sách đơn hàng...
-      </div>
+      <LoadingBlock message="Đang tải danh sách đơn hàng…" className="mt-20 py-12" />
     );
   }
 

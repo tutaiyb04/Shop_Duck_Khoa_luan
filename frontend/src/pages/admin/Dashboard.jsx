@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import useAdminDashboard from "@/hooks/adminHooks/useAdminDashboard";
 import { Button } from "@/components/ui/button";
+import LoadingBlock from "@/components/shared/LoadingBlock";
 
 function formatVnd(n) {
   if (n == null || Number.isNaN(Number(n))) return "0 ₫";
@@ -99,9 +100,7 @@ function Dashboard() {
       </div>
 
       {loading && (
-        <div className="flex items-center justify-center py-20 text-muted-foreground">
-          <Loader2 className="h-8 w-8 animate-spin text-amber-600" />
-        </div>
+        <LoadingBlock message="Đang tải dữ liệu thống kê…" className="py-20" />
       )}
 
       {!loading && (

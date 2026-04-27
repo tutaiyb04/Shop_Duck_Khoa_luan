@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { API } from "@/services/axios";
 import ReportDialog from "@/components/product/productDetails/ReportDialog";
+import LoadingBlock from "@/components/shared/LoadingBlock";
 import toast from "react-hot-toast";
 
 const MAX_ATTACH = 5;
@@ -122,7 +123,7 @@ export default function MessageThreadPanel({
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 p-3">
             <div className="min-w-0 flex-1">
               {loadingThread ? (
-                <span className="text-sm text-gray-500">Đang tải…</span>
+                <LoadingBlock message="Đang tải…" className="py-0 text-left" />
               ) : (
                 <span className="text-sm font-medium text-gray-800">
                   {headerProductId

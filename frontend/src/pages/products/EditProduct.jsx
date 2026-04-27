@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
-import { Loader2 } from "lucide-react";
 import { useEditProductForm } from "@/hooks/productHooks/editProduct/useEditProductFrom";
+import LoadingBlock from "@/components/shared/LoadingBlock";
 import ImageUploader from "@/components/product/createProduct/ImageUploader";
 import ProductForm from "@/components/product/createProduct/ProductForm";
 
@@ -26,11 +26,8 @@ const EditProduct = () => {
 
   if (loading || !initialData) {
     return (
-      <div className="flex justify-center items-center h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-yellow-500" />
-        <span className="ml-2 text-lg text-gray-500">
-          Đang tải thông tin sản phẩm...
-        </span>
+      <div className="flex min-h-[60vh] items-center justify-center px-4">
+        <LoadingBlock message="Đang tải thông tin sản phẩm…" className="py-8" />
       </div>
     );
   }
