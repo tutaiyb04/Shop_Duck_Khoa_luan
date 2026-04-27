@@ -13,6 +13,7 @@ import { Edit, CheckCircle, Trash2 } from "lucide-react";
 function ManageProductsTable({
   products,
   handleUpdateStatus,
+  onMarkSold,
   navigate,
   setVipTarget,
   getStatusInfo,
@@ -103,7 +104,7 @@ function ManageProductsTable({
                     variant="default"
                     size="sm"
                     className="!transition-colors !border-0 !bg-green-500 hover:!bg-green-600 !ring-0 !outline-none"
-                    onClick={() => handleUpdateStatus(product._id, "SOLD")}
+                    onClick={() => onMarkSold(product)}
                   >
                     <CheckCircle className="w-4 h-4 mr-1" /> Đã bán
                   </Button>

@@ -10,13 +10,18 @@ import VipUpgradeModal from "@/components/product/VipUpgradeModal";
 import useManageProducts from "@/hooks/productHooks/manageProduct/useManageProducts";
 import VipInfoBanner from "@/components/product/manageProducts/VipInfoBanner";
 import ManageProductsTable from "@/components/product/manageProducts/ManageProductsTable";
+import MarkSoldModal from "@/components/product/manageProducts/MarkSoldModal";
 import LoadingBlock from "@/components/shared/LoadingBlock";
+import { useState } from "react";
 
 function ManageProducts() {
+  const [markSoldProduct, setMarkSoldProduct] = useState(null);
+
   const {
     products,
     loading,
     handleUpdateStatus,
+    markSoldToBuyer,
     refresh,
     navigate,
     vipTarget,
@@ -56,6 +61,7 @@ function ManageProducts() {
               <ManageProductsTable
                 products={products}
                 handleUpdateStatus={handleUpdateStatus}
+                onMarkSold={(p) => setMarkSoldProduct(p)}
                 navigate={navigate}
                 setVipTarget={setVipTarget}
                 getStatusInfo={getStatusInfo}
@@ -72,6 +78,15 @@ function ManageProducts() {
         }}
         product={vipTarget}
         onPaidRefresh={refresh}
+      />
+
+      <MarkSoldModal
+        open={!!markSoldProduct}
+        onOpenChange={(v) => {
+          if (!v) setMarkSoldProduct(null);
+        }}
+        product={markSoldProduct}
+        onConfirmSold={markSoldToBuyer}
       />
     </div>
   );

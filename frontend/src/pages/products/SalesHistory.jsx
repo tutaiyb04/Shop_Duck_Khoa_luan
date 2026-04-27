@@ -1,45 +1,24 @@
 import UserSidebar from "@/components/shared/UserSidebar";
-import ReviewModal from "@/components/order/ReviewModal";
-import PurchaseHistoryTable from "@/components/order/PurchaseHistoryTable";
-import { usePurchaseHistory } from "@/hooks/orderHooks/usePurchaseHistory";
-import { useReviewModal } from "@/hooks/reviewHooks/useReviewModal";
+import SalesHistoryTable from "@/components/order/SalesHistoryTable";
+import { useSalesHistory } from "@/hooks/orderHooks/useSalesHistory";
+import { formatVnd } from "@/hooks/orderHooks/usePurchaseHistory";
 import LoadingBlock from "@/components/shared/LoadingBlock";
 import { Button } from "@/components/ui/button";
 
-function Orders() {
+function SalesHistory() {
   const {
     orders,
     total,
+    totalDisposalValue,
     currentPage,
     totalPages,
     isLoading,
     goToPage,
-    refetch,
-  } = usePurchaseHistory();
-
-  const {
-    isReviewModalOpen,
-    rating,
-    setRating,
-    comment,
-    setComment,
-    isReviewLoading,
-    openReviewModal,
-    closeReviewModal,
-    submitReview,
-  } = useReviewModal();
-
-  const handleSubmitReview = async () => {
-    const ok = await submitReview();
-    if (ok) refetch();
-  };
+  } = useSalesHistory();
 
   if (isLoading) {
     return (
-      <LoadingBlock
-        message="Đang tải lịch sử mua hàng…"
-        className="mt-20 py-12"
-      />
+      <LoadingBlock message="Đang tải lịch sử bán hàng…" className="mt-20 py-12" />
     );
   }
 
@@ -48,27 +27,31 @@ function Orders() {
       <div className="flex flex-col md:flex-row gap-6">
         <UserSidebar />
 
-        <div className="flex-1 w-full space-y-4">
+        <div className="flex-1 w-full space-y-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
-              Lịch sử mua hàng
+              Lịch sử bán hàng
             </h1>
             <p className="mt-1 text-sm text-gray-600">
-              Các giao dịch đã hoàn tất khi người bán xác nhận bán cho bạn (qua
-              chat trên Duck Shop). Bạn có thể để lại đánh giá sau khi mua.
+              Các giao dịch đã hoàn tất sau khi bạn xác nhận &quot;Đã bán&quot; với
+              người mua (thống kê cá nhân, không phải số dư ví).
             </p>
-            {total > 0 && (
-              <p className="mt-2 text-sm text-gray-500">
-                {total.toLocaleString("vi-VN")} giao dịch
-              </p>
-            )}
+          </div>
+
+          <div className="rounded-xl border border-amber-100 bg-amber-50/80 px-5 py-4 shadow-sm">
+            <p className="text-sm font-medium text-amber-900/90">
+              Tổng giá trị hàng hóa bạn đã thanh lý thành công
+            </p>
+            <p className="mt-1 text-2xl font-bold tabular-nums text-amber-950">
+              {formatVnd(totalDisposalValue)}
+            </p>
+            <p className="mt-2 text-xs text-amber-900/70">
+              Tổng cộng {total.toLocaleString("vi-VN")} giao dịch hoàn tất
+            </p>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm border p-6">
-            <PurchaseHistoryTable
-              orders={orders}
-              onOpenReview={openReviewModal}
-            />
+            <SalesHistoryTable orders={orders} />
             {totalPages > 1 && (
               <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
                 <Button
@@ -97,19 +80,8 @@ function Orders() {
           </div>
         </div>
       </div>
-
-      <ReviewModal
-        isOpen={isReviewModalOpen}
-        onClose={closeReviewModal}
-        rating={rating}
-        setRating={setRating}
-        comment={comment}
-        setComment={setComment}
-        onSubmit={handleSubmitReview}
-        loading={isReviewLoading}
-      />
     </div>
   );
 }
 
-export default Orders;
+export default SalesHistory;

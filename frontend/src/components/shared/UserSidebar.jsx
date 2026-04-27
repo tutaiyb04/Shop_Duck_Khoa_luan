@@ -11,6 +11,7 @@ import {
   List,
   MessagesSquare,
   Store,
+  History,
 } from "lucide-react";
 import UserAvatar from "./UserAvatar";
 
@@ -36,6 +37,11 @@ function UserSidebar() {
           icon: Store,
         },
         { path: "/sell", label: "Đăng tin bán", icon: PlusCircle },
+        {
+          path: "/sales-history",
+          label: "Lịch sử bán hàng",
+          icon: History,
+        },
         { path: "/my-products", label: "Tất cả sản phẩm", icon: List },
         {
           path: "/verify",
@@ -52,7 +58,7 @@ function UserSidebar() {
     {
       title: "Mua hàng",
       items: [
-        { path: "/orders", label: "Đơn hàng của tôi", icon: ClipboardList },
+        { path: "/orders", label: "Lịch sử mua hàng", icon: ClipboardList },
         { path: "/wishlist", label: "Sản phẩm yêu thích", icon: Heart },
       ],
     },

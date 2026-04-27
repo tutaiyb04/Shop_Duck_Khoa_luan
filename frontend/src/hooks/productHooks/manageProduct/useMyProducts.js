@@ -20,12 +20,11 @@ function useMyProducts() {
     }
   }, []);
 
+  /** Ẩn tin — chỉ đổi status qua PATCH */
   const handleUpdateStatus = async (id, status) => {
     try {
       await API.patch(`/products/${id}/status`, { status });
-      toast.success(
-        status === "SOLD" ? "Đã đánh dấu Đã bán" : "Đã xóa sản phẩm",
-      );
+      toast.success("Đã xóa sản phẩm");
       fetchMyProducts();
     } catch (error) {
       console.log("Lỗi khi cập nhật sản phẩm: ", error);
@@ -33,11 +32,29 @@ function useMyProducts() {
     }
   };
 
+  /**
+   * Hoàn tất bán (đơn + SOLD) — phải chọn người mua đã từng chat (backend transaction).
+   */
+  const markSoldToBuyer = async (productId, buyerId) => {
+    await API.post("/orders/complete-offline-sale", {
+      productId,
+      buyerId,
+    });
+    toast.success("Đã ghi nhận bán hàng — có trong Lịch sử mua/bán.");
+    await fetchMyProducts();
+  };
+
   useEffect(() => {
     fetchMyProducts();
   }, [fetchMyProducts]);
 
-  return { products, loading, handleUpdateStatus, refresh: fetchMyProducts };
+  return {
+    products,
+    loading,
+    handleUpdateStatus,
+    markSoldToBuyer,
+    refresh: fetchMyProducts,
+  };
 }
 
 export default useMyProducts;
