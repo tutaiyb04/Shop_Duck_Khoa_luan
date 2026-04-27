@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { X } from "lucide-react";
 import { Button } from "../../ui/button";
-import { useCategoryForm } from "@/hooks/adminHooks/useCategoryForm";
+import { useCategoryForm } from "@/hooks/adminHooks/categoryManagement/useCategoryForm";
 
 function CategoryFormModal({
   isOpen,

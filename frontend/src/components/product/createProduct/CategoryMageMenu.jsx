@@ -1,6 +1,6 @@
 import React from "react";
 import { ChevronRight, ListTree } from "lucide-react";
-import { useCategoryMenu } from "@/hooks/productHooks/useCategoryMenu";
+import { useCategoryMenu } from "@/hooks/productHooks/createProduct/useCategoryMenu";
 
 export default function CategoryMegaMenu({ form, categories }) {
   const {

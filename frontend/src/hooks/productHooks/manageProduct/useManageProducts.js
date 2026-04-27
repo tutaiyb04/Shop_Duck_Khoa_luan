@@ -36,16 +36,16 @@ const PRODUCT_STATUS = {
 function useManageProducts() {
   const { user } = useContext(AuthContext);
   const { products, loading, handleUpdateStatus, refresh } = useMyProducts();
-  const navigate = useNavigate();
   const [vipTarget, setVipTarget] = useState(null);
+  const navigate = useNavigate();
 
-  // 1. Xử lý logic thanh toán VIP khi redirect từ PayOS về
+  // Xử lý logic thanh toán VIP khi redirect từ PayOS về
   useEffect(() => {
+    // Dọn dẹp URL trên thanh trình duyệt
     const params = new URLSearchParams(window.location.search);
     const vip = params.get("vip_payment");
     if (!vip) return;
 
-    // Xóa param khỏi URL cho sạch
     params.delete("vip_payment");
     const next = params.toString();
     window.history.replaceState(
@@ -68,17 +68,17 @@ function useManageProducts() {
         (async () => {
           for (let attempt = 0; attempt < 8; attempt += 1) {
             if (attempt > 0) {
+              // Lần 1 nghỉ 2s, lần 2 nghỉ 2.5s, lần 3 nghỉ 3s...
               await new Promise((r) => setTimeout(r, 1500 + attempt * 500));
             }
+
             try {
               const { data } = await API.post("/payment/confirm-vip", {
                 orderCode,
               });
-              try {
-                sessionStorage.removeItem("vip_checkout_order_code");
-              } catch {
-                // ignore
-              }
+              // Xóa mã cũ đi, báo thành công và load lại bảng
+              sessionStorage.removeItem("vip_checkout_order_code");
+
               if (data?.already) {
                 toast.success("Gói VIP đã kích hoạt.");
               } else {
@@ -86,6 +86,7 @@ function useManageProducts() {
                   "Gói VIP đã kích hoạt. Tin hiển thị nổi bật trên trang chủ.",
                 );
               }
+
               await refresh();
               return;
             } catch (e) {
@@ -101,15 +102,14 @@ function useManageProducts() {
               return;
             }
           }
-          try {
-            sessionStorage.removeItem("vip_checkout_order_code");
-          } catch {
-            // ignore
-          }
+
+          sessionStorage.removeItem("vip_checkout_order_code");
+
           toast(
             "Nếu đã trừ tiền mà trạng thái chưa đổi, hãy tải lại trang sau 1 phút (PayOS có thể trễ vài giây).",
             { icon: "ℹ️" },
           );
+
           await refresh();
         })();
       } else {
@@ -126,7 +126,9 @@ function useManageProducts() {
   // Xử lý lắng nghe Socket ngầm
   useEffect(() => {
     if (!user) return;
+
     const socket = getSocket();
+
     if (!socket) return;
 
     const onVip = () => refresh();
@@ -139,6 +141,7 @@ function useManageProducts() {
 
   const getStatusInfo = (status) => {
     if (status && PRODUCT_STATUS[status]) return PRODUCT_STATUS[status];
+
     return {
       label: status || "—",
       className: "bg-gray-100 text-gray-600 border-gray-200",
@@ -146,12 +149,18 @@ function useManageProducts() {
   };
 
   const shouldShowVipUpgrade = (product) => {
-    if (product.status !== "PENDING" && product.status !== "AVAILABLE")
+    if (product.status !== "PENDING" && product.status !== "AVAILABLE") {
       return false;
+    }
+
     if (!product.isVIP) return true;
+
     if (!product.vipUntil) return true;
+
     const end = new Date(product.vipUntil);
+
     const daysLeft = (end.getTime() - Date.now()) / 86_400_000;
+
     return daysLeft <= 7;
   };
 

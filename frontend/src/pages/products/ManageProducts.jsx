@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/card";
 import UserSidebar from "@/components/shared/UserSidebar";
 import VipUpgradeModal from "@/components/product/VipUpgradeModal";
-import useManageProducts from "@/hooks/productHooks/useManageProducts";
+import useManageProducts from "@/hooks/productHooks/manageProduct/useManageProducts";
 import VipInfoBanner from "@/components/product/manageProducts/VipInfoBanner";
 import ManageProductsTable from "@/components/product/manageProducts/ManageProductsTable";
 

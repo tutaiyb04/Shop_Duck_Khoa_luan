@@ -1,7 +1,7 @@
 import * as LucideIcons from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import useCategoryManagement from "@/hooks/adminHooks/useCategoryManagement";
+import useCategoryManagement from "@/hooks/adminHooks/categoryManagement/useCategoryManagement";
 import CategoryFormModal from "@/components/admin/categoryManagement/CategoryFormModal";
 import CategoryTable from "@/components/admin/categoryManagement/CategoryTable";
 

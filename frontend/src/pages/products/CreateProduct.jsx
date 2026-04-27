@@ -1,4 +1,4 @@
-import { useCreateProduct } from "@/hooks/productHooks/useCreateProduct";
+import { useCreateProduct } from "@/hooks/productHooks/createProduct/useCreateProduct";
 import React from "react";
 
 import ImageUploader from "@/components/product/createProduct/ImageUploader";

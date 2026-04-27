@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
-import { useEditProductForm } from "@/hooks/productHooks/useEditProductFrom";
+import { useEditProductForm } from "@/hooks/productHooks/editProduct/useEditProductFrom";
 import ImageUploader from "@/components/product/createProduct/ImageUploader";
 import ProductForm from "@/components/product/createProduct/ProductForm";
 
