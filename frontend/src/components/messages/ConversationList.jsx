@@ -30,24 +30,27 @@ export default function ConversationList({
       </div>
       {loadingList && (
         <div className="px-1">
-          <LoadingBlock message="Đang tải danh sách hội thoại…" className="py-6 text-left text-sm" />
+          <LoadingBlock
+            message="Đang tải danh sách hội thoại…"
+            className="py-6 text-left text-sm"
+          />
         </div>
       )}
       {errorList && <p className="p-3 text-sm text-red-600">{errorList}</p>}
       {!loadingList && !errorList && conversations.length === 0 && (
         <p className="p-3 text-sm text-gray-500">Chưa có hội thoại.</p>
       )}
-      <ul className="min-h-0 flex-1 overflow-y-auto bg-white">
+      <ul className="mb-3 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto bg-white px-2 py-2">
         {conversations.map((c) => {
           const active = c.id === selectedId;
           const img = c.product?.images?.[0];
           const unread = c.unreadForMe > 0;
           return (
-            <li key={c.id}>
+            <li key={c.id} className="shrink-0">
               <button
                 type="button"
                 onClick={() => onSelectId(c.id)}
-                className={`flex w-full gap-3 !border-0 !ring-0 !outline-none px-3 py-3 text-left !transition-colors ${
+                className={`flex w-full gap-3 rounded-lg !border-0 !ring-0 !outline-none px-3 py-3 text-left !transition-colors ${
                   active ? "!bg-yellow-100" : "!bg-gray-200 hover:!bg-amber-100"
                 }`}
               >

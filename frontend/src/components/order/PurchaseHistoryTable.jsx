@@ -1,120 +1,141 @@
 import { Link } from "react-router-dom";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { formatVnd } from "@/hooks/orderHooks/usePurchaseHistory";
 
 function PurchaseHistoryTable({ orders, onOpenReview }) {
+  if (!orders.length) {
+    return (
+      <Card className="border-dashed shadow-none">
+        <CardContent className="flex flex-col items-center justify-center gap-2 py-14 text-center">
+          <p className="text-lg font-medium text-foreground">
+            Chưa có giao dịch mua nào được ghi nhận.
+          </p>
+          <p className="max-w-md text-sm text-muted-foreground">
+            Khi bạn mua hàng qua chat và người bán xác nhận &quot;Đã bán&quot;,
+            lịch sử sẽ xuất hiện ở đây.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full bg-white border border-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b">
-              Mã giao dịch
-            </th>
-            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b">
-              Sản phẩm
-            </th>
-            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b">
-              Người bán
-            </th>
-            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b">
-              Giá trị
-            </th>
-            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b">
-              Ngày
-            </th>
-            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b">
-              Trạng thái
-            </th>
-            <th className="py-3 px-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider border-b">
-              Hành động
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {orders.length > 0 ? (
-            orders.map((order) => {
-              const pid = order.productId?._id || order.productId;
-              const sid = order.sellerId?._id || order.sellerId;
-              const sellerName = order.sellerId?.username ?? "—";
-              const pName = order.productId?.name ?? "—";
-              const code = order._id
-                ? String(order._id).slice(-8).toUpperCase()
-                : "—";
-              return (
-                <tr
-                  key={String(order._id)}
-                  className="hover:bg-gray-50 transition-colors"
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead className="w-[120px] text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Mã giao dịch
+          </TableHead>
+          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Sản phẩm
+          </TableHead>
+          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Người bán
+          </TableHead>
+          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Giá trị
+          </TableHead>
+          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Ngày
+          </TableHead>
+          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Trạng thái
+          </TableHead>
+          <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Hành động
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {orders.map((order) => {
+          const pid = order.productId?._id || order.productId;
+          const sid = order.sellerId?._id || order.sellerId;
+          const storeName = (order.sellerId?.sellerProfile?.storeName || "").trim();
+          const sellerName = storeName || order.sellerId?.username || "—";
+          const pName = order.productId?.name ?? "—";
+          const hasReview = Boolean(order.hasReview);
+          const code = order._id
+            ? String(order._id).slice(-8).toUpperCase()
+            : "—";
+          return (
+            <TableRow key={String(order._id)}>
+              <TableCell className="font-mono text-sm">#{code}</TableCell>
+              <TableCell className="max-w-[220px] whitespace-normal">
+                {pid ? (
+                  <Button
+                    asChild
+                    variant="link"
+                    className="h-auto p-0 font-medium !text-amber-700 hover:!text-amber-800"
+                  >
+                    <Link to={`/product/${pid}`}>{pName}</Link>
+                  </Button>
+                ) : (
+                  <span className="text-sm">{pName}</span>
+                )}
+              </TableCell>
+              <TableCell className="text-muted-foreground">
+                {sellerName}
+              </TableCell>
+              <TableCell className="font-semibold text-destructive">
+                {formatVnd(order.totalAmount)}
+              </TableCell>
+              <TableCell className="whitespace-nowrap text-muted-foreground">
+                {order.createdAt
+                  ? new Date(order.createdAt).toLocaleString("vi-VN", {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    })
+                  : "—"}
+              </TableCell>
+              <TableCell>
+                <Badge
+                  variant="secondary"
+                  className="border-0 bg-emerald-100 font-semibold text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-200"
                 >
-                  <td className="py-4 px-4 border-b border-gray-200 text-sm font-mono text-gray-800">
-                    #{code}
-                  </td>
-                  <td className="py-4 px-4 border-b border-gray-200 text-sm">
-                    {pid ? (
-                      <Link
-                        to={`/product/${pid}`}
-                        className="text-amber-700 hover:underline font-medium"
-                      >
-                        {pName}
-                      </Link>
-                    ) : (
-                      pName
-                    )}
-                  </td>
-                  <td className="py-4 px-4 border-b border-gray-200 text-sm text-gray-700">
-                    {sellerName}
-                  </td>
-                  <td className="py-4 px-4 border-b border-gray-200 text-sm text-red-600 font-semibold">
-                    {formatVnd(order.totalAmount)}
-                  </td>
-                  <td className="py-4 px-4 border-b border-gray-200 text-sm text-gray-600 whitespace-nowrap">
-                    {order.createdAt
-                      ? new Date(order.createdAt).toLocaleString("vi-VN", {
-                          dateStyle: "short",
-                          timeStyle: "short",
-                        })
-                      : "—"}
-                  </td>
-                  <td className="py-4 px-4 border-b border-gray-200 text-sm">
-                    <span className="px-3 py-1 inline-flex text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">
-                      {order.status === "COMPLETED" ? "Hoàn tất" : order.status}
-                    </span>
-                  </td>
-                  <td className="py-4 px-4 border-b border-gray-200 text-center text-sm">
-                    {order.status === "COMPLETED" && sid && pid ? (
-                      <button
-                        type="button"
-                        onClick={() => onOpenReview(sid, pid)}
-                        className="text-amber-600 hover:text-amber-700 font-medium underline underline-offset-2"
-                      >
-                        Đánh giá
-                      </button>
-                    ) : (
-                      <span className="text-gray-400 italic">—</span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })
-          ) : (
-            <tr>
-              <td
-                colSpan={7}
-                className="py-12 text-center text-gray-500 border-b border-gray-200"
-              >
-                <div className="flex flex-col items-center justify-center">
-                  <span className="text-5xl mb-3">🦆</span>
-                  <p className="text-lg">Chưa có giao dịch mua nào được ghi nhận.</p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Khi bạn mua hàng qua chat và người bán xác nhận &quot;Đã
-                    bán&quot;, lịch sử sẽ xuất hiện ở đây.
-                  </p>
-                </div>
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
+                  {order.status === "COMPLETED" ? "Hoàn tất" : order.status}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-center">
+                {order.status === "COMPLETED" && sid && pid ? (
+                  hasReview ? (
+                    <Badge
+                      variant="secondary"
+                      className="border-slate-200 bg-slate-100 font-normal text-slate-700 hover:bg-slate-100"
+                    >
+                      Đã đánh giá
+                    </Badge>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="link"
+                      size="sm"
+                      className="h-auto text-amber-600 underline-offset-4 hover:text-amber-700"
+                      onClick={() => onOpenReview(order._id)}
+                    >
+                      Đánh giá
+                    </Button>
+                  )
+                ) : (
+                  <span className="text-sm italic text-muted-foreground">
+                    —
+                  </span>
+                )}
+              </TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
   );
 }
 

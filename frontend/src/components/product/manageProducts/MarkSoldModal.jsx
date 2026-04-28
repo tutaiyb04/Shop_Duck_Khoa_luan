@@ -38,9 +38,7 @@ export default function MarkSoldModal({
       setLoadingList(true);
       setSelectedBuyerId(null);
       try {
-        const { data } = await API.get(
-          `/chat/product/${pid}/sale-candidates`,
-        );
+        const { data } = await API.get(`/chat/product/${pid}/sale-candidates`);
         if (!cancelled) {
           setCandidates(Array.isArray(data.buyers) ? data.buyers : []);
         }
@@ -48,7 +46,8 @@ export default function MarkSoldModal({
         if (!cancelled) {
           console.error(e);
           toast.error(
-            e.response?.data?.message || "Không tải được danh sách người đã chat",
+            e.response?.data?.message ||
+              "Không tải được danh sách người đã chat",
           );
           setCandidates([]);
         }
@@ -85,7 +84,8 @@ export default function MarkSoldModal({
         <DialogHeader>
           <DialogTitle>Đã bán — chọn người mua</DialogTitle>
           <DialogDescription>
-            Duck Shop chỉ ghi nhận khi bạn chọn đúng tài khoản đã từng nhắn tin với bạn về món &quot;
+            Duck Shop chỉ ghi nhận khi bạn chọn đúng tài khoản đã từng nhắn tin
+            với bạn về món &quot;
             <span className="font-medium text-foreground">{product?.name}</span>
             &quot;. Hai bên sẽ thấy giao dịch trong Lịch sử mua/bán.
           </DialogDescription>
@@ -94,13 +94,13 @@ export default function MarkSoldModal({
         <div className="max-h-[min(52vh,320px)] overflow-y-auto space-y-2 py-1">
           {loadingList ? (
             <div className="flex justify-center py-10">
-              <Loader2 className="h-8 w-8 animate-spin text-amber-600" />
+              <Loader2 className="h-8 w-8 animate-spin !text-yellow-600" />
             </div>
           ) : candidates.length === 0 ? (
-            <p className="text-sm text-muted-foreground rounded-lg border border-dashed bg-muted/30 px-3 py-4">
-              Chưa có ai mở hội thoại về tin này. Hãy nhắn tin với người mua trong{" "}
-              <strong>Tin nhắn</strong>, rồi quay lại bấm &quot;Đã bán&quot; và chọn đúng
-              người.
+            <p className="text-sm text-muted-foreground rounded-lg border-2 border-dashed bg-muted/30 px-3 py-4">
+              Chưa có ai mở hội thoại về tin này. Hãy nhắn tin với người mua
+              trong <strong className="text-yellow-700">Tin nhắn</strong>, rồi
+              quay lại bấm &quot;Đã bán&quot; và chọn đúng người.
             </p>
           ) : (
             candidates.map((row, idx) => {
@@ -115,29 +115,32 @@ export default function MarkSoldModal({
                   className={cn(
                     "w-full rounded-lg border px-3 py-3 text-left text-sm transition-colors",
                     active
-                      ? "border-amber-500 bg-amber-50 ring-2 ring-amber-400/40"
+                      ? "!border-amber-500 !bg-amber-100 hover:!bg-amber-200 !ring-0 !outline-none"
                       : "border-border hover:bg-muted/50",
                   )}
                 >
-                  <span className="font-medium">{row.user?.username ?? "—"}</span>
+                  <span className="font-medium">
+                    {row.user?.username ?? "—"}
+                  </span>
                 </button>
               );
             })
           )}
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter className="!gap-3 sm:gap-0">
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={submitting}
+            className="!bg-gray-200 hover:!bg-gray-300 !border-1 !border-gray-200 !ring-0 !outline-none !transition-colors"
           >
             Hủy
           </Button>
           <Button
             type="button"
-            className="!bg-green-600 hover:!bg-green-700 text-white"
+            className="!bg-green-600 hover:!bg-green-700 text-white !border-0 !ring-0 !outline-none !transition-colors"
             disabled={
               submitting ||
               loadingList ||

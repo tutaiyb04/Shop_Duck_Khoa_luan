@@ -16,7 +16,8 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: "duck_shop_folder", // Tên thư mục trên cloudinary
-    allowed_formats: ["jpg", "jpeg", "png"], // Chỉ cho phép ảnh
+    // WebP/HEIC rất thường gặp từ điện thoại — thiếu định dạng dễ khiến upload trả 500
+    allowed_formats: ["jpg", "jpeg", "png", "webp", "gif"],
     transformation: [{ width: 500, height: 500, crop: "limit" }], // Tự động resize ảnh cho nhẹ hơn
   },
 });

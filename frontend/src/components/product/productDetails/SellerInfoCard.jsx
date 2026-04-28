@@ -16,7 +16,12 @@ import { Button } from "@/components/ui/button";
 import UserAvatar from "@/components/shared/UserAvatar";
 
 function SellerInfoCard({ seller }) {
-  const rating = seller?.sellerProfile?.rating || 0;
+  const storeName = (seller?.sellerProfile?.storeName || "").trim();
+  const displayName = storeName || seller?.username || "TÊN NGƯỜI BÁN";
+
+  const rating = Number(
+    seller?.rating ?? seller?.sellerProfile?.rating ?? 0,
+  );
   const totalReviews = seller?.sellerProfile?.totalReviews || 0;
   const totalProducts = seller?.totalProducts || 0;
   const totalSold = seller?.totalSold || 0;
@@ -58,8 +63,8 @@ function SellerInfoCard({ seller }) {
 
             <div className="flex flex-col mt-1 ml-5">
               <div className="flex items-center gap-3 mb-2">
-                <h3 className="text-lg font-bold text-gray-800 uppercase leading-none">
-                  {seller?.username || "TÊN NGƯỜI BÁN"}
+                <h3 className="text-lg font-bold text-gray-800 leading-none">
+                  {displayName}
                 </h3>
                 <div className="flex items-center gap-1.5 text-gray-500">
                   <div className="relative">
@@ -81,7 +86,9 @@ function SellerInfoCard({ seller }) {
                 <div className="flex items-center text-yellow-400">
                   <Star className="w-4 h-4 fill-current mr-1" />
                   <span className="font-medium text-gray-700">
-                    {rating > 0 ? rating.toFixed(1) : "Chưa có"}
+                    {totalReviews > 0 && rating > 0
+                      ? rating.toFixed(1)
+                      : "Chưa có"}
                   </span>
                 </div>
                 <NavLink to="#" className="text-blue-500 hover:!underline">

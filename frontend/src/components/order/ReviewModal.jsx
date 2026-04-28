@@ -25,7 +25,7 @@ const ReviewModal = ({
         </button>
 
         <h2 className="text-xl font-bold mb-6 text-center text-gray-800">
-          Đánh giá sản phẩm
+          Đánh giá đơn hàng
         </h2>
 
         {/* Khu vực chọn sao */}
@@ -48,7 +48,7 @@ const ReviewModal = ({
           <textarea
             className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none text-sm"
             rows="4"
-            placeholder="Nhận xét của bạn về sản phẩm và người bán..."
+            placeholder="Nhận xét của bạn về giao dịch và người bán..."
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             disabled={loading}

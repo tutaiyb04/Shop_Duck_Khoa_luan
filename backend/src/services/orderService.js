@@ -2,13 +2,15 @@ const mongoose = require("mongoose");
 const Order = require("../model/Order");
 const Product = require("../model/Product");
 const Conversation = require("../model/Conversation");
+const Review = require("../model/Review");
 
 const SELLABLE_STATUSES = ["AVAILABLE"];
 
-/**
- * Đặt lại trạng thái tin khi tạo Order thất bại (chỉ khi vẫn là SOLD và đúng seller).
- */
-async function rollbackProductAfterFailedOrder(productObjectId, sellerObjectId) {
+// Đặt lại trạng thái tin khi tạo Order thất bại (chỉ khi vẫn là SOLD và đúng seller).
+const rollbackProductAfterFailedOrder = async (
+  productObjectId,
+  sellerObjectId,
+) => {
   await Product.updateOne(
     {
       _id: productObjectId,
@@ -17,16 +19,9 @@ async function rollbackProductAfterFailedOrder(productObjectId, sellerObjectId) 
     },
     { $set: { status: "AVAILABLE" } },
   );
-}
+};
 
-/**
- * Xác nhận đã bán (không dùng MongoDB transaction — chạy được standalone).
- *
- * Chống race / gánh cao:
- * - Một phép findOneAndUpdate nguyên tử: chỉ tin AVAILABLE + đúng sellerId mới đổi SOLD (một luồng thắng).
- * - Index unique partial Order(productId)+COMPLETED chặn trùng đơn.
- * - Order.create sau claim — lỗi thì rollback tin về AVAILABLE.
- */
+// xác nhận bán hàng
 exports.completeOfflineSale = async (sellerId, productId, buyerId) => {
   if (!mongoose.isValidObjectId(String(productId))) {
     const err = new Error("ID sản phẩm không hợp lệ");
@@ -50,6 +45,7 @@ exports.completeOfflineSale = async (sellerId, productId, buyerId) => {
   const sid = new mongoose.Types.ObjectId(String(sellerId));
   const bid = new mongoose.Types.ObjectId(String(buyerId));
 
+  // kiểm tra bắt buộc phải có hội thoại
   const conv = await Conversation.findOne({
     productId: pid,
     participants: { $all: [sid, bid] },
@@ -69,6 +65,7 @@ exports.completeOfflineSale = async (sellerId, productId, buyerId) => {
     productId: pid,
     status: "COMPLETED",
   });
+
   if (alreadySoldOrder) {
     const err = new Error("Sản phẩm này đã có đơn hoàn tất trước đó");
     err.status = 400;
@@ -90,28 +87,36 @@ exports.completeOfflineSale = async (sellerId, productId, buyerId) => {
 
   if (!claimed) {
     const peek = await Product.findById(pid).select("sellerId status").lean();
+
     if (!peek) {
       const err = new Error("Sản phẩm không tồn tại");
+
       err.status = 404;
       throw err;
     }
+
     if (String(peek.sellerId) !== String(sellerId)) {
       const err = new Error("Bạn không phải người bán sản phẩm này");
+
       err.status = 403;
       throw err;
     }
+
     if (peek.status === "SOLD") {
       const err = new Error(
         "Tin đã được xác nhận bán (có thể do người khác vừa thao tác).",
       );
+
       err.status = 409;
       throw err;
     }
+
     const err = new Error(
       !SELLABLE_STATUSES.includes(peek.status)
         ? "Sản phẩm ở trạng thái không thể bán (chỉ khi đang hiển thị Đang bán)."
         : "Không thể xác nhận bán lúc này.",
     );
+
     err.status = 400;
     throw err;
   }
@@ -133,12 +138,14 @@ exports.completeOfflineSale = async (sellerId, productId, buyerId) => {
         conversationId: conv._id,
       },
     ]);
+
     return { order };
   } catch (error) {
     await rollbackProductAfterFailedOrder(pid, sid);
 
     if (error.code === 11000) {
       const err = new Error("Sản phẩm này đã có giao dịch hoàn tất");
+
       err.status = 409;
       throw err;
     }
@@ -146,30 +153,44 @@ exports.completeOfflineSale = async (sellerId, productId, buyerId) => {
   }
 };
 
+// Lịch sử bán hàng cho người bán
+exports.listSellerCompletedOrders = async (
+  sellerId,
+  { page = 1, limit = 20 } = {},
+) => {
+  const safeLimit = Math.min(
+    100,
+    Math.max(1, parseInt(String(limit), 10) || 20),
+  );
 
- // Lịch sử bán: đơn COMPLETED của người bán.
-exports.listSellerCompletedOrders = async (sellerId, { page = 1, limit = 20 } = {}) => {
-  const safeLimit = Math.min(100, Math.max(1, parseInt(String(limit), 10) || 20));
   const safePage = Math.max(1, parseInt(String(page), 10) || 1);
+
   const skip = (safePage - 1) * safeLimit;
 
   const [items, total, sumAgg] = await Promise.all([
-    Order.find({ sellerId, status: "COMPLETED" })
+    Order.find({ sellerId, status: "COMPLETED" }) // Lấy danh sách đơn hoàn tất của người bán
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(safeLimit)
       .populate("productId", "name images")
       .populate("buyerId", "username avatar")
       .lean(),
-    Order.countDocuments({ sellerId, status: "COMPLETED" }),
+    Order.countDocuments({ sellerId, status: "COMPLETED" }), // đếm tổng số đơn (để chia trang)
     Order.aggregate([
-      { $match: { sellerId: new mongoose.Types.ObjectId(String(sellerId)), status: "COMPLETED" } },
+      {
+        $match: {
+          sellerId: new mongoose.Types.ObjectId(String(sellerId)),
+          status: "COMPLETED",
+        },
+      },
       { $group: { _id: null, totalValue: { $sum: "$totalAmount" } } },
     ]),
   ]);
 
-  const totalDisposalValue =
-    sumAgg[0] && Number.isFinite(sumAgg[0].totalValue) ? sumAgg[0].totalValue : 0;
+  const totalDisposalValue = // tính tổng giá trị của tất cả đơn
+    sumAgg[0] && Number.isFinite(sumAgg[0].totalValue)
+      ? sumAgg[0].totalValue
+      : 0;
 
   return {
     orders: items,
@@ -180,11 +201,19 @@ exports.listSellerCompletedOrders = async (sellerId, { page = 1, limit = 20 } = 
   };
 };
 
+// Lịch sử mua của người mua
+exports.listBuyerCompletedOrders = async (
+  buyerId,
+  { page = 1, limit = 20 } = {},
+) => {
+  // giới hạn số lượng đơn trên mỗi trang
+  const safeLimit = Math.min(
+    100,
+    Math.max(1, parseInt(String(limit), 10) || 20),
+  );
 
-// Lịch sử mua: đơn COMPLETED của người mua.
-exports.listBuyerCompletedOrders = async (buyerId, { page = 1, limit = 20 } = {}) => {
-  const safeLimit = Math.min(100, Math.max(1, parseInt(String(limit), 10) || 20));
   const safePage = Math.max(1, parseInt(String(page), 10) || 1);
+
   const skip = (safePage - 1) * safeLimit;
 
   const [items, total] = await Promise.all([
@@ -193,10 +222,23 @@ exports.listBuyerCompletedOrders = async (buyerId, { page = 1, limit = 20 } = {}
       .skip(skip)
       .limit(safeLimit)
       .populate("productId", "name images price")
-      .populate("sellerId", "username avatar")
+      .populate("sellerId", "username avatar sellerProfile")
       .lean(),
     Order.countDocuments({ buyerId, status: "COMPLETED" }),
   ]);
+
+  const orderIds = items.map((o) => o._id);
+  let reviewedIds = new Set();
+  if (orderIds.length > 0) {
+    const rows = await Review.find({ orderId: { $in: orderIds } })
+      .select("orderId")
+      .lean();
+    reviewedIds = new Set(rows.map((r) => String(r.orderId)));
+  }
+
+  for (const o of items) {
+    o.hasReview = reviewedIds.has(String(o._id));
+  }
 
   return {
     orders: items,
