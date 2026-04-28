@@ -58,7 +58,7 @@ exports.resolveReportService = async (reportId, action, adminNote) => {
     const report = await Report.findByIdAndUpdate(
       reportId,
       { status: reportStatus, adminNote: adminNote || defaultNote },
-      { new: true },
+      { returnDocument: "after" },
     );
 
     if (!report) throw new Error("Báo cáo không tồn tại");
@@ -68,7 +68,7 @@ exports.resolveReportService = async (reportId, action, adminNote) => {
       const product = await Product.findByIdAndUpdate(
         report.targetId,
         { status: "LOCKED", adminNote: `Khóa do vi phạm: ${report.reason}` },
-        { new: true },
+        { returnDocument: "after" },
       );
 
       if (product && product.sellerId) {
@@ -76,7 +76,7 @@ exports.resolveReportService = async (reportId, action, adminNote) => {
         const updatedSeller = await User.findByIdAndUpdate(
           product.sellerId,
           { $inc: { reportCount: 1 } },
-          { new: true },
+          { returnDocument: "after" },
         );
 
         if (updatedSeller && updatedSeller.reportCount >= 3) {
@@ -87,7 +87,7 @@ exports.resolveReportService = async (reportId, action, adminNote) => {
       const targetUser = await User.findByIdAndUpdate(
         report.targetId,
         { $inc: { reportCount: 1 } },
-        { new: true },
+        { returnDocument: "after" },
       );
 
       if (targetUser && targetUser.reportCount >= 3) {

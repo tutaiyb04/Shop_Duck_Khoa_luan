@@ -180,7 +180,7 @@ async function processPayosVipWebhook(body) {
   const transaction = await Transaction.findOneAndUpdate(
     { orderCode: data.orderCode, status: "PENDING" },
     { $set: { status: "SUCCESS" } },
-    { new: true, lean: true },
+    { returnDocument: "after", lean: true },
   );
 
   if (!transaction) {
@@ -349,7 +349,7 @@ async function confirmVipAfterReturn({ userId, orderCode }) {
   const updated = await Transaction.findOneAndUpdate(
     { _id: transaction._id, status: "PENDING" },
     { $set: { status: "SUCCESS" } },
-    { new: true, lean: true },
+    { returnDocument: "after", lean: true },
   );
 
   if (!updated) {
@@ -387,6 +387,76 @@ async function confirmVipAfterReturn({ userId, orderCode }) {
       productId: String(updated.productId),
     },
   };
+}
+
+/** Hủy tất cả giao dịch VIP đang chờ thanh toán của tin (đã bán / không còn được mua VIP…). */
+async function cancelPendingVipTransactionsForProduct(productId) {
+  if (!productId || !mongoose.isValidObjectId(String(productId))) {
+    return { modifiedCount: 0 };
+  }
+  const pid = new mongoose.Types.ObjectId(String(productId));
+  const res = await Transaction.updateMany(
+    { productId: pid, status: "PENDING" },
+    { $set: { status: "CANCELLED" } },
+  );
+  return { modifiedCount: res.modifiedCount };
+}
+
+/** Người bán bấm hủy trên PayOS → redirect về site (chưa có webhook hủy). */
+async function cancelVipCheckout({ userId, orderCode }) {
+  if (orderCode === undefined || orderCode === null || orderCode === "") {
+    return { ok: false, status: 400, message: "Thiếu orderCode" };
+  }
+  const code = Number(orderCode);
+  if (!Number.isFinite(code)) {
+    return { ok: false, status: 400, message: "orderCode không hợp lệ" };
+  }
+
+  const updated = await Transaction.findOneAndUpdate(
+    {
+      orderCode: code,
+      userId,
+      status: "PENDING",
+    },
+    { $set: { status: "CANCELLED" } },
+    { returnDocument: "after", lean: true },
+  );
+
+  if (updated) {
+    return {
+      ok: true,
+      data: { message: "Đã hủy giao dịch VIP", orderCode: code },
+    };
+  }
+
+  const existing = await Transaction.findOne({ orderCode: code })
+    .select("status userId")
+    .lean();
+
+  if (!existing) {
+    return { ok: false, status: 404, message: "Không tìm thấy giao dịch" };
+  }
+  if (String(existing.userId) !== String(userId)) {
+    return {
+      ok: false,
+      status: 403,
+      message: "Giao dịch không thuộc tài khoản này",
+    };
+  }
+  if (existing.status === "CANCELLED") {
+    return {
+      ok: true,
+      data: { message: "Giao dịch đã ở trạng thái đã hủy", already: true },
+    };
+  }
+  if (existing.status === "SUCCESS") {
+    return {
+      ok: false,
+      status: 409,
+      message: "Giao dịch đã thanh toán thành công, không thể hủy",
+    };
+  }
+  return { ok: false, status: 409, message: "Không thể hủy giao dịch" };
 }
 
 const VIP_TX_STATUSES = ["PENDING", "SUCCESS", "CANCELLED"];
@@ -474,5 +544,7 @@ module.exports = {
   createVipPaymentLink,
   processPayosVipWebhook,
   confirmVipAfterReturn,
+  cancelVipCheckout,
+  cancelPendingVipTransactionsForProduct,
   getAdminVipTransactions,
 };

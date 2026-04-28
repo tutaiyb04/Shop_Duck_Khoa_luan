@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { API } from "@/services/axios";
 
 import { PRODUCT_CONFIG } from "@/config/constains";
+import { compressImageFiles } from "@/utils/imageCompress";
 
 const productSchema = z.object({
   title: z.string().min(5, { message: "Tên sản phẩm phải có ít nhất 5 ký tự" }),
@@ -80,8 +81,6 @@ export function useCreateProduct() {
 
   const handleFileChange = (event) => {
     const selectedFiles = Array.from(event.target.files);
-    setImageError("");
-
     const newImages = [];
     const filesTooLarge = [];
 
@@ -96,13 +95,37 @@ export function useCreateProduct() {
       });
     });
 
+    const errorParts = [];
     if (filesTooLarge.length > 0) {
-      setImageError(
-        `Các file sau quá lớn (>${PRODUCT_CONFIG.MAX_FILE_SIZE_MB}MB) và đã bị bỏ qua: ${filesTooLarge.join(", ")}`,
+      errorParts.push(
+        `Các file sau quá lớn (>${PRODUCT_CONFIG.MAX_FILE_SIZE_MB}MB) và đã bỏ qua: ${filesTooLarge.join(", ")}`,
       );
     }
 
-    setImages((prev) => [...prev, ...newImages]);
+    const remaining = PRODUCT_CONFIG.MAX_IMAGES - images.length;
+    if (remaining <= 0) {
+      newImages.forEach((img) => URL.revokeObjectURL(img.preview));
+      if (newImages.length > 0) {
+        errorParts.push(
+          `Chỉ được tối đa ${PRODUCT_CONFIG.MAX_IMAGES} ảnh.`,
+        );
+      }
+      setImageError(errorParts.join(" ") || "");
+      event.target.value = null;
+      return;
+    }
+
+    const toAdd = newImages.slice(0, remaining);
+    const overflow = newImages.slice(remaining);
+    overflow.forEach((img) => URL.revokeObjectURL(img.preview));
+    if (overflow.length > 0) {
+      errorParts.push(
+        `Đã chỉ thêm ${toAdd.length} ảnh (tối đa ${PRODUCT_CONFIG.MAX_IMAGES} ảnh).`,
+      );
+    }
+
+    setImageError(errorParts.join(" ") || "");
+    setImages((prev) => [...prev, ...toAdd]);
     event.target.value = null;
   };
 
@@ -128,6 +151,8 @@ export function useCreateProduct() {
     setIsSubmitting(true);
 
     try {
+      // Nén ảnh trước khi gửi lên server
+      const imageFiles = await compressImageFiles(images.map((img) => img.file));
       const formData = new FormData();
       formData.append("name", data.title);
       formData.append("category", data.category);
@@ -142,8 +167,8 @@ export function useCreateProduct() {
         formData.append("attributes", JSON.stringify(data.attributes));
       }
 
-      images.forEach((img) => {
-        formData.append("images", img.file);
+      imageFiles.forEach((file) => {
+        formData.append("images", file);
       });
 
       await API.post("/products/create-product", formData, {

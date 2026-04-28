@@ -10,6 +10,10 @@ const {
   attachCategoryNamesToAdminProducts,
 } = require("../helper/categoryHelper");
 const { applyExtraListingFilters } = require("../helper/productHelper");
+const { uploadProductImageBuffers } = require("../config/cloudinary");
+const {
+  cancelPendingVipTransactionsForProduct,
+} = require("./paymentService");
 
 
 
@@ -316,17 +320,27 @@ exports.createProductService = async (sellerId, productData, files) => {
 
     const latN = parseFloat(lat);
     const lngN = parseFloat(lng);
+
     if (!Number.isFinite(latN) || !Number.isFinite(lngN)) {
       throw new Error(
         "Tọa độ không hợp lệ — vui lòng chọn vị trí trên bản đồ (click vào map).",
       );
     }
+
     if (latN < -90 || latN > 90 || lngN < -180 || lngN > 180) {
       throw new Error("Tọa độ vị trí nằm ngoài phạm vi cho phép.");
     }
 
-    const imageUrls =
-      files?.map((file) => file.path || file.secure_url).filter(Boolean) || [];
+    let imageUrls = [];
+
+    try {
+      imageUrls = await uploadProductImageBuffers(files || []);
+    } catch (e) {
+      console.error("Cloudinary upload:", e);
+      throw new Error(
+        "Không tải được ảnh lên — kiểm tra mạng hoặc cấu hình Cloudinary.",
+      );
+    }
 
     if (imageUrls.length === 0) {
       throw new Error("Vui lòng tải lên ít nhất 1 hình ảnh sản phẩm.");
@@ -386,6 +400,13 @@ exports.updateProductStatusService = async (id, status, adminNote) => {
 
     if (!updatedProduct) throw new Error("Không tìm thấy sản phẩm");
 
+    const st = updatedProduct.status;
+    if (st && !["PENDING", "AVAILABLE"].includes(String(st))) {
+      await cancelPendingVipTransactionsForProduct(id).catch((e) =>
+        console.error("cancelPendingVipTransactionsForProduct:", e),
+      );
+    }
+
     return { updatedProduct };
   } catch (error) {
     console.error("Lỗi tại updateProductStatusService: ", error);
@@ -414,7 +435,17 @@ exports.updateProductService = async (id, sellerId, updateData, files) => {
     }
 
     if (files && files.length > 0) {
-      finalImages = [...finalImages, ...files.map((file) => file.path)];
+      let newUrls = [];
+      
+      try {
+        newUrls = await uploadProductImageBuffers(files);
+      } catch (e) {
+        console.error("Cloudinary upload (update):", e);
+        throw new Error(
+          "Không tải được ảnh mới — kiểm tra mạng hoặc cấu hình Cloudinary.",
+        );
+      }
+      finalImages = [...finalImages, ...newUrls];
     }
 
     updateData.images = finalImages;
@@ -491,6 +522,12 @@ exports.updateMyProductStatusService = async (id, sellerId, status) => {
     if (!updatedProduct) {
       throw new Error(
         "Sản phẩm không tồn tại hoặc bạn không có quyền thao tác",
+      );
+    }
+
+    if (status === "SOLD" || status === "HIDDEN") {
+      await cancelPendingVipTransactionsForProduct(id).catch((e) =>
+        console.error("cancelPendingVipTransactionsForProduct:", e),
       );
     }
 

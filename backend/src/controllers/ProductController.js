@@ -128,10 +128,12 @@ exports.createProduct = async (req, res) => {
   } catch (error) {
     console.error("Lỗi khi tạo sản phẩm: ", error);
     const msg = error.message || "Lỗi server khi đăng tin";
+
     const looksLikeValidation =
       /Vui lòng|không hợp lệ|Danh mục|Tọa độ|Thuộc tính|Trùng dữ liệu|Dữ liệu không/i.test(
         msg,
       );
+      
     return res.status(looksLikeValidation ? 400 : 500).json({ message: msg });
   }
 };

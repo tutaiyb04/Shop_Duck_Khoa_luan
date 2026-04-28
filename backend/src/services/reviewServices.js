@@ -3,9 +3,9 @@ const Review = require("../model/Review");
 const User = require("../model/User");
 const Order = require("../model/Order");
 
-/**
- * Đánh giá gắn với một đơn COMPLETED — lấy sellerId/productId từ đơn để tránh giả mạo.
- */
+
+// Đánh giá gắn với một đơn COMPLETED — lấy sellerId/productId từ đơn để tránh giả mạo.
+
 exports.createReviewService = async (buyerId, orderId, rating, comment) => {
   if (!mongoose.isValidObjectId(String(orderId))) {
     throw new Error("Mã đơn hàng không hợp lệ");
@@ -14,6 +14,7 @@ exports.createReviewService = async (buyerId, orderId, rating, comment) => {
   const oid = new mongoose.Types.ObjectId(String(orderId));
   const bid = new mongoose.Types.ObjectId(String(buyerId));
 
+  // Kiểm tra đơn hàng có tồn tại và thuộc về người mua
   const order = await Order.findOne({
     _id: oid,
     buyerId: bid,
@@ -26,7 +27,9 @@ exports.createReviewService = async (buyerId, orderId, rating, comment) => {
     );
   }
 
+  // Kiểm tra đã đánh giá đơn hàng này chưa- chống spam
   const existingReview = await Review.findOne({ orderId: oid }).lean();
+
   if (existingReview) {
     throw new Error("Bạn đã đánh giá đơn hàng này rồi");
   }
@@ -34,6 +37,7 @@ exports.createReviewService = async (buyerId, orderId, rating, comment) => {
   const sellerId = order.sellerId;
   const productId = order.productId;
 
+  // Tạo session để đảm bảo tính toàn vẹn dữ liệu - Giao dịch an toàn & Tạo Đánh giá (Transaction)
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -50,6 +54,7 @@ exports.createReviewService = async (buyerId, orderId, rating, comment) => {
 
     const sid = new mongoose.Types.ObjectId(String(sellerId));
 
+    // Tính toán điểm trung bình đánh giá của người bán
     const stats = await Review.aggregate([
       { $match: { sellerId: sid } },
       { $group: { _id: "$sellerId", averageRating: { $avg: "$rating" } } },
