@@ -3,26 +3,30 @@ import { API } from "@/services/axios";
 import { useState } from "react";
 
 export const useReviewModal = () => {
-  const [reviewOrderData, setReviewOrderData] = useState(null);
+  const [reviewOrderId, setReviewOrderId] = useState(null);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [isReviewLoading, setIsReviewLoading] = useState(false);
 
-  const isReviewModalOpen = Boolean(reviewOrderData);
+  const isReviewModalOpen = Boolean(reviewOrderId);
 
-  const openReviewModal = (sellerId, productId) => {
-    setReviewOrderData({ sellerId, productId });
+  const openReviewModal = (orderId) => {
+    setReviewOrderId(orderId ? String(orderId) : null);
     setRating(0);
     setComment("");
   };
 
   const closeReviewModal = () => {
-    setReviewOrderData(null);
+    setReviewOrderId(null);
     setRating(0);
     setComment("");
   };
 
   const submitReview = async () => {
+    if (!reviewOrderId) {
+      toast.error("Thiếu thông tin đơn hàng.");
+      return false;
+    }
     if (rating === 0) {
       toast.error("Vui lòng chọn số sao đánh giá (từ 1 đến 5 sao)!");
       return false;
@@ -35,18 +39,19 @@ export const useReviewModal = () => {
     setIsReviewLoading(true);
     try {
       await API.post("/reviews", {
-        sellerId: reviewOrderData.sellerId,
-        productId: reviewOrderData.productId,
+        orderId: reviewOrderId,
         rating,
         comment,
       });
 
-      toast.success("Đánh giá sản phẩm thành công!");
+      toast.success("Đánh giá đơn hàng thành công!");
       closeReviewModal();
       return true;
     } catch (error) {
       console.error(error);
-      toast.error("Có lỗi xảy ra khi gửi đánh giá.");
+      toast.error(
+        error.response?.data?.message || "Có lỗi xảy ra khi gửi đánh giá.",
+      );
       return false;
     } finally {
       setIsReviewLoading(false);

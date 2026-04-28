@@ -3,54 +3,69 @@ const Review = require("../model/Review");
 const User = require("../model/User");
 const Order = require("../model/Order");
 
-exports.createReviewService = async (buyerId, sellerId, productId, rating, comment) => {
-  // Kiểm tra đơn hàng đã hoàn tất chưa 
-  const order = await Order.findOne({ buyerId, productId, status: "COMPLETED" })
-    .sort({ createdAt: -1 });
+/**
+ * Đánh giá gắn với một đơn COMPLETED — lấy sellerId/productId từ đơn để tránh giả mạo.
+ */
+exports.createReviewService = async (buyerId, orderId, rating, comment) => {
+  if (!mongoose.isValidObjectId(String(orderId))) {
+    throw new Error("Mã đơn hàng không hợp lệ");
+  }
+
+  const oid = new mongoose.Types.ObjectId(String(orderId));
+  const bid = new mongoose.Types.ObjectId(String(buyerId));
+
+  const order = await Order.findOne({
+    _id: oid,
+    buyerId: bid,
+    status: "COMPLETED",
+  }).lean();
 
   if (!order) {
-    throw new Error("Chỉ được đánh giá khi giao dịch thành công");
+    throw new Error(
+      "Không thấy đơn hoàn tất hoặc đơn không thuộc về bạn — chỉ đánh giá sau khi mua thành công.",
+    );
   }
 
-  // Kiểm tra chống Spam
-  const existingReview = await Review.findOne({ buyerId, productId });
-
+  const existingReview = await Review.findOne({ orderId: oid }).lean();
   if (existingReview) {
-    throw new Error("Bạn đã đánh giá sản phẩm này rồi");
+    throw new Error("Bạn đã đánh giá đơn hàng này rồi");
   }
 
-  // Dùng Transaction để an toàn dữ liệu
+  const sellerId = order.sellerId;
+  const productId = order.productId;
+
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    // Tạo Review mới
     const newReview = new Review({
-      buyerId,
+      buyerId: bid,
       sellerId,
       productId,
-      orderId: order._id,
+      orderId: oid,
       rating,
       comment,
     });
     await newReview.save({ session });
 
-    // Tính lại điểm trung bình
+    const sid = new mongoose.Types.ObjectId(String(sellerId));
+
     const stats = await Review.aggregate([
-      { $match: { sellerId: new mongoose.Types.ObjectId(sellerId) } },
+      { $match: { sellerId: sid } },
       { $group: { _id: "$sellerId", averageRating: { $avg: "$rating" } } },
     ]).session(session);
 
-    // Số lượt đánh giá (sellerProfile) + rating trung bình (user.rating)
-    const reviewCount = await Review.countDocuments({
-      sellerId: new mongoose.Types.ObjectId(sellerId),
-    }).session(session);
+    const reviewCount = await Review.countDocuments({ sellerId: sid }).session(
+      session,
+    );
 
     const update = { "sellerProfile.totalReviews": reviewCount };
+
     if (stats.length > 0) {
       const roundedRating = Math.round(stats[0].averageRating * 10) / 10;
       update.rating = roundedRating;
     }
+
     await User.findByIdAndUpdate(sellerId, { $set: update }, { session });
 
     await session.commitTransaction();
@@ -60,6 +75,9 @@ exports.createReviewService = async (buyerId, sellerId, productId, rating, comme
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
+    if (error.code === 11000) {
+      throw new Error("Bạn đã đánh giá đơn hàng này rồi");
+    }
     throw error;
   }
 };

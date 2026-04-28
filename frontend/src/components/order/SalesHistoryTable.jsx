@@ -1,103 +1,107 @@
 import { Link } from "react-router-dom";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { formatVnd } from "@/hooks/orderHooks/usePurchaseHistory";
 
 function SalesHistoryTable({ orders }) {
+  if (!orders.length) {
+    return (
+      <Card className="border-dashed shadow-none">
+        <CardContent className="flex flex-col items-center justify-center gap-2 py-14 text-center">
+          <p className="text-lg font-medium text-foreground">
+            Chưa có giao dịch bán nào được ghi nhận.
+          </p>
+          <p className="max-w-md text-sm text-muted-foreground">
+            Sau khi bạn bấm &quot;Đã bán&quot; và chọn người mua đã từng chat,
+            giao dịch sẽ hiển thị tại đây.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full bg-white border border-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b">
-              Mã giao dịch
-            </th>
-            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b">
-              Sản phẩm
-            </th>
-            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b">
-              Người mua
-            </th>
-            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b">
-              Giá trị (thống kê)
-            </th>
-            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b">
-              Ngày
-            </th>
-            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b">
-              Trạng thái
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {orders.length > 0 ? (
-            orders.map((order) => {
-              const pid = order.productId?._id || order.productId;
-              const pName = order.productId?.name ?? "—";
-              const buyerName = order.buyerId?.username ?? "—";
-              const code = order._id
-                ? String(order._id).slice(-8).toUpperCase()
-                : "—";
-              return (
-                <tr
-                  key={String(order._id)}
-                  className="hover:bg-gray-50 transition-colors"
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead className="w-[120px] text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Mã giao dịch
+          </TableHead>
+          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Sản phẩm
+          </TableHead>
+          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Người mua
+          </TableHead>
+          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Giá trị (thống kê)
+          </TableHead>
+          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Ngày
+          </TableHead>
+          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Trạng thái
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {orders.map((order) => {
+          const pid = order.productId?._id || order.productId;
+          const pName = order.productId?.name ?? "—";
+          const buyerName = order.buyerId?.username ?? "—";
+          const code = order._id
+            ? String(order._id).slice(-8).toUpperCase()
+            : "—";
+          return (
+            <TableRow key={String(order._id)}>
+              <TableCell className="text-sm">#{code}</TableCell>
+              <TableCell className="max-w-[220px] whitespace-normal">
+                {pid ? (
+                  <Button
+                    asChild
+                    variant="link"
+                    className="h-auto p-0 font-medium !text-yellow-700 hover:!text-yellow-800"
+                  >
+                    <Link to={`/product/${pid}`}>{pName}</Link>
+                  </Button>
+                ) : (
+                  <span className="text-sm">{pName}</span>
+                )}
+              </TableCell>
+              <TableCell className="text-gray-700">{buyerName}</TableCell>
+              <TableCell className="font-semibold text-black">
+                {formatVnd(order.totalAmount)}
+              </TableCell>
+              <TableCell className="whitespace-nowrap text-gray-700">
+                {order.createdAt
+                  ? new Date(order.createdAt).toLocaleString("vi-VN", {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    })
+                  : "—"}
+              </TableCell>
+              <TableCell>
+                <Badge
+                  variant="secondary"
+                  className="border-0 !bg-emerald-100 font-semibold text-emerald-800 hover:!bg-emerald-100 dark:!bg-emerald-950 dark:!text-emerald-200"
                 >
-                  <td className="py-4 px-4 border-b border-gray-200 text-sm font-mono text-gray-800">
-                    #{code}
-                  </td>
-                  <td className="py-4 px-4 border-b border-gray-200 text-sm">
-                    {pid ? (
-                      <Link
-                        to={`/product/${pid}`}
-                        className="text-amber-700 hover:underline font-medium"
-                      >
-                        {pName}
-                      </Link>
-                    ) : (
-                      pName
-                    )}
-                  </td>
-                  <td className="py-4 px-4 border-b border-gray-200 text-sm text-gray-700">
-                    {buyerName}
-                  </td>
-                  <td className="py-4 px-4 border-b border-gray-200 text-sm text-slate-800 font-semibold">
-                    {formatVnd(order.totalAmount)}
-                  </td>
-                  <td className="py-4 px-4 border-b border-gray-200 text-sm text-gray-600 whitespace-nowrap">
-                    {order.createdAt
-                      ? new Date(order.createdAt).toLocaleString("vi-VN", {
-                          dateStyle: "short",
-                          timeStyle: "short",
-                        })
-                      : "—"}
-                  </td>
-                  <td className="py-4 px-4 border-b border-gray-200 text-sm">
-                    <span className="px-3 py-1 inline-flex text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">
-                      {order.status === "COMPLETED" ? "Hoàn tất" : order.status}
-                    </span>
-                  </td>
-                </tr>
-              );
-            })
-          ) : (
-            <tr>
-              <td
-                colSpan={6}
-                className="py-12 text-center text-gray-500 border-b border-gray-200"
-              >
-                <div className="flex flex-col items-center justify-center">
-                  <span className="text-5xl mb-3">🦆</span>
-                  <p className="text-lg">Chưa có giao dịch bán nào được ghi nhận.</p>
-                  <p className="text-sm text-gray-500 mt-1 max-w-md">
-                    Sau khi bạn bấm &quot;Đã bán&quot; và chọn người mua đã từng
-                    chat, giao dịch sẽ hiển thị tại đây.
-                  </p>
-                </div>
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
+                  {order.status === "COMPLETED" ? "Hoàn tất" : order.status}
+                </Badge>
+              </TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
   );
 }
 

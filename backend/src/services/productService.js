@@ -232,7 +232,7 @@ exports.getProductByIdService = async (id) => {
     const product = await Product.findById(id)
       .populate(
         "sellerId",
-        "username email avatar phone isEmailVerified sellerProfile authType role",
+        "username email avatar phone isEmailVerified sellerProfile authType role rating",
       )
       .populate("category", "name")
       .lean();
@@ -310,10 +310,35 @@ exports.createProductService = async (sellerId, productData, files) => {
       attributes,
     } = productData;
 
-    const imageUrls = files?.map((file) => file.path) || [];
+    if (!mongoose.isValidObjectId(String(category || "").trim())) {
+      throw new Error("Danh mục không hợp lệ — vui lòng chọn lại danh mục.");
+    }
+
+    const latN = parseFloat(lat);
+    const lngN = parseFloat(lng);
+    if (!Number.isFinite(latN) || !Number.isFinite(lngN)) {
+      throw new Error(
+        "Tọa độ không hợp lệ — vui lòng chọn vị trí trên bản đồ (click vào map).",
+      );
+    }
+    if (latN < -90 || latN > 90 || lngN < -180 || lngN > 180) {
+      throw new Error("Tọa độ vị trí nằm ngoài phạm vi cho phép.");
+    }
+
+    const imageUrls =
+      files?.map((file) => file.path || file.secure_url).filter(Boolean) || [];
 
     if (imageUrls.length === 0) {
       throw new Error("Vui lòng tải lên ít nhất 1 hình ảnh sản phẩm.");
+    }
+
+    let attrs = {};
+    if (attributes != null && String(attributes).trim() !== "") {
+      try {
+        attrs = JSON.parse(attributes);
+      } catch {
+        throw new Error("Dữ liệu thuộc tính sản phẩm không đúng định dạng.");
+      }
     }
 
     const newProduct = await Product.create({
@@ -323,20 +348,31 @@ exports.createProductService = async (sellerId, productData, files) => {
       quantity: Number(quantity),
       condition,
       description,
-      attributes: attributes ? JSON.parse(attributes) : {},
+      attributes: attrs,
       images: imageUrls,
       sellerId,
       address,
       location: {
         type: "Point",
-        coordinates: [parseFloat(lng), parseFloat(lat)], // Chuẩn GeoJSON: [Kinh độ, Vĩ độ]
+        coordinates: [lngN, latN], // GeoJSON: [kinh độ, vĩ độ]
       },
     });
 
     return { newProduct };
   } catch (error) {
     console.error("Lỗi tại createProductService: ", error);
-    throw new Error("Không thể tạo mới sản phẩm");
+    if (error instanceof mongoose.Error.ValidationError) {
+      const parts = Object.values(error.errors || {}).map((e) => e.message);
+      throw new Error(parts.length ? parts.join("; ") : error.message);
+    }
+    if (error instanceof mongoose.Error.CastError) {
+      throw new Error(`Dữ liệu không hợp lệ: ${error.path}`);
+    }
+    if (error.code === 11000) {
+      throw new Error("Trùng dữ liệu — không thể tạo sản phẩm.");
+    }
+    const msg = error.message || "Không thể tạo mới sản phẩm";
+    throw new Error(msg);
   }
 };
 

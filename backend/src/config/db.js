@@ -2,10 +2,10 @@ const mongoose = require("mongoose");
 
 async function ConnectDB() {
   try {
+    // mở sẵn 50 connection để tăng tốc độ kết nối DB
     const pool =
       Number.parseInt(process.env.MONGODB_MAX_POOL_SIZE ?? "", 10) || 50;
     await mongoose.connect(process.env.MONGOOSE_URI, {
-      /** Nhiều request đồng thời — tăng trên deploy khi cần (vd. 100–300) */
       maxPoolSize: pool,
     });
     console.log("Kết nối DB thành công");
