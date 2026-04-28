@@ -8,6 +8,9 @@ const router = require("./routes/index");
 const connect = require("./config/db");
 const { setupSocketIO } = require("./utils/socketServer");
 const { setIO } = require("./utils/ioRegistry");
+const {
+  startAutoCancelVipPending,
+} = require("./jobs/autoCancelVipPending");
 
 // Bảo mật DB
 dotenv.config();
@@ -53,6 +56,7 @@ connect().then(() => {
     console.log(`Server chạy trên cổng ${port}`);
     console.log(`Socket.io đã gắn (transports: websocket, polling)`);
   });
+  startAutoCancelVipPending();
 });
 
 module.exports = { app, httpServer, io };

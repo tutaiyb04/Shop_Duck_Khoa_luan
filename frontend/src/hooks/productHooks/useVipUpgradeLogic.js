@@ -32,7 +32,7 @@ export const PLANS = [
   },
 ];
 
-const COUNTDOWN_START = 15 * 60;
+const DEFAULT_COUNTDOWN_SEC = 17 * 60;
 const VIP_POLL_MS = 4000;
 const VIP_POLL_MAX = 50;
 
@@ -54,6 +54,7 @@ export default function useVipUpgradeLogic({
   const [checkoutUrl, setCheckoutUrl] = useState("");
   const [orderCode, setOrderCode] = useState(null);
   const [countdown, setCountdown] = useState(0);
+  const [expiresInSec, setExpiresInSec] = useState(DEFAULT_COUNTDOWN_SEC);
 
   const closeTimerRef = useRef(null);
   const successHandled = useRef(false);
@@ -141,7 +142,7 @@ export default function useVipUpgradeLogic({
       }
       return;
     }
-    setCountdown(COUNTDOWN_START);
+    setCountdown(expiresInSec || DEFAULT_COUNTDOWN_SEC);
     countIntervalRef.current = setInterval(() => {
       setCountdown((c) => (c <= 1 ? 0 : c - 1));
     }, 1000);
@@ -151,7 +152,7 @@ export default function useVipUpgradeLogic({
         countIntervalRef.current = null;
       }
     };
-  }, [step]);
+  }, [step, expiresInSec]);
 
   const handlePay = async () => {
     if (!product?._id) return;
@@ -172,6 +173,9 @@ export default function useVipUpgradeLogic({
           } catch {
             // ignore
           }
+        }
+        if (Number.isFinite(Number(data.expiresInSec))) {
+          setExpiresInSec(Number(data.expiresInSec));
         }
         setCheckoutUrl(data.checkoutUrl);
         setStep("pay");
@@ -257,6 +261,31 @@ export default function useVipUpgradeLogic({
         }, 3000);
       } catch (e) {
         const st = e?.response?.status;
+        const expired =
+          st === 410 || e?.response?.data?.expired === true;
+
+        if (expired) {
+          if (cancelHandled.current) return;
+          cancelHandled.current = true;
+          if (vipPollRef.current) {
+            clearInterval(vipPollRef.current);
+            vipPollRef.current = null;
+          }
+          try {
+            sessionStorage.removeItem("vip_checkout_order_code");
+          } catch {
+            /* ignore */
+          }
+          toast(
+            e?.response?.data?.message ||
+              "Giao dịch đã hết hạn. Vui lòng tạo gói mới.",
+            { icon: "⏰" },
+          );
+          onPaidRefresh?.();
+          onOpenChange(false);
+          reset();
+          return;
+        }
         if (st === 401) {
           toast.error("Hết phiên đăng nhập — tải lại trang rồi thử lại.");
           if (vipPollRef.current) {

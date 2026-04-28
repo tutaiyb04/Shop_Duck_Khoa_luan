@@ -65,7 +65,10 @@ exports.confirmVipAfterReturn = async (req, res) => {
     });
 
     if (!result.ok) {
-      return res.status(result.status).json({ message: result.message });
+      return res.status(result.status).json({
+        message: result.message,
+        ...(result.expired ? { expired: true } : {}),
+      });
     }
 
     return res.status(200).json(result.data);

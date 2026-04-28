@@ -126,6 +126,7 @@ async function createVipPaymentLink({ userId, productId, plan }) {
         checkoutUrl: paymentLink.checkoutUrl,
         qrCode: paymentLink.qrCode,
         orderCode: paymentLink.orderCode,
+        expiresInSec: Math.floor(VIP_PENDING_TTL_MS / 1000),
       },
     };
   } catch (error) {
@@ -281,6 +282,15 @@ async function confirmVipAfterReturn({ userId, orderCode }) {
       },
     };
   }
+  if (String(rec.status) === "CANCELLED") {
+    return {
+      ok: false,
+      status: 410,
+      message:
+        "Giao dịch đã hết hạn hoặc bị hủy. Vui lòng tạo gói VIP mới.",
+      expired: true,
+    };
+  }
   if (String(rec.status) !== "PENDING") {
     return {
       ok: false,
@@ -387,6 +397,25 @@ async function confirmVipAfterReturn({ userId, orderCode }) {
       productId: String(updated.productId),
     },
   };
+}
+
+/**
+ * Tự hủy giao dịch PENDING quá hạn (mặc định 17 phút) — chạy định kỳ.
+ * Đặt > 15 phút TTL của QR PayOS để tránh hủy nhầm khi KH thanh toán đúng phút cuối.
+ * Dùng `createdAt` của Transaction.
+ */
+const VIP_PENDING_TTL_MS = Math.max(
+  60_000,
+  parseInt(process.env.VIP_PENDING_TTL_MS || "", 10) || 17 * 60 * 1000,
+);
+
+async function autoCancelExpiredPendingVip() {
+  const cutoff = new Date(Date.now() - VIP_PENDING_TTL_MS);
+  const res = await Transaction.updateMany(
+    { status: "PENDING", createdAt: { $lt: cutoff } },
+    { $set: { status: "CANCELLED" } },
+  );
+  return { modifiedCount: res.modifiedCount || 0 };
 }
 
 /** Hủy tất cả giao dịch VIP đang chờ thanh toán của tin (đã bán / không còn được mua VIP…). */
@@ -546,5 +575,7 @@ module.exports = {
   confirmVipAfterReturn,
   cancelVipCheckout,
   cancelPendingVipTransactionsForProduct,
+  autoCancelExpiredPendingVip,
+  VIP_PENDING_TTL_MS,
   getAdminVipTransactions,
 };
