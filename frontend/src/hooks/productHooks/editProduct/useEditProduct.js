@@ -61,6 +61,7 @@ export const useEditProduct = (productId) => {
       navigate("/my-products");
     } catch (error) {
       toast.error(error.response?.data?.message || "Cập nhật thất bại");
+      throw error;
     } finally {
       setIsUpdating(false);
     }

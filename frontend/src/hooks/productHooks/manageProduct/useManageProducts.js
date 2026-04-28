@@ -125,7 +125,44 @@ function useManageProducts() {
         refresh();
       }
     } else {
-      toast("Bạn đã hủy thanh toán gói VIP.", { icon: "ℹ️" });
+      const rawCancel = (() => {
+        try {
+          return sessionStorage.getItem("vip_checkout_order_code");
+        } catch {
+          return null;
+        }
+      })();
+      const cancelOrderCode =
+        rawCancel != null && rawCancel !== "" ? Number(rawCancel) : NaN;
+
+      if (user && Number.isFinite(cancelOrderCode)) {
+        (async () => {
+          try {
+            sessionStorage.removeItem("vip_checkout_order_code");
+            await API.post("/payment/cancel-vip", {
+              orderCode: cancelOrderCode,
+            });
+            toast("Đã hủy thanh toán — giao dịch cập nhật sang Đã hủy.", {
+              icon: "ℹ️",
+            });
+          } catch (e) {
+            sessionStorage.removeItem("vip_checkout_order_code");
+            const msg = e?.response?.data?.message;
+            toast.error(
+              msg ||
+                "Không lưu được trạng thái hủy. Kiểm tra kết nối hoặc thử lại.",
+            );
+          }
+          await refresh();
+        })();
+      } else {
+        try {
+          sessionStorage.removeItem("vip_checkout_order_code");
+        } catch {
+          /* ignore */
+        }
+        toast("Bạn đã hủy thanh toán gói VIP.", { icon: "ℹ️" });
+      }
     }
   }, [refresh, user]);
 

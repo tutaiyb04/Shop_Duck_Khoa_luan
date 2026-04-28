@@ -35,6 +35,27 @@ exports.handlePayOSWebhook = async (req, res) => {
   }
 };
 
+// Hủy giao dịch VIP khi KH thoát PayOS (cancelUrl) — cập nhật DB để admin thấy "Đã hủy".
+exports.cancelVipCheckout = async (req, res) => {
+  try {
+    const result = await paymentService.cancelVipCheckout({
+      userId: req.user._id,
+      orderCode: req.body?.orderCode,
+    });
+
+    if (!result.ok) {
+      return res.status(result.status).json({ message: result.message });
+    }
+
+    return res.status(200).json(result.data);
+  } catch (error) {
+    console.error("Lỗi cancelVipCheckout:", error);
+    return res.status(500).json({
+      message: error?.message || "Không thể hủy giao dịch",
+    });
+  }
+};
+
 // xác nhận VIP sau khi về từ PayOS (dự phòng khi webhook ở handlePayOSWebhook không tới).
 exports.confirmVipAfterReturn = async (req, res) => {
   try {

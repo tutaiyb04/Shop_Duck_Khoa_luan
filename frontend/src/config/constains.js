@@ -1,5 +1,6 @@
 export const PRODUCT_CONFIG = {
-  MAX_IMAGES: 100,
+  /** Khớp `upload.array("images", 5)` trên backend */
+  MAX_IMAGES: 5,
   MAX_FILE_SIZE_MB: 5,
   MAX_FILE_SIZE_BYTES: 5 * 1024 * 1024,
 };

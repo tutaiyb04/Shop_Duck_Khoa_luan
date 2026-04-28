@@ -5,6 +5,16 @@ import toast from "react-hot-toast";
 import { API } from "@/services/axios";
 import { getSocket } from "@/services/socket";
 
+const cancelVipOrder = (orderCode) => {
+  if (!Number.isFinite(Number(orderCode))) return Promise.resolve();
+  return API.post("/payment/cancel-vip", {
+    orderCode: Number(orderCode),
+  }).catch((e) => {
+    if (e?.response?.status === 409 || e?.response?.status === 404) return;
+    console.error("cancel-vip:", e);
+  });
+};
+
 export const PLANS = [
   {
     id: "7",
@@ -47,9 +57,19 @@ export default function useVipUpgradeLogic({
 
   const closeTimerRef = useRef(null);
   const successHandled = useRef(false);
+  const cancelHandled = useRef(false);
   const countIntervalRef = useRef(null);
   const vipPollRef = useRef(null);
   const pollAttempts = useRef(0);
+  const iframeRef = useRef(null);
+  const orderCodeRef = useRef(null);
+  const stepRef = useRef("choose");
+  useEffect(() => {
+    orderCodeRef.current = orderCode;
+  }, [orderCode]);
+  useEffect(() => {
+    stepRef.current = step;
+  }, [step]);
 
   const reset = useCallback(() => {
     setStep("choose");
@@ -59,6 +79,7 @@ export default function useVipUpgradeLogic({
     setOrderCode(null);
     setCountdown(0);
     successHandled.current = false;
+    cancelHandled.current = false;
     pollAttempts.current = 0;
     if (vipPollRef.current) {
       clearInterval(vipPollRef.current);
@@ -74,11 +95,29 @@ export default function useVipUpgradeLogic({
     }
   }, []);
 
+  /** Đóng modal khi đang chờ thanh toán mà chưa kích hoạt thành công → hủy giao dịch. */
+  const cancelIfStillPending = useCallback(async () => {
+    if (successHandled.current || cancelHandled.current) return;
+    if (stepRef.current !== "pay") return;
+    const code = orderCodeRef.current;
+    if (!Number.isFinite(Number(code))) return;
+    cancelHandled.current = true;
+    try {
+      sessionStorage.removeItem("vip_checkout_order_code");
+    } catch {
+      /* ignore */
+    }
+    await cancelVipOrder(code);
+    onPaidRefresh?.();
+    toast("Đã hủy giao dịch chờ thanh toán.", { icon: "ℹ️" });
+  }, [onPaidRefresh]);
+
   useEffect(() => {
     if (!open) {
+      void cancelIfStillPending();
       reset();
     }
-  }, [open, reset]);
+  }, [open, reset, cancelIfStillPending]);
 
   /* Đọc orderCode từ session */
   useEffect(() => {
@@ -249,6 +288,66 @@ export default function useVipUpgradeLogic({
     };
   }, [open, step, orderCode, onOpenChange, onPaidRefresh, reset]);
 
+  /** Người dùng bấm "Hủy giao dịch" trong modal: gọi API hủy + đóng modal. */
+  const handleCancelTransaction = useCallback(async () => {
+    if (successHandled.current || cancelHandled.current) {
+      onOpenChange(false);
+      return;
+    }
+    const code = orderCodeRef.current;
+    if (!Number.isFinite(Number(code))) {
+      onOpenChange(false);
+      return;
+    }
+    cancelHandled.current = true;
+    if (vipPollRef.current) {
+      clearInterval(vipPollRef.current);
+      vipPollRef.current = null;
+    }
+    try {
+      sessionStorage.removeItem("vip_checkout_order_code");
+    } catch {
+      /* ignore */
+    }
+    try {
+      await cancelVipOrder(code);
+      toast("Đã hủy giao dịch chờ thanh toán.", { icon: "ℹ️" });
+    } catch (e) {
+      console.error(e);
+      toast.error("Không hủy được giao dịch — thử lại sau.");
+    }
+    onPaidRefresh?.();
+    onOpenChange(false);
+    reset();
+  }, [onOpenChange, onPaidRefresh, reset]);
+
+  /** PayOS bấm hủy → iframe điều hướng về cancelUrl (cùng origin) → hủy giao dịch. */
+  const handleIframeLoad = useCallback(() => {
+    if (successHandled.current || cancelHandled.current) return;
+    const frame = iframeRef.current;
+    if (!frame) return;
+    let href = "";
+    try {
+      href = frame.contentWindow?.location?.href || "";
+    } catch {
+      return;
+    }
+    if (!href || !href.includes("vip_payment=cancel")) return;
+    cancelHandled.current = true;
+    const code = orderCodeRef.current;
+    try {
+      sessionStorage.removeItem("vip_checkout_order_code");
+    } catch {
+      /* ignore */
+    }
+    void cancelVipOrder(code).then(() => {
+      onPaidRefresh?.();
+      toast("Đã hủy giao dịch chờ thanh toán.", { icon: "ℹ️" });
+      onOpenChange(false);
+      reset();
+    });
+  }, [onOpenChange, onPaidRefresh, reset]);
+
   const plan = PLANS.find((p) => p.id === selectedPlan);
 
   return {
@@ -260,5 +359,8 @@ export default function useVipUpgradeLogic({
     countdown,
     handlePay,
     plan,
+    iframeRef,
+    handleIframeLoad,
+    handleCancelTransaction,
   };
 }

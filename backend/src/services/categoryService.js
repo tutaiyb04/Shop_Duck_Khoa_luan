@@ -103,7 +103,7 @@ exports.updateCategoryService = async (
     const updateCategory = await Category.findByIdAndUpdate(
       id,
       { $set: updateData },
-      { new: true, runValidators: true },
+      { returnDocument: "after", runValidators: true },
     );
 
     if (!updateCategory) {
@@ -125,7 +125,7 @@ exports.deleteCategoryService = async (id) => {
     const deleteCategory = await Category.findByIdAndUpdate(
       id,
       { status: "hidden" },
-      { new: true },
+      { returnDocument: "after" },
     );
 
     if (!deleteCategory) {
@@ -144,7 +144,7 @@ exports.restoreCategoryService = async (id) => {
     const restoreCategory = await Category.findOneAndUpdate(
       { _id: id, status: { $ne: "active" } },
       { status: "active" },
-      { new: true },
+      { returnDocument: "after" },
     );
 
     if (!restoreCategory) {

@@ -2,6 +2,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
+import { PRODUCT_CONFIG } from "@/config/constains";
+import { compressImageFiles } from "@/utils/imageCompress";
 import { useEditProduct } from "./useEditProduct";
 
 export const useEditProductForm = (id) => {
@@ -13,6 +15,7 @@ export const useEditProductForm = (id) => {
   const [coords, setCoords] = useState({ lat: null, lng: null });
   const [images, setImages] = useState([]);
   const [imageError, setImageError] = useState("");
+  const [isPreparingUpload, setIsPreparingUpload] = useState(false);
   const fileInputRef = useRef(null);
 
   // Khởi tạo React Hook Form
@@ -55,8 +58,8 @@ export const useEditProductForm = (id) => {
   // Xử lý logic thêm ảnh
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
-    const maxImages = 5;
-    const maxFileSizeMB = 5;
+    const { MAX_IMAGES: maxImages, MAX_FILE_SIZE_MB: maxFileSizeMB } =
+      PRODUCT_CONFIG;
 
     if (images.length + files.length > maxImages) {
       setImageError(`Chỉ được tải lên tối đa ${maxImages} ảnh.`);
@@ -101,7 +104,7 @@ export const useEditProductForm = (id) => {
   };
 
   // Xử lý Submit dữ liệu lên Backend
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     if (images.length === 0) {
       setImageError("Vui lòng tải lên ít nhất 1 hình ảnh sản phẩm.");
       toast.error("Sản phẩm phải có ít nhất 1 ảnh!");
@@ -126,16 +129,31 @@ export const useEditProductForm = (id) => {
     if (finalLat) formData.append("lat", finalLat);
     if (finalLng) formData.append("lng", finalLng);
 
-    // Gắn ảnh vào FormData
-    images.forEach((img) => {
-      if (img.isExisting) {
-        formData.append("existingImages", img.preview); // Ảnh cũ: Gửi URL
-      } else {
-        formData.append("images", img.file); // Ảnh mới: Gửi File
-      }
-    });
+    setIsPreparingUpload(true);
+    try {
+      const newFiles = images
+        .filter((img) => !img.isExisting)
+        .map((img) => img.file);
 
-    handleUpdate(formData);
+      const compressedNew =
+        newFiles.length > 0 ? await compressImageFiles(newFiles) : [];
+      
+        let newIdx = 0;
+      
+        images.forEach((img) => {
+        if (img.isExisting) {
+          formData.append("existingImages", img.preview);
+        } else {
+          formData.append("images", compressedNew[newIdx++]);
+        }
+      });
+
+      await handleUpdate(formData);
+    } catch {
+      /* handleUpdate đã toast lỗi */
+    } finally {
+      setIsPreparingUpload(false);
+    }
   };
 
   // Trả về tất cả State và Func cần thiết cho UI
@@ -144,6 +162,7 @@ export const useEditProductForm = (id) => {
     categories,
     loading,
     isUpdating,
+    isPreparingUpload,
     form,
     images,
     imageError,

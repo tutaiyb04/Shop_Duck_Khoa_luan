@@ -3,33 +3,18 @@ const router = express.Router();
 
 const productController = require("../controllers/ProductController");
 const { protect, isAdmin } = require("../middleware/authMiddleware");
-const { upload } = require("../config/cloudinary");
-
-/** Multer/Cloudinary báo lỗi → trả JSON rõ ràng thay vì 500 không nội dung */
-function uploadProductImages(req, res, next) {
-  upload.array("images", 5)(req, res, (err) => {
-    if (err) {
-      console.error("Upload ảnh sản phẩm:", err);
-      return res.status(400).json({
-        message:
-          err.message ||
-          "Không tải được ảnh lên — kiểm tra định dạng (JPG, PNG, WebP) hoặc cấu hình Cloudinary trên server.",
-      });
-    }
-    next();
-  });
-}
+const { uploadProductImagesMemory } = require("../middleware/uploadMiddleware");
 
 router.post(
   "/create-product",
   protect,
-  uploadProductImages,
+  uploadProductImagesMemory("images", 5),
   productController.createProduct,
 );
 router.put(
   "/:id",
   protect, // Phải đăng nhập
-  uploadProductImages,
+  uploadProductImagesMemory("images", 5),
   productController.updateProduct,
 );
 router.put(

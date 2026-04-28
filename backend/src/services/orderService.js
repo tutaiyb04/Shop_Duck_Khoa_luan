@@ -3,6 +3,9 @@ const Order = require("../model/Order");
 const Product = require("../model/Product");
 const Conversation = require("../model/Conversation");
 const Review = require("../model/Review");
+const {
+  cancelPendingVipTransactionsForProduct,
+} = require("./paymentService");
 
 const SELLABLE_STATUSES = ["AVAILABLE"];
 
@@ -80,7 +83,7 @@ exports.completeOfflineSale = async (sellerId, productId, buyerId) => {
     },
     { $set: { status: "SOLD" } },
     {
-      new: true,
+      returnDocument: "after",
       select: "price quantity sellerId status",
     },
   ).lean();
@@ -138,6 +141,10 @@ exports.completeOfflineSale = async (sellerId, productId, buyerId) => {
         conversationId: conv._id,
       },
     ]);
+
+    await cancelPendingVipTransactionsForProduct(pid).catch((e) =>
+      console.error("cancelPendingVipTransactionsForProduct:", e),
+    );
 
     return { order };
   } catch (error) {

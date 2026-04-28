@@ -161,7 +161,7 @@ exports.resetPasswordService = async (email) => {
   const findUserHaveEmail = await User.findOneAndUpdate(
     { email },
     { resetPasswordToken: randomToken, resetPasswordExpires },
-    { new: true, lean: true },
+    { returnDocument: "after", lean: true },
   );
 
   if (!findUserHaveEmail) {
@@ -346,7 +346,7 @@ exports.updateUserStatusService = async (userId, status) => {
     const updateUser = await User.findByIdAndUpdate(
       userId,
       { status },
-      { new: true, runValidators: true },
+      { returnDocument: "after", runValidators: true },
     );
 
     if (!updateUser) throw new Error("Không tìm thấy người dùng");

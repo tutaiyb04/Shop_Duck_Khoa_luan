@@ -31,6 +31,9 @@ export default function VipUpgradeModal({
     countdown,
     handlePay,
     plan,
+    iframeRef,
+    handleIframeLoad,
+    handleCancelTransaction,
   } = useVipUpgradeLogic({ open, onOpenChange, product, onPaidRefresh });
 
   return (
@@ -179,12 +182,35 @@ export default function VipUpgradeModal({
             {checkoutUrl && (
               <div className="relative min-h-0 flex-1 bg-muted/30">
                 <iframe
+                  ref={iframeRef}
+                  onLoad={handleIframeLoad}
                   title="Trang thanh toán PayOS (nhúng trong ứng dụng)"
                   src={checkoutUrl}
                   className="absolute inset-0 h-full w-full border-0 bg-white"
                 />
               </div>
             )}
+
+            <div className="shrink-0 flex flex-wrap items-center gap-2 border-t border-border/60 bg-white px-3 py-2 sm:px-4">
+              {checkoutUrl && (
+                <a
+                  href={checkoutUrl}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="text-xs font-medium text-amber-700 underline-offset-2 hover:underline"
+                >
+                  Iframe lỗi? Mở PayOS trong tab mới
+                </a>
+              )}
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleCancelTransaction}
+                className="ml-auto h-8 px-3 text-xs !bg-gray-100 hover:!bg-gray-200 !text-gray-700 !border-0"
+              >
+                Hủy giao dịch
+              </Button>
+            </div>
 
             <p className="shrink-0 border-t border-border/50 bg-muted/20 px-3 py-2 text-center text-[11px] leading-relaxed text-muted-foreground">
               Giao dịch do PayOS xử lý. Sau khi trừ tiền thành công, gói VIP cập

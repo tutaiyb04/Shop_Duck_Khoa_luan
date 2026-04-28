@@ -7,6 +7,7 @@ const {
   chatMessageLimiter,
   chatUploadLimiter,
 } = require("../middleware/chatRateLimit");
+const { uploadProductImages } = require("../middleware/uploadMiddleware");
 
 router.get("/conversations", protect, chatController.getConversations);
 /** Phải khai báo trước /:conversationId (tránh coi "product" là id hội thoại) */
@@ -20,7 +21,7 @@ router.post(
   "/upload-images",
   protect,
   chatUploadLimiter,
-  upload.array("images", 5),
+  uploadProductImages("images", 10),
   chatController.postUploadChatImages,
 );
 router.post("/message", protect, chatMessageLimiter, chatController.postMessage);
