@@ -14,6 +14,7 @@ const { uploadProductImageBuffers } = require("../config/cloudinary");
 const {
   cancelPendingVipTransactionsForProduct,
 } = require("./paymentService");
+const { notifyProductChatLocked } = require("../utils/chatSocketNotify");
 
 
 
@@ -528,6 +529,11 @@ exports.updateMyProductStatusService = async (id, sellerId, status) => {
     if (status === "SOLD" || status === "HIDDEN") {
       await cancelPendingVipTransactionsForProduct(id).catch((e) =>
         console.error("cancelPendingVipTransactionsForProduct:", e),
+      );
+
+      // Khoá khung chat của các hội thoại liên quan (Đã bán / Đã ẩn).
+      notifyProductChatLocked(id, status).catch((e) =>
+        console.error("notifyProductChatLocked:", e),
       );
     }
 

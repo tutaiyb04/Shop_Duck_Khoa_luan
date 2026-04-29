@@ -2,12 +2,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { API } from "@/services/axios";
 import { getSocket } from "@/services/socket";
-import { CHAT_CONVERSATION_UPDATED_EVENT } from "@/constants/chatSocket";
+import {
+  CHAT_CONVERSATION_UPDATED_EVENT,
+  CHAT_PRODUCT_LOCKED_EVENT,
+} from "@/constants/chatSocket";
 
 function isObjectIdString(s) {
-  return (
-    typeof s === "string" && /^[a-f\d]{24}$/i.test(s.replace(/\s/g, ""))
-  );
+  return typeof s === "string" && /^[a-f\d]{24}$/i.test(s.replace(/\s/g, ""));
 }
 
 export function useChatInbox() {
@@ -105,17 +106,26 @@ export function useChatInbox() {
       return undefined;
     }
     const onConversationUpdated = (payload) => {
-      const cid = payload?.conversationId
-        ? String(payload.conversationId)
-        : "";
+      const cid = payload?.conversationId ? String(payload.conversationId) : "";
+      void loadConversations({ silent: true });
+      if (cid && selectedIdRef.current === cid) {
+        void loadThread(cid);
+      }
+    };
+
+    // khi backend báo "sản phẩm đã bán/ẩn/khóa", đồng bộ ngay danh sách + thread đang mở để khoá form nhập tin nhắn (read-only) realtime.
+    const onProductLocked = (payload) => {
+      const cid = payload?.conversationId ? String(payload.conversationId) : "";
       void loadConversations({ silent: true });
       if (cid && selectedIdRef.current === cid) {
         void loadThread(cid);
       }
     };
     socket.on(CHAT_CONVERSATION_UPDATED_EVENT, onConversationUpdated);
+    socket.on(CHAT_PRODUCT_LOCKED_EVENT, onProductLocked);
     return () => {
       socket.off(CHAT_CONVERSATION_UPDATED_EVENT, onConversationUpdated);
+      socket.off(CHAT_PRODUCT_LOCKED_EVENT, onProductLocked);
     };
   }, [loadConversations, loadThread]);
 
@@ -158,9 +168,7 @@ export function useChatInbox() {
         if (fileArr.length > 0) {
           imageUrls = await uploadChatImages(fileArr);
           if (imageUrls.length === 0) {
-            setSendError(
-              "Không tải được ảnh lên. Thử lại hoặc dùng JPG/PNG.",
-            );
+            setSendError("Không tải được ảnh lên. Thử lại hoặc dùng JPG/PNG.");
             return false;
           }
         }
@@ -173,9 +181,16 @@ export function useChatInbox() {
         await loadConversations({ silent: true });
         return true;
       } catch (e) {
-        setSendError(
-          e?.response?.data?.message || e?.message || "Gửi thất bại",
-        );
+        const data = e?.response?.data;
+
+        // backend đã đóng băng (sản phẩm SOLD/HIDDEN/LOCKED/REJECTED) — cập nhật thread để giao diện chuyển ngay sang chế độ chỉ đọc, kèm thông báo lý do.
+        if (data?.code === "CHAT_FROZEN") {
+          setSendError(data.message || "Hội thoại đã bị đóng băng.");
+          void loadThread(selectedId);
+          void loadConversations({ silent: true });
+          return false;
+        }
+        setSendError(data?.message || e?.message || "Gửi thất bại");
         return false;
       } finally {
         setSending(false);

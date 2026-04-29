@@ -14,6 +14,7 @@ const productImagesMemory = multer({
   },
 });
 
+// lưu tạm ảnh vào RAM dưới dạng buffer
 exports.uploadProductImagesMemory = (fieldName, maxCount) => {
   return (req, res, next) => {
     productImagesMemory.array(fieldName, maxCount)(req, res, (err) => {
@@ -37,7 +38,9 @@ exports.uploadProductImages = (fieldName, maxCount) => {
       if (err) {
         console.error(`Upload ảnh (${fieldName}):`, err);
         return res.status(400).json({
-          message: err.message || "Không tải được ảnh lên, vui lòng kiểm tra lại định dạng hoặc dung lượng.",
+          message:
+            err.message ||
+            "Không tải được ảnh lên, vui lòng kiểm tra lại định dạng hoặc dung lượng.",
         });
       }
       next();

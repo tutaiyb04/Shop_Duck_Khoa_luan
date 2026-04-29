@@ -4,48 +4,24 @@ const Message = require("../model/Message");
 const Product = require("../model/Product");
 const User = require("../model/User");
 
-const MAX_MESSAGE_LENGTH = 5000;
-const MAX_IMAGE_URLS = 5;
-const MAX_URL_LENGTH = 2000;
-/** Giới hạn số hội thoại trả về mỗi user (tránh payload lớn khi scale). */
-const LIST_CONVERSATIONS_CAP = 200;
-/** Số ứng viên tối đa khi người bán chọn "bán cho ai" (lọc theo đã chat). */
-const SALE_CANDIDATES_CAP = 50;
+const {
+  MAX_MESSAGE_LENGTH,
+  MAX_IMAGE_URLS,
+  MAX_URL_LENGTH,
+  LIST_CONVERSATIONS_CAP,
+  SALE_CANDIDATES_CAP,
+  MESSAGE_CAP,
+  FROZEN_PRODUCT_STATUSES,
+  buildFrozenChatError,
+  lastMessagePreviewForList,
+  isParticipant,
+  normalizeUnreadCountOnConv,
+  getUnreadForUser,
+} = require("../helper/chatHelper");
 
-/** Chuỗi hiển thị trong danh sách hội thoại (text rút gọn hoặc placeholder ảnh). */
-function lastMessagePreviewForList(text, images) {
-  const t = (text && String(text).trim()) || "";
-  const nImg = Array.isArray(images) ? images.filter(Boolean).length : 0;
-  if (t) {
-    return t.length > 200 ? `${t.slice(0, 197)}...` : t;
-  }
-  if (nImg > 0) {
-    return nImg === 1 ? "[Ảnh]" : `[${nImg} ảnh]`;
-  }
-  return "";
-}
+exports.FROZEN_PRODUCT_STATUSES = FROZEN_PRODUCT_STATUSES;
 
-function isParticipant(conversation, userId) {
-  const uid = String(userId);
-  return conversation.participants.some((p) => String(p) === uid);
-}
-
-/** Đảm bảo conv.unreadCount là Map (mongoose có thể trả object thường). */
-function normalizeUnreadCountOnConv(conv) {
-  if (!conv.unreadCount) {
-    conv.set("unreadCount", new Map());
-  } else if (!(conv.unreadCount instanceof Map)) {
-    const o =
-      conv.unreadCount && typeof conv.unreadCount === "object"
-        ? { ...conv.unreadCount }
-        : {};
-    conv.set("unreadCount", new Map(Object.entries(o)));
-  }
-}
-
-/**
- * Tìm hội thoại buyer–seller theo sản phẩm, hoặc tạo mới.
- */
+// tìm hội thoại buyer–seller theo sản phẩm, hoặc tạo mới
 exports.openOrGetConversation = async (buyerId, productId) => {
   if (!productId || !mongoose.isValidObjectId(String(productId))) {
     const err = new Error("ID sản phẩm không hợp lệ");
@@ -59,7 +35,7 @@ exports.openOrGetConversation = async (buyerId, productId) => {
   }
 
   const product = await Product.findById(productId)
-    .select("sellerId name")
+    .select("sellerId name status")
     .lean();
   if (!product) {
     const err = new Error("Sản phẩm không tồn tại");
@@ -97,10 +73,13 @@ exports.openOrGetConversation = async (buyerId, productId) => {
     conversation: {
       id: String(conv._id),
       productId: String(conv.productId),
+      productStatus: product.status || null,
+      isFrozen: FROZEN_PRODUCT_STATUSES.has(product.status),
     },
   };
 };
 
+// danh sách người mua có thể bán cho sản phẩm
 exports.listChatBuyersForProduct = async (sellerId, productId) => {
   if (!productId || !mongoose.isValidObjectId(String(productId))) {
     const err = new Error("ID sản phẩm không hợp lệ");
@@ -115,7 +94,7 @@ exports.listChatBuyersForProduct = async (sellerId, productId) => {
   }
 
   const product = await Product.findById(productId).select("sellerId").lean();
-  
+
   if (!product) {
     const err = new Error("Sản phẩm không tồn tại");
     err.status = 404;
@@ -193,19 +172,7 @@ exports.listChatBuyersForProduct = async (sellerId, productId) => {
   };
 };
 
-function getUnreadForUser(conversation, userId) {
-  const uid = String(userId);
-  const m = conversation.unreadCount;
-  if (!m) return 0;
-  if (m instanceof Map) {
-    return m.get(uid) ?? m.get(userId) ?? 0;
-  }
-  return m[uid] ?? m[userId] ?? 0;
-}
-
-/**
- * Danh sách hội thoại của user, mới nhất trước.
- */
+// danh sách hội thoại của user, mới nhất trước
 exports.listConversations = async (userId) => {
   if (!userId || !mongoose.isValidObjectId(String(userId))) {
     const err = new Error("ID người dùng không hợp lệ");
@@ -224,7 +191,7 @@ exports.listConversations = async (userId) => {
     )
     .sort({ updatedAt: -1 })
     .limit(LIST_CONVERSATIONS_CAP)
-    .populate("productId", "name images price")
+    .populate("productId", "name images price status")
     .populate("participants", "username avatar")
     .lean();
 
@@ -253,6 +220,8 @@ exports.listConversations = async (userId) => {
             name: product.name,
             images: product.images || [],
             price: product.price,
+            status: product.status || null,
+            isFrozen: FROZEN_PRODUCT_STATUSES.has(product.status),
           }
         : null,
       otherParticipant: other
@@ -271,11 +240,7 @@ exports.listConversations = async (userId) => {
   });
 };
 
-const MESSAGE_CAP = 500;
-
-/**
- * Lịch sử tin nhắn một cuộc hội thoại (user phải là participants).
- */
+// lịch sử tin nhắn một cuộc hội thoại (user phải là participants)
 exports.getMessages = async (conversationId, userId) => {
   if (!mongoose.isValidObjectId(conversationId)) {
     const err = new Error("ID hội thoại không hợp lệ");
@@ -312,11 +277,18 @@ exports.getMessages = async (conversationId, userId) => {
     .populate("senderId", "username avatar")
     .lean();
 
+  const product = await Product.findById(conv.productId)
+    .select("status name images price")
+    .lean();
+  const productStatus = product?.status || null;
+
   return {
     conversation: {
       id: String(conv._id),
       productId: String(conv.productId),
       participants: conv.participants.map((p) => String(p)),
+      productStatus,
+      isFrozen: FROZEN_PRODUCT_STATUSES.has(productStatus),
     },
     messages: messages.map((m) => {
       const s = m.senderId;
@@ -344,17 +316,18 @@ exports.getMessages = async (conversationId, userId) => {
   };
 };
 
-/**
- * Tạo tin nhắn, cập nhật lastMessage + unreadCount + updatedAt trên Conversation.
- */
+// gửi tin nhắn
 exports.sendMessage = async (userId, { conversationId, text, images = [] }) => {
   if (!mongoose.isValidObjectId(conversationId)) {
     const err = new Error("ID hội thoại không hợp lệ");
     err.status = 400;
     throw err;
   }
+
   const body = text != null ? String(text).trim() : "";
+
   let imageUrls = Array.isArray(images) ? images : [];
+
   imageUrls = imageUrls
     .map((s) => String(s).trim())
     .filter(Boolean)
@@ -365,6 +338,7 @@ exports.sendMessage = async (userId, { conversationId, text, images = [] }) => {
     err.status = 400;
     throw err;
   }
+
   if (body.length > MAX_MESSAGE_LENGTH) {
     const err = new Error(`Nội dung tối đa ${MAX_MESSAGE_LENGTH} ký tự`);
     err.status = 400;
@@ -383,10 +357,26 @@ exports.sendMessage = async (userId, { conversationId, text, images = [] }) => {
     err.status = 404;
     throw err;
   }
+
   if (!isParticipant(conv, userId)) {
     const err = new Error("Bạn không tham gia hội thoại này");
     err.status = 403;
     throw err;
+  }
+
+  // khóa hội thoại theo trạng thái sản phẩm
+  const product = await Product.findById(conv.productId)
+    .select("status")
+    .lean();
+
+  if (!product) {
+    const err = new Error("Sản phẩm gốc của hội thoại không còn tồn tại");
+    err.status = 404;
+    throw err;
+  }
+
+  if (FROZEN_PRODUCT_STATUSES.has(product.status)) {
+    throw buildFrozenChatError(product.status);
   }
 
   const message = await Message.create({
@@ -449,9 +439,7 @@ exports.sendMessage = async (userId, { conversationId, text, images = [] }) => {
   };
 };
 
-/**
- * Xóa mềm: ẩn hội thoại khỏi danh sách của user hiện tại (không xóa tin nhắn).
- */
+// xóa mềm: ẩn hội thoại khỏi danh sách của user hiện tại (không xóa tin nhắn)
 exports.softHideConversationForUser = async (userId, conversationId) => {
   if (!mongoose.isValidObjectId(conversationId)) {
     const err = new Error("ID hội thoại không hợp lệ");

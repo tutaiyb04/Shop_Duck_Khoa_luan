@@ -1,3 +1,6 @@
+import { Lock } from "lucide-react";
+import LoadingBlock from "@/components/shared/LoadingBlock";
+
 function formatLastMessageLine(c, myId) {
   const text = (c.lastMessage || "").trim();
   if (!text) return "Chưa có tin nhắn";
@@ -10,11 +13,22 @@ function formatLastMessageLine(c, myId) {
   return `${label}: ${text}`;
 }
 
-import LoadingBlock from "@/components/shared/LoadingBlock";
+// nhãn ngắn cho ô badge trên ảnh sản phẩm khi hội thoại bị đóng băng
+function frozenBadgeLabel(productStatus) {
+  switch (productStatus) {
+    case "SOLD":
+      return "Đã bán";
+    case "HIDDEN":
+      return "Đã ẩn";
+    case "LOCKED":
+      return "Bị khóa";
+    case "REJECTED":
+      return "Từ chối";
+    default:
+      return "Đóng băng";
+  }
+}
 
-/**
- * Cột danh sách hội thoại (bên trái).
- */
 export default function ConversationList({
   conversations,
   currentUserId,
@@ -45,6 +59,10 @@ export default function ConversationList({
           const active = c.id === selectedId;
           const img = c.product?.images?.[0];
           const unread = c.unreadForMe > 0;
+          const frozen = Boolean(c.product?.isFrozen);
+          const frozenLabel = frozen
+            ? frozenBadgeLabel(c.product?.status)
+            : null;
           return (
             <li key={c.id} className="shrink-0">
               <button
@@ -63,17 +81,31 @@ export default function ConversationList({
                     <img
                       src={img}
                       alt=""
-                      className="h-full w-full object-cover"
+                      className={`h-full w-full object-cover ${
+                        frozen ? "grayscale" : ""
+                      }`}
                     />
                   ) : (
                     <span className="flex h-full w-full items-center justify-center text-[10px] text-slate-400">
                       SP
                     </span>
                   )}
+                  {frozen && (
+                    <span className="absolute inset-0 flex items-end justify-center bg-black/40">
+                      <span className="mb-0.5 inline-flex items-center gap-0.5 rounded-sm bg-amber-500/95 px-1 py-[1px] text-[9px] font-bold uppercase leading-none text-white shadow-sm">
+                        <Lock className="h-2.5 w-2.5" />
+                        {frozenLabel}
+                      </span>
+                    </span>
+                  )}
                 </div>
                 <div className="min-w-0 flex-1 py-0.5">
                   <div className="flex items-start justify-between gap-2">
-                    <p className="truncate text-sm font-semibold leading-tight text-slate-900">
+                    <p
+                      className={`truncate text-sm font-semibold leading-tight ${
+                        frozen ? "text-slate-500" : "text-slate-900"
+                      }`}
+                    >
                       Sản phẩm: {c.product?.name || "Sản phẩm"}
                     </p>
                     {unread && (

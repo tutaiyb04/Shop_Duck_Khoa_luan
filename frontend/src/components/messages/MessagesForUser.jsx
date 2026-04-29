@@ -1,8 +1,8 @@
 import { useContext, useMemo } from "react";
-import UserSidebar from "@/components/shared/UserSidebar";
 import { AuthContext } from "@/context/AuthContext";
 import { useChatInbox } from "@/hooks/chatHooks/useChatInbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import UserSidebar from "@/components/shared/UserSidebar";
 import ConversationList from "./ConversationList";
 import MessageThreadPanel from "./MessageThreadPanel";
 
@@ -32,6 +32,8 @@ export default function MessagesForUser() {
     return {
       productId: c.product?.id ?? null,
       otherUserId: c.otherParticipant?.id ?? null,
+      productStatus: c.product?.status ?? null,
+      isFrozen: Boolean(c.product?.isFrozen),
     };
   }, [conversations, selectedId]);
 

@@ -1,13 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ImagePlus, Send, ShieldAlert, Trash2, X } from "lucide-react";
+import { ImagePlus, Lock, Send, ShieldAlert, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { API } from "@/services/axios";
 import ReportDialog from "@/components/product/productDetails/ReportDialog";
 import LoadingBlock from "@/components/shared/LoadingBlock";
 import toast from "react-hot-toast";
-
-const MAX_ATTACH = 5;
+import useMessageThreadLogic from "@/hooks/chatHooks/useMessageThreadLogic";
 
 export default function MessageThreadPanel({
   selectedId,
@@ -22,93 +19,32 @@ export default function MessageThreadPanel({
   /** Khi API thread lỗi: vẫn có productId / đối phương từ danh sách trái */
   selectedSummary = null,
 }) {
-  const [draft, setDraft] = useState("");
-  /** { file, url }[] — url là object URL để preview */
-  const [attachments, setAttachments] = useState([]);
-  const fileInputRef = useRef(null);
-  const attachmentsRef = useRef([]);
-  useEffect(() => {
-    attachmentsRef.current = attachments;
-  }, [attachments]);
-
-  useEffect(() => {
-    return () => {
-      attachmentsRef.current.forEach((a) => URL.revokeObjectURL(a.url));
-    };
-  }, []);
-
-  const addFiles = (fileList) => {
-    if (!fileList?.length) return;
-    const incoming = Array.from(fileList).filter((f) =>
-      f.type.startsWith("image/"),
-    );
-    setAttachments((prev) => {
-      const room = MAX_ATTACH - prev.length;
-      if (room <= 0) return prev;
-      const slice = incoming.slice(0, room);
-      const next = slice.map((file) => ({
-        file,
-        url: URL.createObjectURL(file),
-      }));
-      return [...prev, ...next];
-    });
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const removeAttachment = (index) => {
-    setAttachments((prev) => {
-      const t = prev[index];
-      if (t) URL.revokeObjectURL(t.url);
-      return prev.filter((_, i) => i !== index);
-    });
-  };
-
-  const canSend = Boolean(String(draft).trim()) || attachments.length > 0;
-
-  const [isReportOpen, setIsReportOpen] = useState(false);
-  const [isReporting, setIsReporting] = useState(false);
-
-  const opponentUserId = useMemo(() => {
-    const parts = thread?.conversation?.participants;
-    if (Array.isArray(parts) && currentUid) {
-      const other = parts.find((p) => String(p) !== String(currentUid));
-      if (other != null) return String(other);
-    }
-    if (selectedSummary?.otherUserId) {
-      return String(selectedSummary.otherUserId);
-    }
-    return null;
-  }, [thread, currentUid, selectedSummary]);
-
-  const headerProductId = useMemo(() => {
-    const fromThread = thread?.conversation?.productId;
-    if (fromThread != null && String(fromThread)) return String(fromThread);
-    if (selectedSummary?.productId) return String(selectedSummary.productId);
-    return null;
-  }, [thread, selectedSummary]);
-
-  const handleChatReportSend = async ({ reason, description }) => {
-    if (!opponentUserId || !selectedId) return false;
-    setIsReporting(true);
-    try {
-      await API.post("/reports/chat", {
-        targetUserId: opponentUserId,
-        reason,
-        description,
-        evidenceImages: [],
-        conversationId: selectedId,
-      });
-      toast.success("Đã gửi tố cáo. Cảm ơn bạn đã giúp cộng đồng an toàn hơn.");
-      return true;
-    } catch (e) {
-      toast.error(
-        e?.response?.data?.message || e?.message || "Gửi tố cáo thất bại",
-      );
-      return false;
-    } finally {
-      setIsReporting(false);
-    }
-  };
+  const {
+    draft,
+    setDraft,
+    attachments,
+    fileInputRef,
+    addFiles,
+    removeAttachment,
+    canSend,
+    isReportOpen,
+    setIsReportOpen,
+    isReporting,
+    opponentUserId,
+    headerProductId,
+    isFrozen,
+    frozenStatus,
+    frozenInfo,
+    handleChatReportSend,
+    handleFormSubmit,
+    MAX_ATTACH,
+  } = useMessageThreadLogic({
+    selectedId,
+    thread,
+    currentUid,
+    selectedSummary,
+    sendMessage,
+  });
 
   return (
     <section className="flex min-h-0 min-w-0 flex-1 flex-col bg-transparent">
@@ -125,13 +61,29 @@ export default function MessageThreadPanel({
               {loadingThread ? (
                 <LoadingBlock message="Đang tải…" className="py-0 text-left" />
               ) : (
-                <span className="text-sm font-medium text-gray-800">
-                  {headerProductId
-                    ? `Hội thoại · sản phẩm #${headerProductId.slice(-6)}`
-                    : selectedId
-                      ? `Hội thoại #${String(selectedId).slice(-6)}`
-                      : "—"}
-                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-medium text-gray-800">
+                    {headerProductId
+                      ? `Hội thoại · sản phẩm #${headerProductId.slice(-6)}`
+                      : selectedId
+                        ? `Hội thoại #${String(selectedId).slice(-6)}`
+                        : "—"}
+                  </span>
+                  {isFrozen && (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
+                      <Lock className="h-3 w-3" />
+                      {frozenStatus === "SOLD"
+                        ? "Đã bán — đã khóa chat"
+                        : frozenStatus === "HIDDEN"
+                          ? "Đã ẩn — đã khóa chat"
+                          : frozenStatus === "LOCKED"
+                            ? "Bị khóa — đã khóa chat"
+                            : frozenStatus === "REJECTED"
+                              ? "Bị từ chối — đã khóa chat"
+                              : "Đã khóa chat"}
+                    </span>
+                  )}
+                </div>
               )}
               {errorThread && (
                 <p className="mt-1 text-sm text-red-600">{errorThread}</p>
@@ -245,95 +197,104 @@ export default function MessageThreadPanel({
             })}
           </div>
 
-          <div className="border-t border-gray-100 bg-gray-50/80 p-3">
-            {attachments.length > 0 && (
-              <div className="mb-2 flex flex-wrap gap-2">
-                {attachments.map((a, i) => (
-                  <div
-                    key={a.url}
-                    className="relative h-16 w-16 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm"
-                  >
-                    <img
-                      src={a.url}
-                      alt=""
-                      className="h-full w-full object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeAttachment(i)}
-                      className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
-                      aria-label="Bỏ ảnh"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <form
-              className="flex flex-col gap-2 sm:flex-row sm:items-end"
-              onSubmit={async (e) => {
-                e.preventDefault();
-                if (!canSend || sending) return;
-                const files = attachments.map((a) => a.file);
-                const ok = await sendMessage({
-                  text: draft,
-                  files,
-                });
-                if (ok) {
-                  setDraft("");
-                  attachments.forEach((a) => URL.revokeObjectURL(a.url));
-                  setAttachments([]);
-                }
-              }}
+          {isFrozen ? (
+            <div
+              className="border-t border-amber-200 bg-amber-50/70 p-4"
+              role="status"
+              aria-live="polite"
             >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/jpg"
-                multiple
-                className="hidden"
-                onChange={(e) => addFiles(e.target.files)}
-              />
-              <div className="flex min-w-0 flex-1 gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  disabled={sending || attachments.length >= MAX_ATTACH}
-                  className="shrink-0 !bg-amber-200 hover:!bg-amber-300 !border-0 !ring-0 !outline-none !transition-colors"
-                  onClick={() => fileInputRef.current?.click()}
-                  title="Đính kèm ảnh"
-                >
-                  <ImagePlus className="h-4 w-4 text-black" />
-                </Button>
-                <Input
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  placeholder="Nhập tin nhắn (tuỳ chọn — có thể chỉ gửi ảnh)"
-                  disabled={sending}
-                  className="min-w-0 flex-1 border-gray-200 bg-white focus-visible:border-amber-500 focus-visible:ring-amber-500/30"
-                />
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                  <Lock className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-amber-900">
+                    {frozenInfo?.title}
+                  </p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-amber-800/90">
+                    {frozenInfo?.description}
+                  </p>
+                </div>
               </div>
-              <Button
-                type="submit"
-                disabled={sending || !canSend}
-                className="shrink-0 gap-1.5 !bg-amber-500 text-white hover:!bg-amber-600 sm:min-w-[88px] !border-0 !ring-0 !outline-none !transition-colors"
+            </div>
+          ) : (
+            <div className="border-t border-gray-100 bg-gray-50/80 p-3">
+              {attachments.length > 0 && (
+                <div className="mb-2 flex flex-wrap gap-2">
+                  {attachments.map((a, i) => (
+                    <div
+                      key={a.url}
+                      className="relative h-16 w-16 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm"
+                    >
+                      <img
+                        src={a.url}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeAttachment(i)}
+                        className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
+                        aria-label="Bỏ ảnh"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <form
+                className="flex flex-col gap-2 sm:flex-row sm:items-end"
+                onSubmit={(e) => handleFormSubmit(e, sending)}
               >
-                {sending ? (
-                  "…"
-                ) : (
-                  <>
-                    <Send className="h-4 w-4" />
-                    Gửi
-                  </>
-                )}
-              </Button>
-            </form>
-            {sendError && (
-              <p className="mt-2 text-xs text-red-600">{sendError}</p>
-            )}
-          </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/jpg"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => addFiles(e.target.files)}
+                />
+                <div className="flex min-w-0 flex-1 gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    disabled={sending || attachments.length >= MAX_ATTACH}
+                    className="shrink-0 !bg-amber-200 hover:!bg-amber-300 !border-0 !ring-0 !outline-none !transition-colors"
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Đính kèm ảnh"
+                  >
+                    <ImagePlus className="h-4 w-4 text-black" />
+                  </Button>
+                  <Input
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    placeholder="Nhập tin nhắn (tuỳ chọn — có thể chỉ gửi ảnh)"
+                    disabled={sending}
+                    className="min-w-0 flex-1 border-gray-200 bg-white focus-visible:border-amber-500 focus-visible:ring-amber-500/30"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  disabled={sending || !canSend}
+                  className="shrink-0 gap-1.5 !bg-amber-500 text-white hover:!bg-amber-600 sm:min-w-[88px] !border-0 !ring-0 !outline-none !transition-colors"
+                >
+                  {sending ? (
+                    "…"
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4" />
+                      Gửi
+                    </>
+                  )}
+                </Button>
+              </form>
+              {sendError && (
+                <p className="mt-2 text-xs text-red-600">{sendError}</p>
+              )}
+            </div>
+          )}
         </>
       )}
     </section>

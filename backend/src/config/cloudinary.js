@@ -24,19 +24,16 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage: storage });
 
-
 // Upload một buffer ảnh lên Cloudinary (dùng cho sản phẩm: upload song song).
 // Không áp transformation lúc upload — ảnh đã được nén phía client; giảm thời gian chờ.
-
 function uploadProductImageBuffer(buffer) {
   return new Promise((resolve, reject) => {
-    
     // Kiểm tra nếu buffer rỗng
     if (!buffer || buffer.length === 0) {
       reject(new Error("Dữ liệu ảnh rỗng"));
       return;
     }
-    
+
     // Tạo stream upload
     const uploadStream = cloudinary.uploader.upload_stream(
       {

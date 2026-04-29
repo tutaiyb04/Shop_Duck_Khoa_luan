@@ -24,7 +24,12 @@ router.post(
   uploadProductImages("images", 10),
   chatController.postUploadChatImages,
 );
-router.post("/message", protect, chatMessageLimiter, chatController.postMessage);
+router.post(
+  "/message",
+  protect,
+  chatMessageLimiter,
+  chatController.postMessage,
+);
 router.delete(
   "/conversations/:conversationId",
   protect,

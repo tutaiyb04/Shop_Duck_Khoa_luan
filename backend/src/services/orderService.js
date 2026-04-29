@@ -6,6 +6,7 @@ const Review = require("../model/Review");
 const {
   cancelPendingVipTransactionsForProduct,
 } = require("./paymentService");
+const { notifyProductChatLocked } = require("../utils/chatSocketNotify");
 
 const SELLABLE_STATUSES = ["AVAILABLE"];
 
@@ -144,6 +145,11 @@ exports.completeOfflineSale = async (sellerId, productId, buyerId) => {
 
     await cancelPendingVipTransactionsForProduct(pid).catch((e) =>
       console.error("cancelPendingVipTransactionsForProduct:", e),
+    );
+
+    // Đóng băng mọi khung chat liên quan tới sản phẩm vừa bán (realtime).
+    notifyProductChatLocked(pid, "SOLD").catch((e) =>
+      console.error("notifyProductChatLocked(SOLD):", e),
     );
 
     return { order };

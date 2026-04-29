@@ -31,9 +31,7 @@ function ManageProducts() {
   } = useManageProducts();
 
   if (loading) {
-    return (
-      <LoadingBlock message="Đang tải dữ liệu…" className="mt-20 py-12" />
-    );
+    return <LoadingBlock message="Đang tải dữ liệu…" className="mt-20 py-12" />;
   }
 
   return (
