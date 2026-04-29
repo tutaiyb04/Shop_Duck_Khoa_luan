@@ -20,9 +20,9 @@ export const ACCOUNT_LINKS = [
   { to: "/register", label: "Đăng ký" },
 ];
 
-export const POLICY_NOTES = [
-  "Điều khoản dịch vụ",
-  "Chính sách bảo mật",
-  "Quy chế giải quyết tranh chấp",
-  "Hướng dẫn an toàn khi giao dịch",
+export const POLICY_LINKS = [
+  { to: "/terms", label: "Điều khoản dịch vụ" },
+  { to: "/privacy", label: "Chính sách bảo mật" },
+  { to: "/disputes", label: "Quy chế giải quyết tranh chấp" },
+  { to: "/safe-trading", label: "Hướng dẫn an toàn khi giao dịch" },
 ];

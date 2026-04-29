@@ -30,6 +30,10 @@ import ManageProducts from "./pages/products/ManageProducts";
 import EditProduct from "./pages/products/EditProduct";
 import Messages from "./pages/messages/Messages";
 import ScrollToTop from "./components/layout/ScrollToTop";
+import TermsOfService from "./components/layout/footer/TermsOfService";
+import PrivacyPolicy from "./components/layout/footer/PrivacyPolicy";
+import DisputeResolution from "./components/layout/footer/DisputeResolution";
+import SafeTradingGuide from "./components/layout/footer/SafeTradingGuide";
 
 function App() {
   return (
@@ -50,6 +54,18 @@ function App() {
 
               {/* Register Page */}
               <Route path="/register" element={<Register />} />
+
+              {/* Điều khoản dịch vụ */}
+              <Route path="/terms" element={<TermsOfService />} />
+
+              {/* Chính sách bảo mật */}
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+
+              {/* Quy chế giải quyết tranh chấp */}
+              <Route path="/disputes" element={<DisputeResolution />} />
+
+              {/* Hướng dẫn an toàn khi giao dịch */}
+              <Route path="/safe-trading" element={<SafeTradingGuide />} />
 
               {/* ForgotPassword Page */}
               <Route path="/reset-password" element={<ForgotPassword />} />

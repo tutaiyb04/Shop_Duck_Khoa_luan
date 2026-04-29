@@ -1,13 +1,13 @@
-import { NavLink } from "react-router-dom";
-import { Leaf, Mail, MapPin, Phone, ShieldCheck, Truck } from "lucide-react";
-import { cn } from "@/lib/utils";
-import logoImage from "@/assets/logo1.png";
 import {
   CONTACT,
   EXPLORE_LINKS,
   ACCOUNT_LINKS,
-  POLICY_NOTES,
+  POLICY_LINKS,
 } from "@/constants/footerData";
+import { NavLink } from "react-router-dom";
+import { Leaf, Mail, MapPin, Phone, ShieldCheck, Truck } from "lucide-react";
+import { cn } from "@/lib/utils";
+import logoImage from "@/assets/logo1.png";
 import UspCard from "./footer/UspCard";
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -112,9 +112,23 @@ export default function Footer({ className = "" }) {
 
           <nav className="lg:col-span-2" aria-label="Chính sách">
             <SectionTitle>Chính sách</SectionTitle>
-            {POLICY_NOTES.map((note, index) => (
-              <FooterLink key={index}>{note}</FooterLink>
-            ))}
+            {POLICY_LINKS.map((item) =>
+              item.to ? (
+                <FooterLink key={item.to} to={item.to}>
+                  {item.label}
+                </FooterLink>
+              ) : (
+                <span
+                  key={item.label}
+                  className={cn(
+                    "mt-2 block py-0.5 text-sm text-slate-500",
+                    "rounded-sm -mx-0.5 px-0.5",
+                  )}
+                >
+                  {item.label}
+                </span>
+              ),
+            )}
           </nav>
 
           <div className="lg:col-span-3">
