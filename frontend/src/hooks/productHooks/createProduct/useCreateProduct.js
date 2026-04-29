@@ -102,22 +102,26 @@ export function useCreateProduct() {
       );
     }
 
+    // kiểm tra số lượng ảnh tối đa
     const remaining = PRODUCT_CONFIG.MAX_IMAGES - images.length;
+
+    // nếu số lượng ảnh vượt quá tối đa thì báo lỗi
     if (remaining <= 0) {
       newImages.forEach((img) => URL.revokeObjectURL(img.preview));
       if (newImages.length > 0) {
-        errorParts.push(
-          `Chỉ được tối đa ${PRODUCT_CONFIG.MAX_IMAGES} ảnh.`,
-        );
+        errorParts.push(`Chỉ được tối đa ${PRODUCT_CONFIG.MAX_IMAGES} ảnh.`);
       }
       setImageError(errorParts.join(" ") || "");
       event.target.value = null;
       return;
     }
 
+    // thêm ảnh mới
     const toAdd = newImages.slice(0, remaining);
     const overflow = newImages.slice(remaining);
     overflow.forEach((img) => URL.revokeObjectURL(img.preview));
+
+    // nếu số lượng ảnh vượt quá tối đa thì báo lỗi
     if (overflow.length > 0) {
       errorParts.push(
         `Đã chỉ thêm ${toAdd.length} ảnh (tối đa ${PRODUCT_CONFIG.MAX_IMAGES} ảnh).`,
@@ -152,7 +156,9 @@ export function useCreateProduct() {
 
     try {
       // Nén ảnh trước khi gửi lên server
-      const imageFiles = await compressImageFiles(images.map((img) => img.file));
+      const imageFiles = await compressImageFiles(
+        images.map((img) => img.file),
+      );
       const formData = new FormData();
       formData.append("name", data.title);
       formData.append("category", data.category);
@@ -167,6 +173,7 @@ export function useCreateProduct() {
         formData.append("attributes", JSON.stringify(data.attributes));
       }
 
+      // thêm ảnh vào formData
       imageFiles.forEach((file) => {
         formData.append("images", file);
       });

@@ -35,13 +35,8 @@ const PRODUCT_STATUS = {
 
 function useManageProducts() {
   const { user } = useContext(AuthContext);
-  const {
-    products,
-    loading,
-    handleUpdateStatus,
-    markSoldToBuyer,
-    refresh,
-  } = useMyProducts();
+  const { products, loading, handleUpdateStatus, markSoldToBuyer, refresh } =
+    useMyProducts();
   const [vipTarget, setVipTarget] = useState(null);
   const navigate = useNavigate();
 
@@ -132,6 +127,7 @@ function useManageProducts() {
           return null;
         }
       })();
+
       const cancelOrderCode =
         rawCancel != null && rawCancel !== "" ? Number(rawCancel) : NaN;
 

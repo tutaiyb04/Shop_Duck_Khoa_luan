@@ -195,7 +195,16 @@ exports.postMessage = async (req, res) => {
     });
   } catch (error) {
     if (error.status) {
-      return res.status(error.status).json({ message: error.message });
+      const body = { message: error.message };
+
+      // Trả thêm metadata khi hội thoại bị đóng băng để FE khóa giao diện đúng nguyên nhân.
+      if (error.code === "CHAT_FROZEN") {
+        body.code = error.code;
+        body.productStatus = error.productStatus || null;
+        body.isFrozen = true;
+      }
+
+      return res.status(error.status).json(body);
     }
     console.error("Lỗi postMessage:", error);
     return res
