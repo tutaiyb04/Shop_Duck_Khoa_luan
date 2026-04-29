@@ -172,13 +172,13 @@ export default function Header() {
           <div className="h-6 w-px bg-gray-300 hidden md:block"></div>
 
           <div className="flex items-center gap-1 sm:gap-3">
-            <button className="!text-gray-600 hover:!text-yellow-600 relative p-2 cursor-pointer !bg-transparent !border-0 !outline-none transition-colors">
+            <button className="!text-gray-600 hover:!text-yellow-600 relative p-2 cursor-pointer !bg-transparent !border-0 !outline-none !transition-colors">
               <Bell className="w-5 h-5 md:w-6 md:h-6" />
               <span className="absolute top-1 right-1.5 flex h-2 w-2 rounded-full bg-red-500"></span>
             </button>
 
             <NavLink to="/sell" className="flex items-center">
-              <Button className="hidden md:flex h-9 px-6 rounded-full !bg-yellow-500 text-white hover:!bg-yellow-600 transition-colors !border-0 !outline-none shadow-sm cursor-pointer">
+              <Button className="hidden md:flex h-9 px-6 rounded-full !bg-yellow-500 text-white hover:!bg-yellow-600 !transition-colors !border-0 !outline-none shadow-sm cursor-pointer">
                 Đăng bán
               </Button>
               <button className="md:hidden !text-yellow-600 hover:!text-yellow-700 p-2 cursor-pointer !bg-transparent !border-0 !outline-none">

@@ -19,7 +19,7 @@ const ReviewModal = ({
         {/* Nút tắt Modal */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
+          className="absolute top-4 right-4 !border-1 !border-gray-200 !bg-gray-200 hover:!bg-gray-300 !transition-colors  text-gray-400 hover:text-gray-600 transition"
         >
           <X className="w-5 h-5" />
         </button>
@@ -59,7 +59,7 @@ const ReviewModal = ({
         <Button
           onClick={onSubmit}
           disabled={loading}
-          className={`w-full bg-amber-400 text-black hover:bg-amber-500 font-bold h-11 ${
+          className={`w-full !bg-yellow-500 text-white hover:!bg-amber-600 !transition-colors !border-0 font-bold h-11 ${
             rating === 0 ? "opacity-70" : ""
           }`}
         >

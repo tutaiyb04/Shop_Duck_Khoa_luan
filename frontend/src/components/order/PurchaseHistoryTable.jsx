@@ -60,7 +60,9 @@ function PurchaseHistoryTable({ orders, onOpenReview }) {
         {orders.map((order) => {
           const pid = order.productId?._id || order.productId;
           const sid = order.sellerId?._id || order.sellerId;
-          const storeName = (order.sellerId?.sellerProfile?.storeName || "").trim();
+          const storeName = (
+            order.sellerId?.sellerProfile?.storeName || ""
+          ).trim();
           const sellerName = storeName || order.sellerId?.username || "—";
           const pName = order.productId?.name ?? "—";
           const hasReview = Boolean(order.hasReview);
@@ -110,16 +112,15 @@ function PurchaseHistoryTable({ orders, onOpenReview }) {
                   hasReview ? (
                     <Badge
                       variant="secondary"
-                      className="border-slate-200 bg-slate-100 font-normal text-slate-700 hover:bg-slate-100"
+                      className="border-slate-200 bg-slate-100 font-normal text-slate-700 hover:!bg-slate-100"
                     >
                       Đã đánh giá
                     </Badge>
                   ) : (
                     <Button
                       type="button"
-                      variant="link"
                       size="sm"
-                      className="h-auto text-amber-600 underline-offset-4 hover:text-amber-700"
+                      className="h-auto !text-white !bg-yellow-500 !border-0 !ring-0 !outline-none hover:!bg-yellow-600 !transition-colors"
                       onClick={() => onOpenReview(order._id)}
                     >
                       Đánh giá
