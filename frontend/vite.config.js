@@ -7,7 +7,7 @@ import path from "path";
 export default defineConfig(({ command }) => {
   return {
     plugins: [react(), tailwindcss()],
-    base: command === "build" ? "/Shop_Duck_Khoa_luan/" : "/",
+    base: "/",
     resolve: {
       alias: {
         // eslint-disable-next-line no-undef
