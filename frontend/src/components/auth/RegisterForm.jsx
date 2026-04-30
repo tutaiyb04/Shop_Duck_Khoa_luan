@@ -1,5 +1,6 @@
 import { Controller } from "react-hook-form";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 
@@ -57,10 +58,9 @@ function RegisterForm({ form, onSubmit, isLoading, error }) {
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
             <FieldLabel>Nhập mật khẩu</FieldLabel>
-            <Input
+            <PasswordInput
               {...field}
               id={field.name}
-              type="password"
               aria-invalid={fieldState.invalid}
               placeholder="••••••••"
               className="!ring-0 focus-visible:border-yellow-500"
@@ -80,10 +80,9 @@ function RegisterForm({ form, onSubmit, isLoading, error }) {
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
             <FieldLabel>Xác nhận mật khẩu</FieldLabel>
-            <Input
+            <PasswordInput
               {...field}
               id={field.name}
-              type="password"
               aria-invalid={fieldState.invalid}
               placeholder="••••••••"
               className="!ring-0 focus-visible:border-yellow-500"
