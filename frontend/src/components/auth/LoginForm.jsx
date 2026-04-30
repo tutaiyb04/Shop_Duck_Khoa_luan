@@ -2,6 +2,7 @@ import { Controller } from "react-hook-form";
 import { NavLink } from "react-router-dom";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
 
 function LoginForm({ form, onSubmit, isLoading, error }) {
@@ -37,10 +38,9 @@ function LoginForm({ form, onSubmit, isLoading, error }) {
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
             <FieldLabel htmlFor={field.name}>Nhập mật khẩu</FieldLabel>
-            <Input
+            <PasswordInput
               {...field}
               id={field.name}
-              type="password"
               aria-invalid={fieldState.invalid}
               placeholder="••••••••"
               className="!ring-0 focus-visible:border-yellow-500"

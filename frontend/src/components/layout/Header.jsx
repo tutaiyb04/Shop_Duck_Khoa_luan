@@ -128,7 +128,7 @@ export default function Header() {
                 </DropdownMenuTrigger>
 
                 <DropdownMenuContent
-                  className="w-56 max-h-[80vh] overflow-y-auto"
+                  className="w-56 max-h-[50vh] overflow-y-auto"
                   align="end"
                   forceMount
                 >
