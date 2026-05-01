@@ -10,17 +10,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Search,
-  ChevronDown,
-  CirclePlus,
-  Bell,
-  Menu,
-  MapPin,
-} from "lucide-react";
+import { Search, ChevronDown, CirclePlus, Menu, MapPin } from "lucide-react";
 import logoImage from "@/assets/logo1.png";
 import useHeader from "@/hooks/header/useHeader";
 import UserMenuLinks from "./header/UserMenuLinks";
+import NotificationDropdown from "@/components/notifications/NotificationDropdown";
 
 export default function Header() {
   const {
@@ -172,10 +166,7 @@ export default function Header() {
           <div className="h-6 w-px bg-gray-300 hidden md:block"></div>
 
           <div className="flex items-center gap-1 sm:gap-3">
-            <button className="!text-gray-600 hover:!text-yellow-600 relative p-2 cursor-pointer !bg-transparent !border-0 !outline-none !transition-colors">
-              <Bell className="w-5 h-5 md:w-6 md:h-6" />
-              <span className="absolute top-1 right-1.5 flex h-2 w-2 rounded-full bg-red-500"></span>
-            </button>
+            <NotificationDropdown />
 
             <NavLink to="/sell" className="flex items-center">
               <Button className="hidden md:flex h-9 px-6 rounded-full !bg-yellow-500 text-white hover:!bg-yellow-600 !transition-colors !border-0 !outline-none shadow-sm cursor-pointer">
