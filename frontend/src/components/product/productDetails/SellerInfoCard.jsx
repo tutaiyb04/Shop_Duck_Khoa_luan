@@ -2,7 +2,6 @@ import {
   Check,
   ShieldCheck,
   MessageCircle,
-  Truck,
   BadgeCheck,
   Mail,
   Smartphone,
@@ -30,7 +29,6 @@ function SellerInfoCard({ seller }) {
   const isReliable = rating >= 4.5 && totalReviews >= 10; // Đáng tin cậy: >= 4.5 sao và >= 10 đánh giá
   const isReputable = seller?.isEmailVerified || seller?.authType === "google"; // Uy tín: Đã xác minh tài khoản
   const isFastResponse = responseRate >= 90; // Phản hồi nhanh: Tỷ lệ >= 90%
-  const isFastDelivery = rating >= 4.0;
 
   return (
     <Card className="border shadow-sm bg-white overflow-hidden rounded-xl p-0">
@@ -147,21 +145,9 @@ function SellerInfoCard({ seller }) {
               </div>
             )}
 
-            {isFastDelivery && (
-              <div className="flex flex-col items-center gap-2 w-20 shrink-0">
-                <div className="w-15 h-15 rounded-full bg-amber-50 text-yellow-500 flex items-center justify-center">
-                  <Truck className="w-5 h-5" />
-                </div>
-                <span className="text-xs text-gray-500 font-bold text-center leading-tight">
-                  Giao hàng nhanh
-                </span>
-              </div>
-            )}
-
             {!isReliable &&
               !isReputable &&
-              !isFastResponse &&
-              !isFastDelivery && (
+              !isFastResponse && (
                 <div className="text-xs text-gray-400 italic flex items-center justify-center h-full">
                   Shop mới / Chưa có huy hiệu
                 </div>
