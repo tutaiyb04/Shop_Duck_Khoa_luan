@@ -7,6 +7,7 @@ const {
   cancelPendingVipTransactionsForProduct,
 } = require("./paymentService");
 const { notifyProductChatLocked } = require("../utils/chatSocketNotify");
+const notificationService = require("./notificationService");
 
 const SELLABLE_STATUSES = ["AVAILABLE"];
 
@@ -85,7 +86,7 @@ exports.completeOfflineSale = async (sellerId, productId, buyerId) => {
     { $set: { status: "SOLD" } },
     {
       returnDocument: "after",
-      select: "price quantity sellerId status",
+      select: "price quantity sellerId status name",
     },
   ).lean();
 
@@ -151,6 +152,16 @@ exports.completeOfflineSale = async (sellerId, productId, buyerId) => {
     notifyProductChatLocked(pid, "SOLD").catch((e) =>
       console.error("notifyProductChatLocked(SOLD):", e),
     );
+
+    // Gửi thông báo "Đơn hàng đã được xác nhận" cho người mua (realtime + lưu DB).
+    notificationService
+      .notifyOrderConfirmed({
+        buyerId: bid,
+        sellerId: sid,
+        orderId: order._id,
+        totalAmount,
+      })
+      .catch((e) => console.error("notifyOrderConfirmed:", e));
 
     return { order };
   } catch (error) {

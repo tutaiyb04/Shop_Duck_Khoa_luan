@@ -11,6 +11,7 @@ const { setIO } = require("./utils/ioRegistry");
 const {
   startAutoCancelVipPending,
 } = require("./jobs/autoCancelVipPending");
+const { startReviewReminder } = require("./jobs/reviewReminder");
 
 // Bảo mật DB
 dotenv.config();
@@ -57,6 +58,7 @@ connect().then(() => {
     console.log(`Socket.io đã gắn (transports: websocket, polling)`);
   });
   startAutoCancelVipPending();
+  startReviewReminder();
 });
 
 module.exports = { app, httpServer, io };

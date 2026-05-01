@@ -2,6 +2,8 @@ const mongoose = require("mongoose");
 const Review = require("../model/Review");
 const User = require("../model/User");
 const Order = require("../model/Order");
+const Product = require("../model/Product");
+const notificationService = require("./notificationService");
 
 
 // Đánh giá gắn với một đơn COMPLETED — lấy sellerId/productId từ đơn để tránh giả mạo.
@@ -75,6 +77,24 @@ exports.createReviewService = async (buyerId, orderId, rating, comment) => {
 
     await session.commitTransaction();
     session.endSession();
+
+    // Sau khi commit thành công → gửi thông báo "Có đánh giá mới" cho người bán.
+    // Helper notifyReviewReceived tự gom nhóm theo productId (groupKey) — nếu sản phẩm
+    // nhận nhiều review chưa đọc, chúng sẽ cộng dồn thành 1 thông báo.
+    Product.findById(productId)
+      .select("name")
+      .lean()
+      .then((p) =>
+        notificationService.notifyReviewReceived({
+          sellerId,
+          productId,
+          actorId: bid,
+          rating,
+          comment,
+          productName: p?.name,
+        }),
+      )
+      .catch((e) => console.error("notifyReviewReceived:", e));
 
     return { newReview };
   } catch (error) {

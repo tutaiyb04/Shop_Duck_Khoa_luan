@@ -5,7 +5,9 @@ const bcrypt = require("bcryptjs");
 const util = require("util");
 
 const User = require("../model/User");
+const Product = require("../model/Product");
 const sendEmail = require("../helper/sendEmail");
+const notificationService = require("./notificationService");
 
 dotenv.config();
 
@@ -376,7 +378,28 @@ exports.toggleWishlistService = async (userId, productId) => {
     throw new Error("Người dùng không tồn tại");
   }
 
-  return { isLiked: !isExist };
+  const isLiked = !isExist;
+
+  // Chỉ gửi thông báo khi vừa LIKE (không gửi khi UNLIKE).
+  // Helper notifyProductLiked tự gom nhóm theo productId (groupKey) — nhiều người
+  // cùng like 1 sản phẩm sẽ chỉ tạo 1 thông báo trong inbox người bán.
+  if (isLiked) {
+    Product.findById(productId)
+      .select("sellerId name")
+      .lean()
+      .then((p) => {
+        if (!p?.sellerId) return null;
+        return notificationService.notifyProductLiked({
+          sellerId: p.sellerId,
+          productId,
+          productName: p.name,
+          actorId: userId,
+        });
+      })
+      .catch((e) => console.error("notifyProductLiked:", e));
+  }
+
+  return { isLiked };
 };
 
 exports.getWishlistService = async (userId) => {

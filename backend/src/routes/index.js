@@ -7,6 +7,7 @@ const chatRouter = require("./chatRouter");
 const paymentRouter = require("./paymentRouter");
 const adminRouter = require("./adminRouter");
 const orderRouter = require("./orderRouter");
+const notificationRouter = require("./notificationRouter");
 
 function Route(app) {
   app.use("/user", userRouter);
@@ -18,6 +19,7 @@ function Route(app) {
   app.use("/chat", chatRouter);
   app.use("/payment", paymentRouter);
   app.use("/admin", adminRouter);
+  app.use("/notifications", notificationRouter);
 }
 
 module.exports = Route;

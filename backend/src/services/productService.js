@@ -15,6 +15,7 @@ const {
   cancelPendingVipTransactionsForProduct,
 } = require("./paymentService");
 const { notifyProductChatLocked } = require("../utils/chatSocketNotify");
+const notificationService = require("./notificationService");
 
 
 
@@ -406,6 +407,45 @@ exports.updateProductStatusService = async (id, status, adminNote) => {
       await cancelPendingVipTransactionsForProduct(id).catch((e) =>
         console.error("cancelPendingVipTransactionsForProduct:", e),
       );
+    }
+
+    // Gửi thông báo cho người bán dựa vào trạng thái admin vừa set.
+    // (bỏ qua nếu thiếu sellerId để tránh crash với dữ liệu cũ)
+    if (updatedProduct.sellerId) {
+      // tạo 1 phong bì chứa 3 thông tin bắt buộc cho 1 thông báo
+      const baseArgs = {
+        sellerId: updatedProduct.sellerId,
+        productId: updatedProduct._id,
+        productName: updatedProduct.name,
+      };
+
+      const onError = (tag) => (e) => console.error(`${tag}:`, e);
+
+      // admin duyệt bài 
+      if (st === "AVAILABLE") {
+        notificationService
+          .notifyProductApproved(baseArgs)
+          .catch(onError("notifyProductApproved"));
+      } 
+      // admin từ chối
+      else if (st === "REJECTED" || st === "LOCKED") {
+        notificationService
+          .notifyProductRejected({
+            ...baseArgs,
+            reason:
+              adminNote ||
+              (st === "LOCKED"
+                ? "Bài đăng bị khoá bởi quản trị viên."
+                : "Bài đăng không đạt điều kiện."),
+          })
+          .catch(onError("notifyProductRejected"));
+      } 
+      // admin ẩn bài
+      else if (st === "HIDDEN") {
+        notificationService
+          .notifyProductHidden({ ...baseArgs, reason: adminNote || "" })
+          .catch(onError("notifyProductHidden"));
+      }
     }
 
     return { updatedProduct };

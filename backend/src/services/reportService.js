@@ -3,6 +3,7 @@ const Report = require("../model/Report");
 const Product = require("../model/Product");
 const User = require("../model/User");
 const Conversation = require("../model/Conversation");
+const notificationService = require("./notificationService");
 
 exports.getAllReportsService = async (filters) => {
   try {
@@ -82,6 +83,16 @@ exports.resolveReportService = async (reportId, action, adminNote) => {
         if (updatedSeller && updatedSeller.reportCount >= 3) {
           await User.findByIdAndUpdate(product.sellerId, { status: "locked" });
         }
+
+        // Báo cho người bán biết bài đăng bị khoá kèm lý do report.
+        notificationService
+          .notifyProductRejected({
+            sellerId: product.sellerId,
+            productId: product._id,
+            productName: product.name,
+            reason: `Bài đăng bị khoá do vi phạm: ${report.reason}`,
+          })
+          .catch((e) => console.error("notifyProductRejected(report):", e));
       }
     } else if (report.targetType === "User") {
       const targetUser = await User.findByIdAndUpdate(
