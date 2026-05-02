@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Edit, CheckCircle, Trash2 } from "lucide-react";
+import { isProductVipActive } from "@/utils/vipDisplay";
 
 function ManageProductsTable({
   products,
@@ -57,7 +58,7 @@ function ManageProductsTable({
               </TableCell>
               <TableCell className="text-sm align-top max-w-[200px]">
                 <div className="flex flex-col gap-2">
-                  {product.isVIP && (
+                  {isProductVipActive(product) && (
                     <div className="space-y-0.5">
                       <Badge
                         variant="destructive"
@@ -80,10 +81,10 @@ function ManageProductsTable({
                       onClick={() => setVipTarget(product)}
                       className="!h-8 w-fit text-xs mt-2.5  !bg-yellow-600 hover:!bg-yellow-700  text-white !border-0"
                     >
-                      {product.isVIP ? "Gia hạn VIP" : "Mua gói VIP"}
+                      {isProductVipActive(product) ? "Gia hạn VIP" : "Mua gói VIP"}
                     </Button>
                   )}
-                  {!product.isVIP && !shouldShowVipUpgrade(product) && (
+                  {!isProductVipActive(product) && !shouldShowVipUpgrade(product) && (
                     <span className="text-gray-400 text-xs">—</span>
                   )}
                 </div>

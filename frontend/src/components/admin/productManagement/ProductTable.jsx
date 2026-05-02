@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import LoadingBlock from "@/components/shared/LoadingBlock";
 import { CheckCircle, Lock, Unlock, XCircle } from "lucide-react";
+import { isProductVipActive } from "@/utils/vipDisplay";
 
 const StatusBadge = ({ status }) => {
   switch (status) {
@@ -103,7 +104,7 @@ function ProductTable({ products, loading, handleUpdateStatus }) {
                   />
                   <span className="font-semibold text-gray-800 line-clamp-2 max-w-[200px] whitespace-normal flex flex-wrap items-center gap-1.5">
                     {product.name}
-                    {product.isVIP && (
+                    {isProductVipActive(product) && (
                       <Badge
                         variant="destructive"
                         className="h-5 shrink-0 border-0 bg-amber-500 px-1.5 text-s font-bold uppercase text-white"

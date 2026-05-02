@@ -36,6 +36,11 @@ router.get(
   protect,
   productController.getMyRecommendations,
 );
+router.post(
+  "/pricing-suggestion",
+  protect,
+  productController.getPricingSuggestion,
+);
 router.get("/:id", productController.getProductById);
 router.get("/", productController.getAllProducts);
 

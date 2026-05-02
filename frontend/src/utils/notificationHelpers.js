@@ -66,6 +66,7 @@ export const getNotificationHref = (n) => {
     case "PRODUCT_REJECTED":
     case "PRODUCT_HIDDEN":
     case "PRODUCT_LIKED":
+    case "VIP_EXPIRED":
       return id ? `/product/${id}` : "/my-products";
     default:
       break;

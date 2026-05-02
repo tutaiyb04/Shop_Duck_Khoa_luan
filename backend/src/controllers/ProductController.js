@@ -1,5 +1,6 @@
 const productService = require("../services/productService");
 const recommendationService = require("../services/recommendationService");
+const pricingSuggestionService = require("../services/pricingSuggestionService");
 const { truthyQueryFlag } = require("../helper/productHelper");
 
 // lấy gợi ý sản phẩm cho user
@@ -35,6 +36,38 @@ exports.getMyRecommendations = async (req, res) => {
     }
 
     return res.status(500).json({ message: msg });
+  }
+};
+
+// lấy gợi ý giá đăng bán
+exports.getPricingSuggestion = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Vui lòng đăng nhập" });
+    }
+
+    const sellerId = req.user._id || req.user.id;
+    // lấy sellerId để loại trừ khỏi gợi ý
+    const excludeSellerId =
+      req.body.excludeOwnListings === false ? null : sellerId;
+
+    const suggestion = await pricingSuggestionService.getPricingSuggestion({
+      categoryId: req.body.categoryId,
+      condition: req.body.condition,
+      attributes: req.body.attributes,
+      excludeSellerId,
+    });
+
+    return res.status(200).json({
+      message: "Lấy gợi ý giá thành công",
+      suggestion,
+    });
+  } catch (error) {
+    console.error("Lỗi tại getPricingSuggestion:", error);
+    const status = error.statusCode || 500;
+    const msg = error.message || "Lỗi server";
+
+    return res.status(status).json({ message: msg });
   }
 };
 

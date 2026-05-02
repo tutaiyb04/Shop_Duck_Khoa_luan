@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 
 import { AuthContext } from "@/context/AuthContext";
 import {
@@ -12,12 +12,14 @@ import {
   MessagesSquare,
   Store,
   History,
+  LogOut,
 } from "lucide-react";
 import UserAvatar from "./UserAvatar";
 
 function UserSidebar() {
   const location = useLocation();
-  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const { user, logout } = useContext(AuthContext);
 
   // Danh sách Menu theo từng nhóm trang trong khu vực quản lý
   const navGroups = [
@@ -115,6 +117,20 @@ function UserSidebar() {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="mt-6 pt-4 border-t border-gray-200">
+        <button
+          type="button"
+          onClick={() => {
+            logout();
+            navigate("/login");
+          }}
+          className="flex w-full items-center gap-3 px-3 py-2.5 !transition-colors text-sm font-medium !bg-white !text-gray-600 hover:!bg-gray-100 hover:!text-yellow-600 !border-0"
+        >
+          <LogOut className="w-5 h-5 shrink-0" />
+          Đăng xuất
+        </button>
       </div>
     </div>
   );

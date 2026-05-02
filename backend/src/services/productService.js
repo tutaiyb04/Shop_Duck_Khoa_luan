@@ -2,20 +2,21 @@ const mongoose = require("mongoose");
 const Product = require("../model/Product");
 const User = require("../model/User");
 const Category = require("../model/Category");
+const notificationService = require("./notificationService");
 const { escapeRegexForSearch } = require("../utils/escapeRegex");
-
+const { applyExtraListingFilters } = require("../helper/productHelper");
+const { uploadProductImageBuffers } = require("../config/cloudinary");
+const { cancelPendingVipTransactionsForProduct } = require("./paymentService");
+const { notifyProductChatLocked } = require("../utils/chatSocketNotify");
 const {
   parseCategoryObjectIdFilter,
   buildCategoryFilterQuery,
   attachCategoryNamesToAdminProducts,
 } = require("../helper/categoryHelper");
-const { applyExtraListingFilters } = require("../helper/productHelper");
-const { uploadProductImageBuffers } = require("../config/cloudinary");
 const {
-  cancelPendingVipTransactionsForProduct,
-} = require("./paymentService");
-const { notifyProductChatLocked } = require("../utils/chatSocketNotify");
-const notificationService = require("./notificationService");
+  stripExpiredVipFlags,
+  stripExpiredVipFlagsMany,
+} = require("../helper/vipProductHelper");
 
 
 
@@ -130,6 +131,8 @@ exports.getAllProductsService = async (filters = {}) => {
       ]);
       const total = countAgg[0]?.total || 0;
 
+      stripExpiredVipFlagsMany(products);
+
       return {
         products,
         totalPages: Math.ceil(total / limitN),
@@ -169,6 +172,8 @@ exports.getAllProductsService = async (filters = {}) => {
         .lean(),
       Product.countDocuments(query),
     ]);
+
+    stripExpiredVipFlagsMany(products);
 
     return {
       products,
@@ -210,6 +215,8 @@ exports.getSellerCatalogGroupedService = async (sellerIdRaw) => {
       .sort({ isVIP: -1, updatedAt: -1 })
       .lean(),
   ]);
+
+  stripExpiredVipFlagsMany(products);
 
   const groupsMap = new Map();
   for (const p of products) {
@@ -320,6 +327,8 @@ exports.getSellerShopListingService = async (sellerIdRaw, filters = {}) => {
     Product.distinct("category", baseQuery),
   ]);
 
+  stripExpiredVipFlagsMany(products);
+
   const validCatIds = categoryIds.filter(
     (id) => id && mongoose.isValidObjectId(String(id)),
   );
@@ -385,6 +394,8 @@ exports.getAdminProductsService = async (filters) => {
     ]);
     await attachCategoryNamesToAdminProducts(products);
 
+    stripExpiredVipFlagsMany(products);
+
     return {
       products,
       totalPages: Math.ceil(total / limit),
@@ -409,6 +420,8 @@ exports.getProductByIdService = async (id) => {
     if (!product) {
       throw new Error("Sản phẩm không tồn tại");
     }
+
+    stripExpiredVipFlags(product);
 
     const rawSellerId = product.sellerId?._id || product.sellerId;
     const rawCategoryId = product.category?._id || product.category;
@@ -447,6 +460,9 @@ exports.getProductByIdService = async (id) => {
           ]),
         ]);
     }
+
+    stripExpiredVipFlagsMany(relatedProducts);
+    stripExpiredVipFlagsMany(recommendedProducts);
 
     if (product.sellerId && typeof product.sellerId === "object") {
       product.sellerId.totalProducts = totalProducts;
@@ -701,6 +717,8 @@ exports.getMyProductsService = async (sellerId, page, limit, status) => {
         .lean(),
       Product.countDocuments(query),
     ]);
+
+    stripExpiredVipFlagsMany(products);
 
     return {
       products,

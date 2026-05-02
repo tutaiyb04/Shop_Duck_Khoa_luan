@@ -31,6 +31,7 @@ import ManageProducts from "./pages/products/ManageProducts";
 import EditProduct from "./pages/products/EditProduct";
 import Messages from "./pages/messages/Messages";
 import ScrollToTop from "./components/layout/ScrollToTop";
+import RequireAuth from "./components/shared/RequireAuth";
 import TermsOfService from "./components/layout/footer/TermsOfService";
 import PrivacyPolicy from "./components/layout/footer/PrivacyPolicy";
 import DisputeResolution from "./components/layout/footer/DisputeResolution";
@@ -86,8 +87,15 @@ function App() {
               {/* Tin nhắn */}
               <Route path="/messages" element={<Messages />} />
 
-              {/* Trang Đăng bán sản phẩm */}
-              <Route path="/sell" element={<CreateProduct />} />
+              {/* Trang Đăng bán sản phẩm — bắt buộc đăng nhập */}
+              <Route
+                path="/sell"
+                element={
+                  <RequireAuth>
+                    <CreateProduct />
+                  </RequireAuth>
+                }
+              />
 
               {/* Chi Tiết Sản Phẩm */}
               <Route path="/product/:id" element={<ProductDetails />} />
