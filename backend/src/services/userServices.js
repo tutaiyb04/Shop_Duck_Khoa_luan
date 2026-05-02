@@ -8,6 +8,7 @@ const User = require("../model/User");
 const Product = require("../model/Product");
 const sendEmail = require("../helper/sendEmail");
 const notificationService = require("./notificationService");
+const recommendationService = require("./recommendationService");
 
 dotenv.config();
 
@@ -398,6 +399,12 @@ exports.toggleWishlistService = async (userId, productId) => {
       })
       .catch((e) => console.error("notifyProductLiked:", e));
   }
+
+  recommendationService
+    .invalidateUserRecommendation(userId)
+    .catch((e) =>
+      console.error("invalidateUserRecommendation(wishlist):", e),
+    );
 
   return { isLiked };
 };

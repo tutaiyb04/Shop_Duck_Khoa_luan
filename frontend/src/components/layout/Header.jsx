@@ -39,6 +39,7 @@ export default function Header() {
   } = useHeader();
 
   const recVisible = searchPanelOpen || mobileNavOpen;
+
   const {
     loading: recLoading,
     products: recProducts,
@@ -124,9 +125,11 @@ export default function Header() {
                   aria-label="Gợi ý tìm kiếm"
                 >
                   <div className="px-3 py-2 text-[11px] text-muted-foreground bg-amber-50/40 border-b border-amber-100/80 leading-snug">
-                    <span className="font-semibold text-gray-800">Tìm kiếm</span>{" "}
-                    — nhấn Enter để lọc theo từ khóa; danh sách dưới là gợi ý
-                    cá nhân hóa (Collaborative Filtering).
+                    <span className="font-semibold text-gray-800">Tìm kiếm</span>
+                    {": "}
+                    nhấn Enter để tìm theo từ bạn gõ. Bên dưới là gợi ý riêng cho
+                    bạn — dựa trên món đã xem, yêu thích và hoạt động mua sắm của
+                    bạn.
                   </div>
                   <HeaderSearchRecommendations
                     user={user}
