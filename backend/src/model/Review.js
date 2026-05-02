@@ -52,4 +52,9 @@ reviewSchema.index({ productId: 1, createdAt: -1 });
 /** Chống trùng theo từng cặp mua – sản phẩm (dùng trong service; có thể nới sau nếu cho phép nhiều lần mua) */
 reviewSchema.index({ buyerId: 1, productId: 1 });
 
+/** CF stage A2/B2 (AGG1+AGG2): match buyerId + rating tích cực, productId */
+reviewSchema.index({ buyerId: 1, rating: -1, productId: 1 });
+/** CF stage A2 (AGG1): match productId in seedIds + rating */
+reviewSchema.index({ productId: 1, rating: -1 });
+
 module.exports = mongoose.model("Review", reviewSchema);

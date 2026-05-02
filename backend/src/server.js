@@ -12,6 +12,10 @@ const {
   startAutoCancelVipPending,
 } = require("./jobs/autoCancelVipPending");
 const { startReviewReminder } = require("./jobs/reviewReminder");
+const {
+  startPrecomputeRecommendations,
+} = require("./jobs/precomputeRecommendations");
+const redisCache = require("./config/redis");
 
 // Bảo mật DB
 dotenv.config();
@@ -59,6 +63,16 @@ connect().then(() => {
   });
   startAutoCancelVipPending();
   startReviewReminder();
+  startPrecomputeRecommendations();
+
+  // Khởi tạo kết nối Redis (lazy, chỉ khi REDIS_URL được set)
+  if (redisCache.isEnabled()) {
+    redisCache.getClient();
+  } else {
+    console.log(
+      "[redis] REDIS_URL không có — chạy không cache L1 (chỉ dùng Mongo cache).",
+    );
+  }
 });
 
 module.exports = { app, httpServer, io };

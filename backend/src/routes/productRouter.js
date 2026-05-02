@@ -26,6 +26,16 @@ router.put(
 router.patch("/:id/status", protect, productController.updateMyProductStatus);
 router.get("/my-products/all", protect, productController.getMyProducts);
 router.get("/admin/all", protect, isAdmin, productController.getAdminProducts);
+router.get("/shop/:sellerId", productController.getSellerShopListing);
+router.get(
+  "/seller-catalog/:sellerId",
+  productController.getSellerCatalogGrouped,
+);
+router.get(
+  "/recommendations",
+  protect,
+  productController.getMyRecommendations,
+);
 router.get("/:id", productController.getProductById);
 router.get("/", productController.getAllProducts);
 

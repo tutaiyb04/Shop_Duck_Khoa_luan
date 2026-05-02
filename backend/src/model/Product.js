@@ -57,4 +57,7 @@ productSchema.index({ sellerId: 1 }); // Load trang cá nhân của người bá
 
 productSchema.index({ isVIP: -1 });
 
+// Sản phẩm có status AVAILABLE và sellerId != user
+productSchema.index({ status: 1, sellerId: 1 });
+
 module.exports = mongoose.model("Product", productSchema);

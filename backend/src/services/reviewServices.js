@@ -4,6 +4,7 @@ const User = require("../model/User");
 const Order = require("../model/Order");
 const Product = require("../model/Product");
 const notificationService = require("./notificationService");
+const recommendationService = require("./recommendationService");
 
 
 // Đánh giá gắn với một đơn COMPLETED — lấy sellerId/productId từ đơn để tránh giả mạo.
@@ -78,9 +79,6 @@ exports.createReviewService = async (buyerId, orderId, rating, comment) => {
     await session.commitTransaction();
     session.endSession();
 
-    // Sau khi commit thành công → gửi thông báo "Có đánh giá mới" cho người bán.
-    // Helper notifyReviewReceived tự gom nhóm theo productId (groupKey) — nếu sản phẩm
-    // nhận nhiều review chưa đọc, chúng sẽ cộng dồn thành 1 thông báo.
     Product.findById(productId)
       .select("name")
       .lean()
@@ -96,6 +94,11 @@ exports.createReviewService = async (buyerId, orderId, rating, comment) => {
       )
       .catch((e) => console.error("notifyReviewReceived:", e));
 
+    // xoá cache gợi ý của người mua
+    recommendationService
+      .invalidateUserRecommendation(bid)
+      .catch((e) => console.error("invalidateUserRecommendation(reviewer):", e));
+
     return { newReview };
   } catch (error) {
     await session.abortTransaction();
@@ -105,4 +108,48 @@ exports.createReviewService = async (buyerId, orderId, rating, comment) => {
     }
     throw error;
   }
+};
+
+// lấy danh sách đánh giá của người bán
+exports.listReviewsBySellerService = async (
+  sellerIdRaw,
+  page = 1,
+  limit = 10,
+) => {
+  const sellerIdStr = String(sellerIdRaw || "").trim();
+  
+  if (!mongoose.isValidObjectId(sellerIdStr)) {
+    throw new Error("Mã shop không hợp lệ.");
+  }
+
+  const sid = new mongoose.Types.ObjectId(sellerIdStr);
+  const exists = await User.exists({ _id: sid, status: "active" });
+
+  if (!exists) {
+    throw new Error("Không tìm thấy shop.");
+  }
+
+  const limitN = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 50);
+  const pageN = Math.max(parseInt(page, 10) || 1, 1);
+  const skip = (pageN - 1) * limitN;
+
+  const [reviews, total] = await Promise.all([
+    Review.find({ sellerId: sid })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitN)
+      .populate("buyerId", "username avatar")
+      .populate("productId", "name images")
+      .lean(),
+    Review.countDocuments({ sellerId: sid }),
+  ]);
+
+  return {
+    reviews,
+    pagination: {
+      currentPage: pageN,
+      totalPages: Math.max(1, Math.ceil(total / limitN)),
+      totalItems: total,
+    },
+  };
 };

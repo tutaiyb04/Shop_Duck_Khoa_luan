@@ -50,9 +50,6 @@ function UserSidebar() {
           // Hiện badge thông báo nếu chưa verify
           badge: !user?.isEmailVerified && user?.authType === "local",
         },
-        // GỢI Ý: Sau này thêm chức năng thì paste vào đây
-        // { path: "/my-products", label: "Sản phẩm đang bán", icon: Package },
-        // { path: "/sales-orders", label: "Đơn khách đặt", icon: ShoppingBag },
       ],
     },
     {
