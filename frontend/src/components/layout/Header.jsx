@@ -11,10 +11,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Search, ChevronDown, CirclePlus, Menu, MapPin } from "lucide-react";
+import { useHeaderRecommendations } from "@/hooks/header/useHeaderRecommendations";
 import logoImage from "@/assets/logo1.png";
 import useHeader from "@/hooks/header/useHeader";
 import UserMenuLinks from "./header/UserMenuLinks";
 import NotificationDropdown from "@/components/notifications/NotificationDropdown";
+import HeaderSearchRecommendations from "./header/HeaderSearchRecommendations";
 
 export default function Header() {
   const {
@@ -29,7 +31,20 @@ export default function Header() {
     handleGetLocation,
     handleSearch,
     handleLogout,
+    searchContainerRef,
+    searchPanelOpen,
+    setSearchPanelOpen,
+    mobileNavOpen,
+    setMobileNavOpen,
   } = useHeader();
+
+  const recVisible = searchPanelOpen || mobileNavOpen;
+  const {
+    loading: recLoading,
+    products: recProducts,
+    source: recSource,
+    error: recError,
+  } = useHeaderRecommendations(recVisible, user, { limit: 8 });
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white shadow-sm">
@@ -43,10 +58,14 @@ export default function Header() {
             />
           </NavLink>
 
-          <form
-            onSubmit={handleSearch}
-            className="hidden md:flex flex-1 max-w-xl items-center gap-2 relative mx-6"
+          <div
+            ref={searchContainerRef}
+            className="hidden md:flex flex-1 max-w-xl mx-6 relative"
           >
+            <form
+              onSubmit={handleSearch}
+              className="flex w-full items-center gap-2"
+            >
             {/* Nút Bật/Tắt Vị trí */}
             <Button
               type="button"
@@ -94,12 +113,37 @@ export default function Header() {
                 className="pl-9 w-full bg-muted/50 focus-visible:bg-background rounded-full border-primary/20 !ring-0 focus-visible:border-yellow-500"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setSearchPanelOpen(true)}
+                autoComplete="off"
               />
+
+              {searchPanelOpen && (
+                <div
+                  className="absolute left-0 right-0 top-[calc(100%+6px)] z-[60] rounded-xl border border-amber-200/60 bg-white shadow-xl shadow-amber-900/5 overflow-hidden"
+                  role="listbox"
+                  aria-label="Gợi ý tìm kiếm"
+                >
+                  <div className="px-3 py-2 text-[11px] text-muted-foreground bg-amber-50/40 border-b border-amber-100/80 leading-snug">
+                    <span className="font-semibold text-gray-800">Tìm kiếm</span>{" "}
+                    — nhấn Enter để lọc theo từ khóa; danh sách dưới là gợi ý
+                    cá nhân hóa (Collaborative Filtering).
+                  </div>
+                  <HeaderSearchRecommendations
+                    user={user}
+                    loading={recLoading}
+                    products={recProducts}
+                    source={recSource}
+                    error={recError}
+                    onPickProduct={() => setSearchPanelOpen(false)}
+                  />
+                </div>
+              )}
             </div>
             <button type="submit" className="hidden">
               Tìm
             </button>
           </form>
+          </div>
         </div>
 
         <div className="flex items-center gap-2 md:gap-6 shrink-0">
@@ -178,7 +222,10 @@ export default function Header() {
             </NavLink>
 
             <div className="md:hidden">
-              <DropdownMenu>
+              <DropdownMenu
+                open={mobileNavOpen}
+                onOpenChange={setMobileNavOpen}
+              >
                 <DropdownMenuTrigger asChild>
                   <button className="p-2 !text-gray-600 hover:!text-yellow-600 cursor-pointer !bg-transparent !border-0 !outline-none">
                     <Menu className="w-6 h-6" />
@@ -192,7 +239,10 @@ export default function Header() {
                 >
                   <div className="p-2">
                     <form
-                      onSubmit={handleSearch}
+                      onSubmit={(e) => {
+                        handleSearch(e);
+                        setMobileNavOpen(false);
+                      }}
                       className="relative flex items-center"
                     >
                       <Input
@@ -211,6 +261,18 @@ export default function Header() {
                         <Search className="h-4 w-4" />
                       </Button>
                     </form>
+
+                    <div className="mt-1 -mx-2 rounded-lg border border-amber-100/80 bg-white overflow-hidden">
+                      <HeaderSearchRecommendations
+                        user={user}
+                        loading={recLoading}
+                        products={recProducts}
+                        source={recSource}
+                        error={recError}
+                        compact
+                        onPickProduct={() => setMobileNavOpen(false)}
+                      />
+                    </div>
                   </div>
                   <DropdownMenuSeparator />
 

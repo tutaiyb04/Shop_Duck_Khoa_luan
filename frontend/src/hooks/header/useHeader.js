@@ -17,7 +17,11 @@ function useHeader() {
   const [location, setLocation] = useState(null);
   const [radius, setRadius] = useState("5000");
   const [isLocating, setIsLocating] = useState(false);
+  const [searchPanelOpen, setSearchPanelOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
   const geoRequestGen = useRef(0);
+  const searchContainerRef = useRef(null);
 
   const qSearch = searchParams.get("search") ?? "";
   const qLat = searchParams.get("lat") ?? "";
@@ -42,6 +46,29 @@ function useHeader() {
       setRadius(qRadius || "5000");
     });
   }, [qSearch, qLat, qLng, qRadius]);
+
+  // xử lý khi đóng panel tìm kiếm
+  useEffect(() => {
+    if (!searchPanelOpen) return undefined;
+
+    const onPointerDown = (e) => {
+      if (!searchContainerRef.current?.contains(e.target)) {
+        setSearchPanelOpen(false);
+      }
+    };
+
+    const onKey = (e) => {
+      if (e.key === "Escape") setSearchPanelOpen(false);
+    };
+
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKey);
+    
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [searchPanelOpen]);
 
   // Hàm xử lý xin quyền lấy tọa độ GPS
   const handleGetLocation = () => {
@@ -95,6 +122,7 @@ function useHeader() {
 
     if (!searchQuery.trim() && !location) {
       navigate("/");
+      setSearchPanelOpen(false);
       return;
     }
 
@@ -107,6 +135,7 @@ function useHeader() {
     }
 
     navigate(`/?${queryParams.toString()}`);
+    setSearchPanelOpen(false);
   };
 
   // Hàm Đăng xuất
@@ -127,6 +156,11 @@ function useHeader() {
     handleGetLocation,
     handleSearch,
     handleLogout,
+    searchContainerRef,
+    searchPanelOpen,
+    setSearchPanelOpen,
+    mobileNavOpen,
+    setMobileNavOpen,
   };
 }
 
