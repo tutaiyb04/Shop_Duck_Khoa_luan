@@ -4,8 +4,8 @@ import { Sparkles, Loader2, ChevronRight } from "lucide-react";
 // dịch mã nguồn của danh sách gợi ý
 const sourceHint = (src) => {
   if (src === "hybrid") return "CF + CBF";
-  if (src === "cbf") return "theo nội dung (CBF)";
-  if (src === "cf") return "theo cộng đồng (CF)";
+  if (src === "cbf") return "theo nội dung";
+  if (src === "cf") return "theo cộng đồng";
   return null;
 }
 
