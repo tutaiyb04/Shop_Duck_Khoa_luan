@@ -2,25 +2,6 @@ const Order = require("../model/Order");
 const Review = require("../model/Review");
 const recommendationService = require("../services/recommendationService");
 
-/**
- * Job định kỳ pre-compute Collaborative Filtering cho user "active".
- *
- * Mục tiêu: với hệ thống cần đáp ứng 1000+ req/s, không thể compute realtime
- * mỗi request. Job này tính sẵn vào collection `UserRecommendation` (+ Redis)
- * để API chỉ cần đọc cache (~ms).
- *
- * Cấu hình env:
- *   - CF_PRECOMPUTE_INTERVAL_MS    : chu kỳ (default 6h)
- *   - CF_PRECOMPUTE_ACTIVE_DAYS    : khoảng "active" (default 30 ngày)
- *   - CF_PRECOMPUTE_BATCH_SIZE     : số user xử lý mỗi tick (default 500)
- *   - CF_PRECOMPUTE_CONCURRENCY    : số user compute song song (default 5)
- *   - CF_PRECOMPUTE_LIMIT_PER_USER : số gợi ý lưu mỗi user (default 24)
- *
- * Pattern giống các job khác trong dự án (autoCancelVipPending, reviewReminder):
- *   - setInterval + unref() để Node thoát sạch khi shutdown
- *   - cờ `running` chống chạy chồng nhau
- */
-
 // chu kỳ chạy - 6 tiếng 1 lần
 const DEFAULT_INTERVAL_MS = Math.max(
   60 * 60 * 1000, // tối thiểu 1h để bảo vệ DB
