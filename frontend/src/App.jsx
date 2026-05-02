@@ -19,6 +19,7 @@ import AdminProfile from "./pages/admin/AdminProfile";
 import UserManagement from "./pages/admin/UserManagement";
 import ProductManagement from "./pages/admin/ProductManagement";
 import ProductDetails from "./pages/products/ProductDetails";
+import ShopPublicPage from "./pages/products/ShopPublicPage";
 import ProductsCatalog from "./pages/products/ProductsCatalog";
 import ReportManagement from "./pages/admin/ReportManagement";
 import Revenue from "./pages/admin/Revenue";
@@ -90,6 +91,9 @@ function App() {
 
               {/* Chi Tiết Sản Phẩm */}
               <Route path="/product/:id" element={<ProductDetails />} />
+
+              {/* Gian hàng công khai (theo seller) */}
+              <Route path="/shop/:sellerId" element={<ShopPublicPage />} />
 
               {/* Danh sách tất cả sản phẩm + lọc */}
               <Route path="/products" element={<ProductsCatalog />} />

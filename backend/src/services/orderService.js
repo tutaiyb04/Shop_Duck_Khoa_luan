@@ -8,6 +8,7 @@ const {
 } = require("./paymentService");
 const { notifyProductChatLocked } = require("../utils/chatSocketNotify");
 const notificationService = require("./notificationService");
+const recommendationService = require("./recommendationService");
 
 const SELLABLE_STATUSES = ["AVAILABLE"];
 
@@ -162,6 +163,11 @@ exports.completeOfflineSale = async (sellerId, productId, buyerId) => {
         totalAmount,
       })
       .catch((e) => console.error("notifyOrderConfirmed:", e));
+
+    // xóa cache gợi ý của người mua
+    recommendationService
+      .invalidateUserRecommendation(bid)
+      .catch((e) => console.error("invalidateUserRecommendation(buyer):", e));
 
     return { order };
   } catch (error) {

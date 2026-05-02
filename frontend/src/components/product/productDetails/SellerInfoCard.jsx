@@ -14,7 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import UserAvatar from "@/components/shared/UserAvatar";
 
-function SellerInfoCard({ seller }) {
+function SellerInfoCard({ seller, hideViewShopButton = false }) {
   const storeName = (seller?.sellerProfile?.storeName || "").trim();
   const displayName = storeName || seller?.username || "TÊN NGƯỜI BÁN";
 
@@ -98,14 +98,19 @@ function SellerInfoCard({ seller }) {
                 <span>{totalSold} đã bán</span>
               </div>
 
-              <div>
-                <Button
-                  variant="secondary"
-                  className="w-35 h-8 text-xs !bg-gray-200 hover:!bg-gray-300 !border-gray-200 text-black px-3 flex items-center gap-2 cursor-pointer !transition-all !border-1 !ring-0 !outline-none"
-                >
-                  <Store className="w-4 h-4" /> Xem shop
-                </Button>
-              </div>
+              {!hideViewShopButton && seller?._id && (
+                <div>
+                  <Button
+                    variant="secondary"
+                    asChild
+                    className="w-35 h-8 text-xs !bg-gray-200 hover:!bg-gray-300 !border-gray-200 !text-black px-3 flex items-center gap-2 cursor-pointer !transition-all !border-1 !ring-0 !outline-none"
+                  >
+                    <NavLink to={`/shop/${seller._id}`}>
+                      <Store className="w-4 h-4" /> Xem shop
+                    </NavLink>
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 

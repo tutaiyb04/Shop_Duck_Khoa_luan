@@ -46,6 +46,7 @@ orderSchema.index({ buyerId: 1, createdAt: -1 });
 orderSchema.index({ sellerId: 1, createdAt: -1 });
 orderSchema.index({ productId: 1, status: 1 });
 orderSchema.index({ buyerId: 1, productId: 1, status: 1 });
+orderSchema.index({ buyerId: 1, status: 1, productId: 1 });
 // Một sản phẩm (một tin) chỉ một đơn COMPLETED
 orderSchema.index(
   { productId: 1 },

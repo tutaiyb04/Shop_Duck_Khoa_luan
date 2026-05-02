@@ -1,5 +1,42 @@
 const productService = require("../services/productService");
+const recommendationService = require("../services/recommendationService");
 const { truthyQueryFlag } = require("../helper/productHelper");
+
+// lấy gợi ý sản phẩm cho user
+exports.getMyRecommendations = async (req, res) => {
+  try {
+    // kiểm tra xác thực
+    if (!req.user) {
+      return res.status(401).json({ message: "Vui lòng đăng nhập" });
+    }
+
+    const userId = req.user._id || req.user.id; // lấy userId
+    const limit = req.query.limit; // lấy limit số sản phẩm gới ý
+    const forceRefresh = truthyQueryFlag(req.query.refresh); // lấy forceRefresh để ghi đè cache
+
+    const result = await recommendationService.getRecommendationsForUser(
+      userId,
+      { limit, forceRefresh },
+    );
+
+    return res.status(200).json({
+      message: "Lấy gợi ý sản phẩm thành công",
+      products: result.products,
+      source: result.source,
+      cacheHit: result.cacheHit,
+      computedAt: result.computedAt,
+    });
+  } catch (error) {
+    console.error("Lỗi tại getMyRecommendations:", error);
+    const msg = error.message || "Lỗi server";
+
+    if (msg.includes("không hợp lệ")) {
+      return res.status(400).json({ message: msg });
+    }
+
+    return res.status(500).json({ message: msg });
+  }
+};
 
 exports.getAllProducts = async (req, res) => {
   try {
@@ -196,6 +233,70 @@ exports.getMyProducts = async (req, res) => {
   } catch (error) {
     console.error("Lỗi tại getMyProducts: ", error);
     return res.status(500).json({ message: error.message || "Lỗi server" });
+  }
+};
+
+exports.getSellerCatalogGrouped = async (req, res) => {
+  try {
+    const { sellerId } = req.params;
+    const data = await productService.getSellerCatalogGroupedService(sellerId);
+
+    return res.status(200).json({
+      message: "Lấy danh mục gian hàng thành công",
+      seller: data.seller,
+      groups: data.groups,
+    });
+  } catch (error) {
+    console.error("Lỗi tại getSellerCatalogGrouped:", error);
+    const msg = error.message || "Lỗi server";
+
+    if (msg.includes("không hợp lệ")) {
+      return res.status(400).json({ message: msg });
+    }
+    
+    if (msg.includes("Không tìm thấy shop")) {
+      return res.status(404).json({ message: msg });
+    }
+
+    return res.status(500).json({
+      message: msg,
+    });
+  }
+};
+
+exports.getSellerShopListing = async (req, res) => {
+  try {
+    const { sellerId } = req.params;
+    
+    const data = await productService.getSellerShopListingService(sellerId, {
+      page: parseInt(req.query.page, 10) || 1,
+      limit: parseInt(req.query.limit, 10) || 12,
+      category: req.query.category || "",
+      minPrice: req.query.minPrice,
+      maxPrice: req.query.maxPrice,
+      condition: req.query.condition || "",
+    });
+
+    return res.status(200).json({
+      message: "Lấy gian hàng thành công",
+      seller: data.seller,
+      filterCategories: data.filterCategories,
+      products: data.products,
+      pagination: data.pagination,
+    });
+  } catch (error) {
+    console.error("Lỗi tại getSellerShopListing:", error);
+    const msg = error.message || "Lỗi server";
+
+    if (msg.includes("không hợp lệ")) {
+      return res.status(400).json({ message: msg });
+    }
+
+    if (msg.includes("Không tìm thấy shop")) {
+      return res.status(404).json({ message: msg });
+    }
+
+    return res.status(500).json({ message: msg });
   }
 };
 

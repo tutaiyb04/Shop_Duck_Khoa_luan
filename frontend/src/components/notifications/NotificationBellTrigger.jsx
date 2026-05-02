@@ -16,7 +16,7 @@ export default function NotificationBellTrigger({
       variant="ghost"
       size="icon-sm"
       className={cn(
-        "relative rounded-full !border-1 !border-gray-200 !bg-gray-200 !text-gray-600 !transition-colors hover:!bg-yellow-300 hover:!text-yellow-900",
+        "relative rounded-full !border-1 !border-gray-200 !bg-gray-200 !text-gray-600 !transition-colors hover:!bg-amber-200/80 hover:!text-yellow-900",
         showBadge &&
           "ring-2 ring-amber-400/50 ring-offset-2 ring-offset-amber-50 !bg-yellow-200",
         className,

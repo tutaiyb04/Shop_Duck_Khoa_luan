@@ -181,6 +181,169 @@ exports.getAllProductsService = async (filters = {}) => {
   }
 };
 
+exports.getSellerCatalogGroupedService = async (sellerIdRaw) => {
+  const sellerIdStr = String(sellerIdRaw || "").trim();
+  if (!mongoose.isValidObjectId(sellerIdStr)) {
+    throw new Error("Mã shop không hợp lệ.");
+  }
+
+  const oid = new mongoose.Types.ObjectId(sellerIdStr);
+
+  const user = await User.findOne({
+    _id: oid,
+    status: "active",
+  })
+    .select(
+      "username avatar sellerProfile rating isEmailVerified authType role",
+    )
+    .lean();
+
+  if (!user) {
+    throw new Error("Không tìm thấy shop.");
+  }
+
+  const [totalProducts, totalSold, products] = await Promise.all([
+    Product.countDocuments({ sellerId: oid }),
+    Product.countDocuments({ sellerId: oid, status: "SOLD" }),
+    Product.find({ sellerId: oid, status: "AVAILABLE" })
+      .populate("category", "name")
+      .sort({ isVIP: -1, updatedAt: -1 })
+      .lean(),
+  ]);
+
+  const groupsMap = new Map();
+  for (const p of products) {
+    const cat = p.category;
+    const key = cat?._id ? String(cat._id) : "__other__";
+    if (!groupsMap.has(key)) {
+      groupsMap.set(key, {
+        categoryId: cat?._id || null,
+        categoryName: cat?.name?.trim() || "Khác",
+        products: [],
+      });
+    }
+    groupsMap.get(key).products.push(p);
+  }
+
+  const groups = Array.from(groupsMap.values()).sort((a, b) =>
+    String(a.categoryName).localeCompare(String(b.categoryName), "vi", {
+      sensitivity: "base",
+    }),
+  );
+
+  const seller = {
+    ...user,
+    totalProducts,
+    totalSold,
+  };
+
+  return { seller, groups };
+};
+
+/** Gian hàng công khai: danh sách sản phẩm có lọc danh mục / giá / tình trạng + phân trang. */
+exports.getSellerShopListingService = async (sellerIdRaw, filters = {}) => {
+  const sellerIdStr = String(sellerIdRaw || "").trim();
+  if (!mongoose.isValidObjectId(sellerIdStr)) {
+    throw new Error("Mã shop không hợp lệ.");
+  }
+
+  const oid = new mongoose.Types.ObjectId(sellerIdStr);
+
+  const user = await User.findOne({
+    _id: oid,
+    status: "active",
+  })
+    .select(
+      "username avatar sellerProfile rating isEmailVerified authType role",
+    )
+    .lean();
+
+  if (!user) {
+    throw new Error("Không tìm thấy shop.");
+  }
+
+  const [totalProducts, totalSold] = await Promise.all([
+    Product.countDocuments({ sellerId: oid }),
+    Product.countDocuments({ sellerId: oid, status: "SOLD" }),
+  ]);
+
+  const seller = {
+    ...user,
+    totalProducts,
+    totalSold,
+  };
+
+  const {
+    page = 1,
+    limit = 12,
+    category: rawCategory,
+    minPrice,
+    maxPrice,
+    condition,
+  } = filters;
+
+  const limitN = Math.min(Math.max(parseInt(limit, 10) || 12, 1), 48);
+  const pageN = Math.max(parseInt(page, 10) || 1, 1);
+  const skip = (pageN - 1) * limitN;
+
+  const baseQuery = { sellerId: oid, status: "AVAILABLE" };
+
+  const categoryStr = (rawCategory || "").toString().trim();
+  const categoryId =
+    categoryStr && mongoose.isValidObjectId(categoryStr)
+      ? new mongoose.Types.ObjectId(categoryStr)
+      : null;
+  const categoryMongoFilter = categoryId
+    ? await buildCategoryFilterQuery(categoryId)
+    : null;
+
+  const productQuery = { ...baseQuery };
+  if (categoryMongoFilter) {
+    productQuery.category = categoryMongoFilter;
+  }
+  applyExtraListingFilters(productQuery, {
+    minPrice,
+    maxPrice,
+    condition,
+    province: "",
+  });
+
+  const [products, total, categoryIds] = await Promise.all([
+    Product.find(productQuery)
+      .populate("sellerId", "username avatar")
+      .populate("category", "name")
+      .sort({ isVIP: -1, updatedAt: -1 })
+      .skip(skip)
+      .limit(limitN)
+      .lean(),
+    Product.countDocuments(productQuery),
+    Product.distinct("category", baseQuery),
+  ]);
+
+  const validCatIds = categoryIds.filter(
+    (id) => id && mongoose.isValidObjectId(String(id)),
+  );
+  const filterCategoriesRaw = await Category.find({ _id: { $in: validCatIds } })
+    .select("name")
+    .lean();
+  const filterCategories = [...filterCategoriesRaw].sort((a, b) =>
+    String(a.name || "").localeCompare(String(b.name || ""), "vi", {
+      sensitivity: "base",
+    }),
+  );
+
+  return {
+    seller,
+    filterCategories,
+    products,
+    pagination: {
+      currentPage: pageN,
+      totalPages: Math.max(1, Math.ceil(total / limitN)),
+      totalItems: total,
+    },
+  };
+};
+
 exports.getAdminProductsService = async (filters) => {
   try {
     const {

@@ -51,6 +51,12 @@ function ProductDetails() {
       </div>
     );
 
+  const categoryId = product.category?._id ?? product.category;
+  const categoryQuery =
+    categoryId != null && String(categoryId).trim() !== ""
+      ? `?category=${encodeURIComponent(String(categoryId).trim())}`
+      : "";
+
   return (
     <div className="max-w-6xl mx-auto px-2 sm:px-4 py-4 md:py-6 bg-gray-50/30 min-h-screen space-y-4 sm:space-y-6">
       {/* BREADCRUMB */}
@@ -68,7 +74,7 @@ function ProductDetails() {
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <NavLink
-                to="#"
+                to={`/products${categoryQuery}`}
                 className="hover:!text-yellow-600 !text-black !transition-colors"
               >
                 {product.category?.name || "Danh mục"}
