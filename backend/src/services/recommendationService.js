@@ -18,7 +18,11 @@ const {
   MONGO_CACHE_TTL_SEC,
   MONGO_CACHE_STALE_AFTER_SEC,
   toObjectId,
-  dedupeObjectIds
+  dedupeObjectIds,
+  tokenizeProductText,
+  diceCoefficient,
+  loadWishlistProductIds,
+  hydrateRecommendationProducts
 } = require("../helper/recommendationHelper");
 
 // Bước thu nhập dấu vết: thu nhập các sản phẩm mà user đã tương tác (đánh giá hoặc mua thành công)
@@ -271,6 +275,222 @@ const buildRecommendationsFromSimilarUsers = async ({
     .allowDiskUse(true);
 };
 
+// hàm tính toán gợi ý content-based
+exports.getContentBasedRecommendationsService = async (
+  userIdRaw,
+  options = {},
+) => {
+  const userIdStr = String(userIdRaw || "").trim();
+
+  if (!mongoose.isValidObjectId(userIdStr)) {
+    throw new Error("Mã người dùng không hợp lệ.");
+  }
+
+  const userId = toObjectId(userIdStr);
+  const limitN = Math.min(
+    Math.max(parseInt(options.limit, 10) || DEFAULT_LIMIT, 1),
+    MAX_LIMIT,
+  );
+
+  // lấy danh sách sản phẩm đã tương tác và sản phẩm yêu thích của user
+  const [{ seedIds, interactedIds }, wishlistIds] = await Promise.all([
+    collectUserSeeds(userId),
+    loadWishlistProductIds(userId),
+  ]);
+
+  const profileProductIds = dedupeObjectIds([
+    ...seedIds.map((id) => String(id)),
+    ...wishlistIds.map((id) => String(id)),
+  ]);
+
+  if (profileProductIds.length === 0) {
+    return {
+      products: [],
+      usedFallback: true,
+      debug: {
+        profileCount: 0,
+        interactedCount: interactedIds.length,
+      },
+    };
+  }
+
+  const profileProducts = await Product.find({
+    _id: { $in: profileProductIds.slice(0, 80) },
+  })
+    .select("name description category condition price attributes isVIP")
+    .lean()
+    .maxTimeMS(AGG_MAX_TIME_MS);
+
+  if (!profileProducts.length) {
+    return {
+      products: [],
+      usedFallback: true,
+      debug: {
+        profileCount: 0,
+        interactedCount: interactedIds.length,
+      },
+    };
+  }
+
+  const categoryWeights = new Map();
+  let priceSum = 0;
+  let priceN = 0;
+  const conditionCounts = new Map();
+  const profileTokenSet = new Set();
+
+  for (const p of profileProducts) {
+    const ckey = String(p.category);
+    categoryWeights.set(ckey, (categoryWeights.get(ckey) || 0) + 1);
+    priceSum += Number(p.price) || 0;
+    priceN += 1;
+    conditionCounts.set(
+      p.condition,
+      (conditionCounts.get(p.condition) || 0) + 1,
+    );
+    for (const t of tokenizeProductText(p)) {
+      profileTokenSet.add(t);
+    }
+  }
+
+  const avgPrice = priceN ? priceSum / priceN : 0;
+  let topCondition = null;
+  let topCondN = 0;
+  for (const [cond, n] of conditionCounts) {
+    if (n > topCondN) {
+      topCondN = n;
+      topCondition = cond;
+    }
+  }
+
+  const preferredCategories = [...categoryWeights.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 12)
+    .map(([id]) => toObjectId(id));
+
+  const baseMatch = {
+    status: "AVAILABLE",
+    sellerId: { $ne: userId },
+    _id: { $nin: interactedIds },
+  };
+
+  const selectFields =
+    "name description category condition price isVIP sellerId images address location attributes createdAt updatedAt";
+
+  // tìm ứng viên để lọc
+  let candidates = await Product.find({
+    ...baseMatch,
+    category: { $in: preferredCategories },
+  })
+    .select(selectFields)
+    .limit(280)
+    .lean()
+    .maxTimeMS(AGG_MAX_TIME_MS);
+
+  if (candidates.length < Math.max(limitN * 6, 36)) {
+    const more = await Product.find(baseMatch)
+      .select(selectFields)
+      .sort({ updatedAt: -1 })
+      .limit(220)
+      .lean()
+      .maxTimeMS(AGG_MAX_TIME_MS);
+    const seen = new Set(candidates.map((c) => String(c._id)));
+    for (const m of more) {
+      const id = String(m._id);
+      if (!seen.has(id)) {
+        seen.add(id);
+        candidates.push(m);
+      }
+    }
+  }
+
+  // chấm điểm các sản phẩm còn lại
+  const scored = [];
+  for (const c of candidates) {
+    const catW = categoryWeights.get(String(c.category)) || 0;
+    const candTokens = tokenizeProductText(c);
+    const dice = diceCoefficient(profileTokenSet, candTokens);
+    let score = catW * 4 + dice * 14;
+
+    if (topCondition && c.condition === topCondition) score += 1.6;
+
+    if (avgPrice > 0) {
+      const pr = Number(c.price) || 0;
+      if (pr >= avgPrice * 0.3 && pr <= avgPrice * 3.2) score += 1.1;
+    }
+
+    if (c.isVIP) score += VIP_BOOST;
+
+    if (score < 0.01) continue;
+
+    scored.push({ doc: c, score, dice, catW });
+  }
+
+  scored.sort((a, b) => b.score - a.score);
+  const top = scored.slice(0, limitN);
+
+  const raw = top.map((t) => ({
+    ...t.doc,
+    recommendation: {
+      score: t.score,
+      method: "content",
+      textSimilarity: Math.round(t.dice * 1000) / 1000,
+      categoryAffinity: t.catW,
+    },
+  }));
+
+  const products = await hydrateRecommendationProducts(raw);
+
+  return {
+    products,
+    usedFallback: false,
+    debug: {
+      profileCount: profileProducts.length,
+      interactedCount: interactedIds.length,
+      preferredCategories: preferredCategories.length,
+    },
+  };
+};
+
+// hàm tính toán gợi ý hybrid (CF + CBF)
+exports.getHybridRecommendationsService = async (userIdRaw, options = {}) => {
+  const userIdStr = String(userIdRaw || "").trim();
+  if (!mongoose.isValidObjectId(userIdStr)) {
+    throw new Error("Mã người dùng không hợp lệ.");
+  }
+
+  const limitN = Math.min(
+    Math.max(parseInt(options.limit, 10) || DEFAULT_LIMIT, 1),
+    MAX_LIMIT,
+  );
+
+  // khởi động kép cả 2 cách gợi ý tìm kiếm
+  const pool = Math.min(limitN * 2, MAX_LIMIT);
+
+  const [cfResult, cbfResult] = await Promise.all([
+    exports.getCollaborativeRecommendationsService(userIdRaw, {
+      ...options,
+      limit: pool,
+    }),
+    exports.getContentBasedRecommendationsService(userIdRaw, {
+      ...options,
+      limit: pool,
+    }),
+  ]);
+
+  // gọi hàm trộn gợi ý collaborative và content-based
+  const merged = mergeCfAndCbf(cfResult.products, cbfResult.products, limitN);
+
+  return {
+    products: merged,
+    usedFallback: merged.length === 0,
+    debug: {
+      cf: cfResult.debug,
+      cbf: cbfResult.debug,
+      mergedCount: merged.length,
+    },
+  };
+};
+
 // hàm thực hiện tính toán gợi ý collaborative filtering - 3 hàm ở trên ghép lại
 exports.getCollaborativeRecommendationsService = async (
   userIdRaw,
@@ -347,18 +567,28 @@ exports.RECOMMENDATION_CONSTANTS = {
   MAX_LIMIT,
 };
 
-// gọi hàm getCollaborativeRecommendationsService() để tính toán -> có kết quả -> ghi vào cache (Redis L1 + Mongo L2)
+// gọi hybrid (CF + Content-Based) -> cache Redis + Mongo
 exports.computeAndCacheRecommendations = async (userIdRaw, options = {}) => {
-  const result = await exports.getCollaborativeRecommendationsService(
+  const result = await exports.getHybridRecommendationsService(
     userIdRaw,
     options,
   );
 
-  const source = result.usedFallback
-    ? result.products.length > 0
-      ? "trending"
-      : "empty"
-    : "cf";
+  let source = "empty";
+  if (result.products.length > 0) {
+    const methods = new Set(
+      result.products.map((p) => p.recommendation?.method).filter(Boolean),
+    );
+    if (methods.has("hybrid")) {
+      source = "hybrid";
+    } else if (methods.has("collaborative") && methods.has("content")) {
+      source = "hybrid";
+    } else if (methods.has("collaborative")) {
+      source = "cf";
+    } else {
+      source = "cbf";
+    }
+  }
 
   const computedAt = new Date();
   const expiresAt = new Date(computedAt.getTime() + MONGO_CACHE_TTL_SEC * 1000);
@@ -367,8 +597,8 @@ exports.computeAndCacheRecommendations = async (userIdRaw, options = {}) => {
     userId: String(userIdRaw),
     products: result.products,
     source,
-    seedCount: result.debug?.seedCount || 0,
-    similarUsersCount: result.debug?.similarUsersCount || 0,
+    seedCount: result.debug?.cf?.seedCount ?? 0,
+    similarUsersCount: result.debug?.cf?.similarUsersCount ?? 0,
     computedAt,
     expiresAt,
   };

@@ -1,11 +1,28 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { Sparkles, Loader2, ChevronRight } from "lucide-react";
 
+// dịch mã nguồn của danh sách gợi ý
+const sourceHint = (src) => {
+  if (src === "hybrid") return "CF + CBF";
+  if (src === "cbf") return "theo nội dung (CBF)";
+  if (src === "cf") return "theo cộng đồng (CF)";
+  return null;
+}
+
+// hàm hiển thị giá sản phẩm
 const formatPrice = (price) => {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",
   }).format(price);
+}
+
+// hàm hiển thị label cho nguồn gợi ý
+const methodLabel = (m) => {
+  if (m === "hybrid") return "CF+CBF";
+  if (m === "content") return "CBF";
+  if (m === "collaborative") return "CF";
+  return null;
 }
 
 export default function HeaderSearchRecommendations({
@@ -23,8 +40,8 @@ export default function HeaderSearchRecommendations({
     return (
       <div className="px-3 py-3 border-t border-amber-100/80 bg-amber-50/40">
         <p className="text-xs text-amber-900/90 font-medium leading-snug">
-          Đăng nhập để xem gợi ý theo lịch sử mua & đánh giá — Collaborative
-          Filtering.
+          Đăng nhập để xem gợi ý theo lịch sử mua, đánh giá, wishlist — kết hợp
+          Collaborative Filtering &amp; Content-Based.
         </p>
         <div className="mt-2 flex gap-2">
           <NavLink
@@ -53,9 +70,9 @@ export default function HeaderSearchRecommendations({
           <span className="text-xs font-semibold text-gray-800 truncate">
             Gợi ý cho bạn
           </span>
-          {source === "cf" && (
-            <span className="text-[10px] text-muted-foreground shrink-0 hidden sm:inline">
-              (cá nhân hóa)
+          {sourceHint(source) && (
+            <span className="text-xxs text-muted-foreground shrink-0 hidden sm:inline">
+              ({sourceHint(source)})
             </span>
           )}
         </div>
@@ -82,8 +99,8 @@ export default function HeaderSearchRecommendations({
 
       {!loading && !error && products.length === 0 && (
         <p className="px-3 py-3 text-xs text-muted-foreground leading-relaxed">
-          Chưa có gợi ý. Hãy hoàn tất đơn hoặc đánh giá sản phẩm — hệ thống sẽ
-          gợi ý dựa trên người có sở thích tương tự.
+          Chưa có gợi ý. Thử thêm vào yêu thích, hoặc hoàn tất đơn / đánh giá — hệ
+          thống sẽ học từ danh mục, từ khóa trong tin bạn quan tâm.
         </p>
       )}
 
@@ -121,8 +138,20 @@ export default function HeaderSearchRecommendations({
                     {formatPrice(p.price)}
                   </p>
                   {p.condition && (
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
-                      {p.condition}
+                    <p className="text-[10px] text-muted-foreground mt-0.5 flex flex-wrap items-center gap-1.5">
+                      <span>{p.condition}</span>
+                      {methodLabel(p.recommendation?.method) && (
+                        <span className="rounded bg-amber-100/90 px-1 py-px text-[9px] font-semibold text-amber-900">
+                          {methodLabel(p.recommendation?.method)}
+                        </span>
+                      )}
+                    </p>
+                  )}
+                  {!p.condition && methodLabel(p.recommendation?.method) && (
+                    <p className="text-[10px] mt-0.5">
+                      <span className="rounded bg-amber-100/90 px-1 py-px text-[9px] font-semibold text-amber-900">
+                        {methodLabel(p.recommendation?.method)}
+                      </span>
                     </p>
                   )}
                 </div>

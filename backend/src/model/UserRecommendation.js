@@ -15,7 +15,7 @@ const userRecommendationSchema = new mongoose.Schema(
     },
     source: {
       type: String,
-      enum: ["cf", "trending", "empty"],
+      enum: ["cf", "cbf", "hybrid", "trending", "empty"],
       default: "cf",
     },
     seedCount: { type: Number, default: 0 },
