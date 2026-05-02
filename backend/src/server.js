@@ -4,18 +4,15 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const { Server } = require("socket.io");
 
+const redisCache = require("./config/redis");
 const router = require("./routes/index");
 const connect = require("./config/db");
 const { setupSocketIO } = require("./utils/socketServer");
 const { setIO } = require("./utils/ioRegistry");
-const {
-  startAutoCancelVipPending,
-} = require("./jobs/autoCancelVipPending");
+const { startAutoCancelVipPending } = require("./jobs/autoCancelVipPending");
 const { startReviewReminder } = require("./jobs/reviewReminder");
-const {
-  startPrecomputeRecommendations,
-} = require("./jobs/precomputeRecommendations");
-const redisCache = require("./config/redis");
+const { startPrecomputeRecommendations } = require("./jobs/precomputeRecommendations");
+const { startExpireVipProductsJob } = require("./jobs/expireVipProducts");
 
 // Bảo mật DB
 dotenv.config();
@@ -62,6 +59,7 @@ connect().then(() => {
     console.log(`Socket.io đã gắn (transports: websocket, polling)`);
   });
   startAutoCancelVipPending();
+  startExpireVipProductsJob();
   startReviewReminder();
   startPrecomputeRecommendations();
 

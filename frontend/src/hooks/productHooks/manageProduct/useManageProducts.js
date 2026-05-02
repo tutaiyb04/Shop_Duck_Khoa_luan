@@ -192,13 +192,20 @@ function useManageProducts() {
       return false;
     }
 
-    if (!product.isVIP) return true;
+    const vipUntilMs = product.vipUntil
+      ? new Date(product.vipUntil).getTime()
+      : null;
+    const vipExpired =
+      product.isVIP &&
+      vipUntilMs != null &&
+      !Number.isNaN(vipUntilMs) &&
+      vipUntilMs <= Date.now();
+
+    if (!product.isVIP || vipExpired) return true;
 
     if (!product.vipUntil) return true;
 
-    const end = new Date(product.vipUntil);
-
-    const daysLeft = (end.getTime() - Date.now()) / 86_400_000;
+    const daysLeft = (vipUntilMs - Date.now()) / 86_400_000;
 
     return daysLeft <= 7;
   };

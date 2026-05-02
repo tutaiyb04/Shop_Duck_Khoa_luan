@@ -17,8 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { usePricingSuggestion } from "@/hooks/productHooks/createProduct/usePricingSuggestion";
 import CategoryMegaMenu from "./CategoryMageMenu";
 import MapPicker from "./MapPicker";
+import PricingSuggestionPanel from "./PricingSuggestionPanel";
 
 function ProductForm({
   form,
@@ -29,6 +31,7 @@ function ProductForm({
   setCoords,
 }) {
   const addressValue = form.watch("location");
+  const pricingSuggestion = usePricingSuggestion(form);
 
   return (
     <Form {...form}>
@@ -117,6 +120,14 @@ function ProductForm({
               <FormMessage />
             </FormItem>
           )}
+        />
+
+        <PricingSuggestionPanel
+          form={form}
+          phase={pricingSuggestion.phase}
+          suggestion={pricingSuggestion.suggestion}
+          errorMessage={pricingSuggestion.errorMessage}
+          ready={pricingSuggestion.ready}
         />
 
         <FormField

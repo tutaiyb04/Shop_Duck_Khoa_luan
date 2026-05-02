@@ -3,6 +3,7 @@ import {
   Bell,
   BadgeCheck,
   Clock,
+  Crown,
   EyeOff,
   Heart,
   Package,
@@ -32,6 +33,7 @@ export const NOTIFICATION_TYPE_ICON = {
   PRODUCT_REJECTED: Ban,
   PRODUCT_HIDDEN: EyeOff,
   PRODUCT_LIKED: Heart,
+  VIP_EXPIRED: Crown,
 };
 
 export const NOTIFICATION_DEFAULT_ICON = Bell;

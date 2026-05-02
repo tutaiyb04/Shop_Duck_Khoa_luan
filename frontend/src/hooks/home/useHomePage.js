@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useGetProduct } from "@/hooks/productHooks/useGetProduct";
 import { API } from "@/services/axios";
+import { isProductVipActive } from "@/utils/vipDisplay";
 
 function sortByNewest(a, b) {
   const ta = new Date(a?.createdAt || 0).getTime();
@@ -93,11 +94,11 @@ export function useHomePage() {
   }, [parentCategories, isFiltered]);
 
   const vipProducts = useMemo(
-    () => products.filter((p) => p.isVIP),
+    () => products.filter((p) => isProductVipActive(p)),
     [products],
   );
   const newProducts = useMemo(() => {
-    const nonVip = products.filter((p) => !p.isVIP);
+    const nonVip = products.filter((p) => !isProductVipActive(p));
     return [...nonVip].sort(sortByNewest);
   }, [products]);
 

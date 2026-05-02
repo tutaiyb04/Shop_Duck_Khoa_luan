@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { MapPin } from "lucide-react";
+import { isProductVipActive } from "@/utils/vipDisplay";
 
 function ProductCard({ product }) {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ function ProductCard({ product }) {
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
-        {product.isVIP && (
+        {isProductVipActive(product) && (
           <Badge
             className="absolute top-2 left-2 z-10 border-0 bg-gradient-to-r from-red-600 to-red-700 px-2 py-0.5 text-[10px] font-extrabold text-amber-100 shadow-md sm:text-xs"
             variant="destructive"
