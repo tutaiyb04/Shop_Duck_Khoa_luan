@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+const User = require("../model/User");
+const Category = require("../model/Category");
 
 const POSITIVE_ORDER_STATUSES = ["PAID", "SHIPPING", "COMPLETED"];
 const POSITIVE_RATING_MIN = 3;  // mức đánh giá tối thiểu để được tính điểm

@@ -22,7 +22,8 @@ const {
   tokenizeProductText,
   diceCoefficient,
   loadWishlistProductIds,
-  hydrateRecommendationProducts
+  hydrateRecommendationProducts,
+  mergeCfAndCbf,
 } = require("../helper/recommendationHelper");
 
 // Bước thu nhập dấu vết: thu nhập các sản phẩm mà user đã tương tác (đánh giá hoặc mua thành công)
