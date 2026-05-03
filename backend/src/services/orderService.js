@@ -12,23 +12,38 @@ const recommendationService = require("./recommendationService");
 
 const SELLABLE_STATUSES = ["AVAILABLE"];
 
-// Đặt lại trạng thái tin khi tạo Order thất bại (chỉ khi vẫn là SOLD và đúng seller).
-const rollbackProductAfterFailedOrder = async (
-  productObjectId,
-  sellerObjectId,
-) => {
-  await Product.updateOne(
-    {
-      _id: productObjectId,
-      sellerId: sellerObjectId,
-      status: "SOLD",
+// Trừ tồn kho và có thể chuyển SOLD — pipeline (1 atomic write)
+const buildSubtractQuantityPipeline = (qtyToSell) => [
+  {
+    // tính toàn tồn kho còn lại
+    $set: {
+      _remain: {
+        $subtract: [
+          { $toInt: { $ifNull: ["$quantity", 1] } },
+          { $literal: qtyToSell },
+        ],
+      },
     },
-    { $set: { status: "AVAILABLE" } },
-  );
-};
+  },
+  // cập nhật tồn kho và trạng thái
+  {
+    $set: {
+      quantity: "$_remain",
+      status: {
+        $cond: [{ $eq: ["$_remain", 0] }, "SOLD", "AVAILABLE"],
+      },
+    },
+  },
+  { $unset: "_remain" },
+];
 
-// xác nhận bán hàng
-exports.completeOfflineSale = async (sellerId, productId, buyerId) => {
+// xác nhận bán hàng — có thể bán một phần tồn kho / nhiều đơn trên cùng tin đăng
+exports.completeOfflineSale = async (
+  sellerId,
+  productId,
+  buyerId,
+  saleQuantityRaw = 1,
+) => {
   if (!mongoose.isValidObjectId(String(productId))) {
     const err = new Error("ID sản phẩm không hợp lệ");
     err.status = 400;
@@ -47,11 +62,23 @@ exports.completeOfflineSale = async (sellerId, productId, buyerId) => {
     throw err;
   }
 
+  // ép kiểu số lượng bán thành số nguyên dương
+  const parsed = Number(saleQuantityRaw);
+  const qtyToSell = Number.isFinite(parsed) ? Math.trunc(parsed) : NaN;
+
+  // kiểm tra số lượng bán có hợp lệ không
+  if (!Number.isFinite(qtyToSell) || qtyToSell < 1 || parsed !== qtyToSell) {
+    const err = new Error(
+      "Số lượng bán phải là số nguyên dương và không lớn hơn số tin đăng có trên chợ.",
+    );
+    err.status = 400;
+    throw err;
+  }
+
   const pid = new mongoose.Types.ObjectId(String(productId));
   const sid = new mongoose.Types.ObjectId(String(sellerId));
   const bid = new mongoose.Types.ObjectId(String(buyerId));
 
-  // kiểm tra bắt buộc phải có hội thoại
   const conv = await Conversation.findOne({
     productId: pid,
     participants: { $all: [sid, bid] },
@@ -67,119 +94,133 @@ exports.completeOfflineSale = async (sellerId, productId, buyerId) => {
     throw err;
   }
 
-  const alreadySoldOrder = await Order.exists({
-    productId: pid,
-    status: "COMPLETED",
-  });
-
-  if (alreadySoldOrder) {
-    const err = new Error("Sản phẩm này đã có đơn hoàn tất trước đó");
-    err.status = 400;
-    throw err;
-  }
-
-  const claimed = await Product.findOneAndUpdate(
-    {
-      _id: pid,
-      sellerId: sid,
-      status: "AVAILABLE",
-    },
-    { $set: { status: "SOLD" } },
-    {
-      returnDocument: "after",
-      select: "price quantity sellerId status name",
-    },
-  ).lean();
-
-  if (!claimed) {
-    const peek = await Product.findById(pid).select("sellerId status").lean();
-
-    if (!peek) {
-      const err = new Error("Sản phẩm không tồn tại");
-
-      err.status = 404;
-      throw err;
-    }
-
-    if (String(peek.sellerId) !== String(sellerId)) {
-      const err = new Error("Bạn không phải người bán sản phẩm này");
-
-      err.status = 403;
-      throw err;
-    }
-
-    if (peek.status === "SOLD") {
-      const err = new Error(
-        "Tin đã được xác nhận bán (có thể do người khác vừa thao tác).",
-      );
-
-      err.status = 409;
-      throw err;
-    }
-
-    const err = new Error(
-      !SELLABLE_STATUSES.includes(peek.status)
-        ? "Sản phẩm ở trạng thái không thể bán (chỉ khi đang hiển thị Đang bán)."
-        : "Không thể xác nhận bán lúc này.",
-    );
-
-    err.status = 400;
-    throw err;
-  }
-
-  const quantity = Math.max(1, Number(claimed.quantity) || 1);
-  const unitPrice = Number(claimed.price);
-  const totalAmount = unitPrice * quantity;
+  // tạo session để đảm bảo tính toàn vẹn dữ liệu - Giao dịch an toàn & Tạo Đơn (Transaction)
+  const session = await mongoose.startSession();
 
   try {
-    const [order] = await Order.create([
-      {
-        buyerId: bid,
-        sellerId: sid,
-        productId: pid,
-        quantity,
-        unitPrice,
-        totalAmount,
-        status: "COMPLETED",
-        conversationId: conv._id,
-      },
-    ]);
+    let updatedProduct = null;
+    let orderDoc = null;
 
-    await cancelPendingVipTransactionsForProduct(pid).catch((e) =>
-      console.error("cancelPendingVipTransactionsForProduct:", e),
-    );
+    // thực hiện giao dịch an toàn & tạo đơn
+    await session.withTransaction(async () => {
+      // tìm và cập nhật sản phẩm
+      updatedProduct = await Product.findOneAndUpdate(
+        {
+          _id: pid,
+          sellerId: sid,
+          status: "AVAILABLE",
+          quantity: { $gte: qtyToSell },
+        },
+        buildSubtractQuantityPipeline(qtyToSell),
+        {
+          session,
+          new: true,
+        },
+      )
+        .select("price quantity sellerId status name")
+        .lean();
 
-    // Đóng băng mọi khung chat liên quan tới sản phẩm vừa bán (realtime).
-    notifyProductChatLocked(pid, "SOLD").catch((e) =>
-      console.error("notifyProductChatLocked(SOLD):", e),
-    );
+      if (!updatedProduct) {
+        const peek = await Product.findById(pid)
+          .session(session)
+          .select("sellerId status quantity")
+          .lean();
 
-    // Gửi thông báo "Đơn hàng đã được xác nhận" cho người mua (realtime + lưu DB).
+        let errMsg = "Không thể xác nhận bán lúc này.";
+        let code = 400;
+
+        if (!peek) {
+          errMsg = "Sản phẩm không tồn tại";
+          code = 404;
+        } else if (String(peek.sellerId) !== String(sellerId)) {
+          errMsg = "Bạn không phải người bán sản phẩm này";
+          code = 403;
+        } else if (peek.status === "SOLD") {
+          errMsg =
+            "Tin đã bán hết (kho không còn). Không ghi nhận thêm đơn trên tin này.";
+          code = 409;
+        } else if (!SELLABLE_STATUSES.includes(peek.status)) {
+          errMsg =
+            "Sản phẩm ở trạng thái không thể bán (chỉ khi đang hiển thị đang bán).";
+        } else {
+          const stocked = Number(peek.quantity) || 0;
+          errMsg =
+            stocked <= 0
+              ? "Sản phẩm không còn tồn kho để xác nhận bán."
+              : stocked < qtyToSell
+                ? `Số lượng có trên tin (${stocked}) nhỏ hơn số bạn nhập (${qtyToSell}).`
+                : errMsg;
+        }
+
+        const err = new Error(errMsg);
+        err.status = code;
+        throw err;
+      }
+
+      const unitPrice = Number(updatedProduct.price);
+      const totalAmount = unitPrice * qtyToSell;
+
+      let inserted;
+
+      try {
+        inserted = await Order.create(
+          [
+            {
+              buyerId: bid,
+              sellerId: sid,
+              productId: pid,
+              quantity: qtyToSell,
+              unitPrice,
+              totalAmount,
+              status: "COMPLETED",
+              conversationId: conv._id,
+            },
+          ],
+          { session },
+        );
+      } catch (dupOrErr) {
+        if (dupOrErr.code === 11000) {
+          const err = new Error("Đơn hàng không thể được tạo (trùng ràng buộc).");
+          err.status = 409;
+          throw err;
+        }
+        throw dupOrErr;
+      }
+
+      orderDoc = inserted[0];
+    });
+
+    const soldOut = updatedProduct.status === "SOLD";
+
+    if (soldOut) {
+      await cancelPendingVipTransactionsForProduct(pid).catch((e) =>
+        console.error("cancelPendingVipTransactionsForProduct:", e),
+      );
+
+      notifyProductChatLocked(pid, "SOLD").catch((e) =>
+        console.error("notifyProductChatLocked(SOLD):", e),
+      );
+    }
+
     notificationService
       .notifyOrderConfirmed({
         buyerId: bid,
         sellerId: sid,
-        orderId: order._id,
-        totalAmount,
+        orderId: orderDoc._id,
+        totalAmount: orderDoc.totalAmount,
       })
       .catch((e) => console.error("notifyOrderConfirmed:", e));
 
-    // xóa cache gợi ý của người mua
     recommendationService
       .invalidateUserRecommendation(bid)
       .catch((e) => console.error("invalidateUserRecommendation(buyer):", e));
 
-    return { order };
-  } catch (error) {
-    await rollbackProductAfterFailedOrder(pid, sid);
-
-    if (error.code === 11000) {
-      const err = new Error("Sản phẩm này đã có giao dịch hoàn tất");
-
-      err.status = 409;
-      throw err;
-    }
-    throw error;
+    return { order: orderDoc, productUpdated: updatedProduct, soldOut };
+  } catch (e) {
+    if (!e.message && e.reason) Object.assign(e, { message: String(e.reason) });
+    throw e;
+  } finally {
+    session.endSession();
   }
 };
 
@@ -198,14 +239,14 @@ exports.listSellerCompletedOrders = async (
   const skip = (safePage - 1) * safeLimit;
 
   const [items, total, sumAgg] = await Promise.all([
-    Order.find({ sellerId, status: "COMPLETED" }) // Lấy danh sách đơn hoàn tất của người bán
+    Order.find({ sellerId, status: "COMPLETED" })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(safeLimit)
       .populate("productId", "name images")
       .populate("buyerId", "username avatar")
       .lean(),
-    Order.countDocuments({ sellerId, status: "COMPLETED" }), // đếm tổng số đơn (để chia trang)
+    Order.countDocuments({ sellerId, status: "COMPLETED" }),
     Order.aggregate([
       {
         $match: {
@@ -217,7 +258,7 @@ exports.listSellerCompletedOrders = async (
     ]),
   ]);
 
-  const totalDisposalValue = // tính tổng giá trị của tất cả đơn
+  const totalDisposalValue =
     sumAgg[0] && Number.isFinite(sumAgg[0].totalValue)
       ? sumAgg[0].totalValue
       : 0;
@@ -236,7 +277,6 @@ exports.listBuyerCompletedOrders = async (
   buyerId,
   { page = 1, limit = 20 } = {},
 ) => {
-  // giới hạn số lượng đơn trên mỗi trang
   const safeLimit = Math.min(
     100,
     Math.max(1, parseInt(String(limit), 10) || 20),

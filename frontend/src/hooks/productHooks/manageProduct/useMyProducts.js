@@ -35,10 +35,11 @@ function useMyProducts() {
   /**
    * Hoàn tất bán (đơn + SOLD) — phải chọn người mua đã từng chat (backend transaction).
    */
-  const markSoldToBuyer = async (productId, buyerId) => {
+  const markSoldToBuyer = async (productId, buyerId, quantity = 1) => {
     await API.post("/orders/complete-offline-sale", {
       productId,
       buyerId,
+      quantity,
     });
     toast.success("Đã ghi nhận bán hàng — có trong Lịch sử mua/bán.");
     await fetchMyProducts();

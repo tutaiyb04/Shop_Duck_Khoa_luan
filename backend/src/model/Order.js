@@ -47,13 +47,7 @@ orderSchema.index({ sellerId: 1, createdAt: -1 });
 orderSchema.index({ productId: 1, status: 1 });
 orderSchema.index({ buyerId: 1, productId: 1, status: 1 });
 orderSchema.index({ buyerId: 1, status: 1, productId: 1 });
-// Một sản phẩm (một tin) chỉ một đơn COMPLETED
-orderSchema.index(
-  { productId: 1 },
-  {
-    unique: true,
-    partialFilterExpression: { status: "COMPLETED" },
-  },
-);
+// Nếu DB còn chỉ mục unique cũ (một tin chỉ một đơn COMPLETED), hãy xóa tay:
+// use shop_db → db.orders.dropIndex("productId_1")
 
 module.exports = mongoose.model("Order", orderSchema);

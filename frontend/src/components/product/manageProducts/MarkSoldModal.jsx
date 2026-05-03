@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function MarkSoldModal({
   open,
@@ -23,13 +24,27 @@ export default function MarkSoldModal({
   const [loadingList, setLoadingList] = useState(false);
   const [selectedBuyerId, setSelectedBuyerId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [saleQty, setSaleQty] = useState(1);
+
+  const maxListedQty = Math.max(
+    1,
+    Math.min(
+      999999,
+      Number.isFinite(Number(product?.quantity))
+        ? Math.trunc(Number(product.quantity))
+        : 1,
+    ),
+  );
 
   useEffect(() => {
     if (!open || !product?._id) {
       setCandidates([]);
       setSelectedBuyerId(null);
+      setSaleQty(1);
       return;
     }
+
+    setSaleQty(1);
 
     let cancelled = false;
     const pid = product._id;
@@ -59,13 +74,18 @@ export default function MarkSoldModal({
     return () => {
       cancelled = true;
     };
-  }, [open, product?._id]);
+  }, [open, product?._id, product?.quantity]);
+
+  const qtyValid =
+    Number.isInteger(saleQty) &&
+    saleQty >= 1 &&
+    saleQty <= maxListedQty;
 
   const handleSubmit = async () => {
-    if (!product?._id || !selectedBuyerId) return;
+    if (!product?._id || !selectedBuyerId || !qtyValid) return;
     setSubmitting(true);
     try {
-      await onConfirmSold(product._id, selectedBuyerId);
+      await onConfirmSold(product._id, selectedBuyerId, saleQty);
       onOpenChange(false);
     } catch (e) {
       console.error(e);
@@ -90,6 +110,37 @@ export default function MarkSoldModal({
             &quot;. Hai bên sẽ thấy giao dịch trong Lịch sử mua/bán.
           </DialogDescription>
         </DialogHeader>
+
+        <div className="space-y-1.5 px-1">
+          <span className="text-sm font-medium text-foreground">
+            Số lượng xác nhận bán lần này{" "}
+            <span className="text-muted-foreground font-normal">(chiếc)</span>
+          </span>
+          <Input
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={maxListedQty}
+            disabled={loadingList || candidates.length === 0}
+            value={saleQty}
+            className="h-10 font-medium"
+            onChange={(e) => {
+              const v = Number.parseInt(e.target.value, 10);
+              if (!Number.isFinite(v)) {
+                setSaleQty(1);
+                return;
+              }
+              setSaleQty(Math.min(Math.max(v, 1), maxListedQty));
+            }}
+          />
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Tin đăng đang có tối đa{" "}
+            <strong className="text-foreground">{maxListedQty}</strong> trong
+            kho.&nbsp;
+            Sau khi xác nhận sẽ chỉ phần được trừ; nếu còn tin thì khách vẫn có
+            thể chat và mua (trừ khi tin đã bán hết).
+          </p>
+        </div>
 
         <div className="max-h-[min(52vh,320px)] overflow-y-auto space-y-2 py-1">
           {loadingList ? (
@@ -145,6 +196,7 @@ export default function MarkSoldModal({
               submitting ||
               loadingList ||
               !selectedBuyerId ||
+              !qtyValid ||
               candidates.length === 0
             }
             onClick={handleSubmit}

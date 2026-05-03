@@ -13,28 +13,54 @@ exports.postCompleteOfflineSale = async (req, res) => {
       return res.status(401).json({ message: "Vui lòng đăng nhập" });
     }
 
-    const { productId, buyerId } = req.body;
-    
+    const { productId, buyerId, quantity } = req.body;
+
     if (!productId || !buyerId) {
       return res.status(400).json({ message: "Thiếu productId hoặc buyerId" });
     }
-    
-    const { order } = await orderService.completeOfflineSale(
+
+    const qtyParsed = Number(quantity);
+    const saleQuantity =
+      quantity === undefined || quantity === "" || quantity === null
+        ? 1
+        : Number.isFinite(qtyParsed) &&
+            Math.trunc(qtyParsed) === qtyParsed &&
+            qtyParsed >= 1
+          ? qtyParsed
+          : null;
+
+    if (saleQuantity == null) {
+      return res
+        .status(400)
+        .json({ message: "quantity phải là số nguyên dương (tùy chọn, mặc định 1)" });
+    }
+
+    const { order, productUpdated, soldOut } =
+      await orderService.completeOfflineSale(
       sellerId,
       productId,
       buyerId,
+      saleQuantity,
     );
-    
+
     return res.status(201).json({
-      message: "Đã ghi nhận bán hàng thành công",
+      message: soldOut
+        ? "Đã ghi nhận bán hàng — tin đăng đã bán hết."
+        : "Đã ghi nhận bán hàng — tồn kho tin đăng đã được cập nhật.",
       order: {
         _id: order._id,
         buyerId: order.buyerId,
         sellerId: order.sellerId,
         productId: order.productId,
+        quantity: order.quantity,
         totalAmount: order.totalAmount,
         status: order.status,
         createdAt: order.createdAt,
+      },
+      product: productUpdated && {
+        _id: productUpdated._id,
+        quantity: productUpdated.quantity,
+        status: productUpdated.status,
       },
     });
   } catch (error) {
