@@ -68,6 +68,12 @@ export const getNotificationHref = (n) => {
     case "PRODUCT_LIKED":
     case "VIP_EXPIRED":
       return id ? `/product/${id}` : "/my-products";
+    case "PRODUCT_CHAT_MESSAGE": {
+      const c = n.metadata?.conversationId;
+      const cid = c != null ? String(c).trim() : "";
+      if (/^[a-f\d]{24}$/i.test(cid)) return `/messages?c=${cid}`;
+      return "/messages";
+    }
     default:
       break;
   }

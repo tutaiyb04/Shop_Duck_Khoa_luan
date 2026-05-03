@@ -6,6 +6,7 @@ import {
   Crown,
   EyeOff,
   Heart,
+  MessageCircle,
   Package,
   Star,
 } from "lucide-react";
@@ -33,6 +34,7 @@ export const NOTIFICATION_TYPE_ICON = {
   PRODUCT_REJECTED: Ban,
   PRODUCT_HIDDEN: EyeOff,
   PRODUCT_LIKED: Heart,
+  PRODUCT_CHAT_MESSAGE: MessageCircle,
   VIP_EXPIRED: Crown,
 };
 

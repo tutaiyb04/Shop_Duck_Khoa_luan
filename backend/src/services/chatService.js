@@ -18,6 +18,7 @@ const {
   normalizeUnreadCountOnConv,
   getUnreadForUser,
 } = require("../helper/chatHelper");
+const notificationService = require("./notificationService");
 
 exports.FROZEN_PRODUCT_STATUSES = FROZEN_PRODUCT_STATUSES;
 
@@ -366,7 +367,7 @@ exports.sendMessage = async (userId, { conversationId, text, images = [] }) => {
 
   // khóa hội thoại theo trạng thái sản phẩm
   const product = await Product.findById(conv.productId)
-    .select("status")
+    .select("status name")
     .lean();
 
   if (!product) {
@@ -410,6 +411,20 @@ exports.sendMessage = async (userId, { conversationId, text, images = [] }) => {
       $unset[`userHidden.${String(p)}`] = "";
     }
     await Conversation.updateOne({ _id: conv._id }, { $unset });
+  }
+
+  const productNameNotify = product?.name ? String(product.name) : "";
+  for (const rid of recipientIds) {
+    notificationService
+      .notifyProductChatMessage({
+        recipientId: rid,
+        actorId: userId,
+        productId: conv.productId,
+        productName: productNameNotify,
+        conversationId: conv._id,
+        preview: conv.lastMessage,
+      })
+      .catch(() => {});
   }
 
   await message.populate("senderId", "username avatar");

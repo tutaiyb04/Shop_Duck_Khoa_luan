@@ -274,6 +274,40 @@ exports.notifyProductLiked = ({
     groupKey: productId ? `PRODUCT_LIKED:${String(productId)}` : null,
   });
 
+/** Tin nhắn trong hội thoại theo sản phẩm — gửi cho người nhận (không phải người gửi). */
+exports.notifyProductChatMessage = ({
+  recipientId,
+  actorId,
+  productId,
+  productName,
+  conversationId,
+  preview,
+}) => {
+  const snippet = typeof preview === "string" ? preview.trim() : "";
+  const short =
+    snippet.length > 140 ? `${snippet.slice(0, 137)}…` : snippet || "📷 Đính kèm ảnh";
+  const pname = String(productName || "").trim();
+
+  const content = pname
+    ? `${short} — Tin nhắn về sản phẩm "${pname.slice(0, 80)}${pname.length > 80 ? "…" : ""}"`
+    : short;
+
+  return exports.createNotification({
+    userId: recipientId,
+    actorId,
+    type: TYPES.PRODUCT_CHAT_MESSAGE,
+    title: "Tin nhắn mới",
+    content,
+    relatedId: productId,
+    refModel: REF_MODELS.Product,
+    metadata: {
+      conversationId: conversationId ? String(conversationId) : null,
+      productName: pname,
+      previewSnippet: snippet.slice(0, 500),
+    },
+  });
+};
+
 // lấy danh sách thông báo của 1 user
 exports.listUserNotifications = async (userId, query = {}) => {
   const uid = ensureObjectId(userId, "userId");

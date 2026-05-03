@@ -9,6 +9,7 @@ const Schema = mongoose.Schema;
  *  PRODUCT_REJECTED  – Tin bị từ chối / khóa (kèm lý do) → gửi NGƯỜI BÁN  (ref: Product)
  *  PRODUCT_HIDDEN    – Tin bị admin ẩn              → gửi NGƯỜI BÁN       (ref: Product)
  *  PRODUCT_LIKED     – Có người thích sản phẩm      → gửi NGƯỜI BÁN       (ref: Product)
+ *  PRODUCT_CHAT_MESSAGE – Có tin nhắn qua sản phẩm → gửi người còn lại    (ref: Product, metadata.conversationId)
  *  VIP_EXPIRED       – Gói VIP tin đăng đã hết hạn → gửi NGƯỜI BÁN       (ref: Product)
  */
 const NOTIFICATION_TYPES = [
@@ -19,6 +20,7 @@ const NOTIFICATION_TYPES = [
   "PRODUCT_REJECTED",
   "PRODUCT_HIDDEN",
   "PRODUCT_LIKED",
+  "PRODUCT_CHAT_MESSAGE",
   "VIP_EXPIRED",
 ];
 
@@ -58,6 +60,7 @@ const notificationSchema = new Schema(
      *  - REVIEW_RECEIVED:  { rating: number, comment?: string }
      *  - ORDER_CONFIRMED:  { totalAmount: number }
      *  - PRODUCT_LIKED:    { likeCount?: number, lastActorIds?: ObjectId[] }
+     *  - PRODUCT_CHAT_MESSAGE: { conversationId: string, productName?: string, previewSnippet?: string }
      */
     metadata: {
       type: Schema.Types.Mixed,
