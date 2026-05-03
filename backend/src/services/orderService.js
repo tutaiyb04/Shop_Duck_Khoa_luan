@@ -115,6 +115,7 @@ exports.completeOfflineSale = async (
         {
           session,
           new: true,
+          updatePipeline: true,
         },
       )
         .select("price quantity sellerId status name")
