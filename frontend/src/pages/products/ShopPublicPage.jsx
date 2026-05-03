@@ -96,7 +96,11 @@ function ShopPublicPage() {
         ) : (
           <>
             <div className="mb-6">
-              <SellerInfoCard seller={seller} hideViewShopButton />
+              <SellerInfoCard
+                seller={seller}
+                hideViewShopButton
+                reviewsLinkSamePage
+              />
             </div>
 
             {desc ? (
@@ -228,7 +232,10 @@ function ShopPublicPage() {
               )}
             </div>
 
-            <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+            <section
+              id="shop-reviews"
+              className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6 scroll-mt-24"
+            >
               <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2 border-b border-gray-100 pb-3">
                 <h2 className="text-lg font-bold text-gray-800">
                   Tất cả đánh giá
@@ -296,7 +303,7 @@ function ShopPublicPage() {
                               {productId ? (
                                 <NavLink
                                   to={`/product/${productId}`}
-                                  className="mt-2 inline-block text-sm font-medium text-amber-700 hover:text-amber-900 hover:underline"
+                                  className="mt-2 inline-block text-sm font-medium !text-amber-700 hover:!text-amber-900 !transition-colors"
                                 >
                                   {typeof product === "object" &&
                                   product?.name?.trim()

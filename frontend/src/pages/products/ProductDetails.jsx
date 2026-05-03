@@ -125,7 +125,10 @@ function ProductDetails() {
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-12 gap-4 sm:gap-6 mt-4 sm:mt-6">
         <div className="md:col-span-2 lg:col-span-9 flex flex-col gap-4 sm:gap-6">
           <ProductDescription product={product} />
-          <RelatedProducts products={relatedProducts} />
+          <RelatedProducts
+            products={relatedProducts}
+            categoryId={categoryId}
+          />
         </div>
 
         <div className="md:col-span-1 lg:col-span-3">

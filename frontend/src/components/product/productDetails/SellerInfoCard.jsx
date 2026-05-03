@@ -14,7 +14,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import UserAvatar from "@/components/shared/UserAvatar";
 
-function SellerInfoCard({ seller, hideViewShopButton = false }) {
+function SellerInfoCard({
+  seller,
+  hideViewShopButton = false,
+  reviewsLinkSamePage = false,
+}) {
   const storeName = (seller?.sellerProfile?.storeName || "").trim();
   const displayName = storeName || seller?.username || "TÊN NGƯỜI BÁN";
 
@@ -89,9 +93,29 @@ function SellerInfoCard({ seller, hideViewShopButton = false }) {
                       : "Chưa có"}
                   </span>
                 </div>
-                <NavLink to="#" className="text-blue-500 hover:!underline">
-                  ({totalReviews} đánh giá)
-                </NavLink>
+                {seller?._id ? (
+                  reviewsLinkSamePage ? (
+                    <a
+                      href="#shop-reviews"
+                      className="!text-yellow-600 hover:!text-yellow-700 !transition-colors"
+                      aria-label="Xem tất cả đánh giá của shop"
+                    >
+                      ({totalReviews} đánh giá)
+                    </a>
+                  ) : (
+                    <NavLink
+                      to={`/shop/${seller._id}#shop-reviews`}
+                      className="!text-yellow-600 hover:!text-yellow-700 !transition-colors"
+                      aria-label="Xem tất cả đánh giá của shop"
+                    >
+                      ({totalReviews} đánh giá)
+                    </NavLink>
+                  )
+                ) : (
+                  <span className="text-gray-600">
+                    ({totalReviews} đánh giá)
+                  </span>
+                )}
                 <span className="text-gray-300">•</span>
                 <span>{totalProducts} sản phẩm</span>
                 <span className="text-gray-300">•</span>
