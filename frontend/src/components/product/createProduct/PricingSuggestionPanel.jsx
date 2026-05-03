@@ -23,7 +23,7 @@ export default function PricingSuggestionPanel({
 
     if (v == null || Number.isNaN(Number(v))) return;
     
-    dform.setValue("price", String(Number(v)), {
+    form.setValue("price", String(Number(v)), {
       shouldValidate: true,
       shouldDirty: true,
     });
