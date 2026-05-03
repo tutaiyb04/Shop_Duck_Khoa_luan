@@ -63,9 +63,16 @@ function ProductForm({
             control={form.control}
             name="condition"
             render={({ field }) => {
-              const safeValue = field.value
-                ? String(field.value).trim().normalize("NFC")
-                : "";
+              const nf = (v) =>
+                v ? String(v).trim().normalize("NFC").replace(/\uFEFF/g, "") : "";
+
+              const safeValue = nf(field.value);
+
+              const mergedConditions =
+                safeValue &&
+                !conditions.some((c) => nf(c) === safeValue)
+                  ? [...conditions, safeValue]
+                  : conditions;
 
               return (
                 <FormItem>
@@ -74,8 +81,9 @@ function ProductForm({
                   </FormLabel>
 
                   <Select
+                    key={`condition-${safeValue || "empty"}`}
                     onValueChange={field.onChange}
-                    value={safeValue}
+                    value={safeValue === "" ? undefined : safeValue}
                   >
                     <FormControl>
                       <SelectTrigger className="!h-10 !text-md hover:!border-yellow-500 focus:!border-yellow-500 transition-colors !border-1 !border-gray-200">
@@ -83,11 +91,11 @@ function ProductForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {conditions.map((cond, index) => {
-                        const safeCond = String(cond).trim().normalize("NFC");
+                      {mergedConditions.map((cond, index) => {
+                        const safeCond = nf(cond);
 
                         return (
-                          <SelectItem key={index} value={safeCond}>
+                          <SelectItem key={`${safeCond}-${index}`} value={safeCond}>
                             {cond}
                           </SelectItem>
                         );

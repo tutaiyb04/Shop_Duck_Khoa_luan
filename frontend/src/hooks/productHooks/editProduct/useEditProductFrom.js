@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { PRODUCT_CONFIG } from "@/config/constains";
 import { compressImageFiles } from "@/utils/imageCompress";
+import { toCanonicalProductCondition } from "@/utils/productConditions";
 import { useEditProduct } from "./useEditProduct";
 
 export const useEditProductForm = (id) => {
@@ -33,25 +34,51 @@ export const useEditProductForm = (id) => {
     },
   });
 
-  // Đổ dữ liệu cũ vào Form khi API tải xong
+  // Đổ dữ liệu vào các field đã đăng ký (không đưa lat/lng/existingImages vào reset)
   useEffect(() => {
-    if (initialData && Object.keys(initialData).length > 0) {
-      form.reset(initialData);
+    if (!initialData || Object.keys(initialData).length === 0) return;
 
-      // Đổ dữ liệu Ảnh cũ
-      if (initialData.existingImages) {
-        const formattedImages = initialData.existingImages.map((url) => ({
-          preview: url,
-          file: null,
-          isExisting: true,
-        }));
-        setImages(formattedImages);
-      }
+    const conditionVal = toCanonicalProductCondition(initialData.condition);
 
-      // Đổ dữ liệu tọa độ Bản đồ
-      if (initialData.lat && initialData.lng) {
-        setCoords({ lat: initialData.lat, lng: initialData.lng });
-      }
+    form.reset({
+      title: initialData.title ?? "",
+      parentCategory: String(initialData.parentCategory ?? ""),
+      category: String(initialData.category ?? ""),
+      price:
+        initialData.price != null && initialData.price !== ""
+          ? String(initialData.price)
+          : "",
+      quantity:
+        initialData.quantity != null && initialData.quantity !== ""
+          ? Number(initialData.quantity)
+          : 1,
+      condition: conditionVal,
+      description: initialData.description ?? "",
+      location: initialData.location ?? "",
+      attributes: {
+        size: String(initialData.attributes?.size ?? ""),
+      },
+    });
+
+    requestAnimationFrame(() => {
+      form.setValue("condition", conditionVal, {
+        shouldDirty: false,
+        shouldValidate: false,
+        shouldTouch: false,
+      });
+    });
+
+    if (initialData.existingImages) {
+      const formattedImages = initialData.existingImages.map((url) => ({
+        preview: url,
+        file: null,
+        isExisting: true,
+      }));
+      setImages(formattedImages);
+    }
+
+    if (initialData.lat && initialData.lng) {
+      setCoords({ lat: initialData.lat, lng: initialData.lng });
     }
   }, [initialData, form]);
 

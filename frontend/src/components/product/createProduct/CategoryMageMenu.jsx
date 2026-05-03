@@ -1,6 +1,6 @@
 import React from "react";
 import { ChevronRight, ListTree } from "lucide-react";
-import { useCategoryMenu } from "@/hooks/productHooks/createProduct/useCategoryMenu";
+import { idEquals, useCategoryMenu } from "@/hooks/productHooks/createProduct/useCategoryMenu";
 
 export default function CategoryMegaMenu({ form, categories }) {
   const {
@@ -61,8 +61,8 @@ export default function CategoryMegaMenu({ form, categories }) {
           <div className="w-[280px] sm:w-[300px] border-r border-gray-100 overflow-y-auto bg-gray-50/50 py-2 shrink-0">
             {mainCategories.map((cat) => {
               const isActive =
-                hoveredParent === cat._id ||
-                (!hoveredParent && selectedParentId === cat._id);
+                idEquals(hoveredParent, cat._id) ||
+                (!hoveredParent && idEquals(selectedParentId, cat._id));
               // Kiểm tra xem mục này có danh mục con hay không
               const hasChildren = getSubCategories(cat._id).length > 0;
 
@@ -94,7 +94,7 @@ export default function CategoryMegaMenu({ form, categories }) {
                   key={child._id}
                   onClick={() => handleSelectChild(child._id, activeParentId)}
                   className={`px-5 py-2.5 cursor-pointer text-sm transition-colors ${
-                    selectedCategoryId === child._id
+                    idEquals(selectedCategoryId, child._id)
                       ? "text-yellow-600 font-bold bg-yellow-50"
                       : "text-gray-700 hover:text-yellow-600 hover:bg-yellow-50"
                   }`}

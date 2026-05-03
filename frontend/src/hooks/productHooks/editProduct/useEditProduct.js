@@ -1,7 +1,11 @@
 import { API } from "@/services/axios";
+import { toCanonicalProductCondition } from "@/utils/productConditions";
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+
+const stringifyId = (v) =>
+  v == null ? "" : String(v?._id ?? v).trim();
 
 export const useEditProduct = (productId) => {
   const [initialData, setInitialData] = useState(null);
@@ -21,13 +25,20 @@ export const useEditProduct = (productId) => {
         const fetchedCategories = categoryRes.data.category || categoryRes.data;
         setCategories(fetchedCategories);
 
+        const categoryId = stringifyId(product.category);
+        const parentFromCategory =
+          product.category?.parentId != null
+            ? stringifyId(product.category.parentId)
+            : "";
+
+        const conditionCanon = toCanonicalProductCondition(product.condition);
+
         setInitialData({
           title: product.name,
           price: product.price,
-          category: product.category?._id || product.category,
-          parentCategory:
-            product.category?.parentId?._id || product.category?.parentId || "",
-          condition: product.condition,
+          category: categoryId,
+          parentCategory: parentFromCategory,
+          condition: conditionCanon,
           quantity: product.quantity,
           description: product.description,
           location: product.address,
@@ -47,8 +58,6 @@ export const useEditProduct = (productId) => {
 
     if (productId) fetchProduct();
   }, [productId, navigate]);
-
-  console.log("initialData", initialData);
 
   const handleUpdate = async (formData) => {
     try {

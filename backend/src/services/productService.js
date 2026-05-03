@@ -414,7 +414,10 @@ exports.getProductByIdService = async (id) => {
         "sellerId",
         "username email avatar phone isEmailVerified sellerProfile authType role rating",
       )
-      .populate("category", "name")
+      .populate({
+        path: "category",
+        select: "name parentId",
+      })
       .lean();
 
     if (!product) {
