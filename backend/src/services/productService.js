@@ -38,13 +38,12 @@ exports.getAllProductsService = async (filters = {}) => {
     } = filters;
 
     const search = (rawSearch || "").trim();
-
-    const categoryStr = (rawCategory || "").toString().trim();
+    const categoryStr = (rawCategory || "").toString().trim(); // chuỗi đã trim trắng
     const categoryId =
       categoryStr && mongoose.isValidObjectId(categoryStr)
-        ? new mongoose.Types.ObjectId(categoryStr)
+        ? new mongoose.Types.ObjectId(categoryStr) // chỉ tạo  ObjectId khi có chuỗi và mongoose.isValidObjectId — tránh id sai format
         : null;
-    const categoryMongoFilter = categoryId
+    const categoryMongoFilter = categoryId // nếu có id hợp lệ thì gọi buildCategoryFilterQuery để lọc danh mục
       ? await buildCategoryFilterQuery(categoryId)
       : null;
 
@@ -53,25 +52,31 @@ exports.getAllProductsService = async (filters = {}) => {
     const skip = (pageN - 1) * limitN;
     const lngN = parseFloat(lng);
     const latN = parseFloat(lat);
-    const hasValidGeo =
-      lat && lng && Number.isFinite(lngN) && Number.isFinite(latN);
+    const hasValidGeo = lat && lng && Number.isFinite(lngN) && Number.isFinite(latN); // nếu có vĩ độ và kinh độ hợp lệ thì set cờ
     const maxDistanceM = parseInt(radius, 10) || 5000;
 
     if (hasValidGeo) {
       const geoQuery = { status: "AVAILABLE" };
+
+      // nếu chỉ lọc sản phẩm VIP thì set cờ
       if (vipOnly) {
         geoQuery.isVIP = true;
       }
 
+      // chỉ lọc sản phẩm theo từ khóa tìm kiếm
       if (search) {
         geoQuery.name = {
-          $regex: escapeRegexForSearch(search),
-          $options: "i",
+          $regex: escapeRegexForSearch(search), //  escape ký tự đặc biệt của regex để user gõ ., *… không phá pattern
+          $options: "i", // không phân biệt hoa thường
         };
       }
+
+      // chỉ lọc sản phẩm theo danh mục
       if (categoryMongoFilter) {
         geoQuery.category = categoryMongoFilter;
       }
+
+      // chỉ lọc sản phẩm theo giá, tình trạng, tỉnh
       applyExtraListingFilters(geoQuery, {
         minPrice,
         maxPrice,
@@ -91,24 +96,26 @@ exports.getAllProductsService = async (filters = {}) => {
         },
       };
 
+      // pipeline để lọc sản phẩm theo vị trí, giá, tình trạng, tỉnh
       const pipeline = [
         geoNearStage,
         { $sort: { isVIP: -1, distance: 1 } },
         { $skip: skip },
         { $limit: limitN },
         {
+          // lookup bảng User để lấy thông tin seller
           $lookup: {
             from: User.collection.name,
-            let: { sid: "$sellerId" },
+            let: { sid: "$sellerId" }, // biến sid là sellerId của sản phẩm
             pipeline: [
-              { $match: { $expr: { $eq: ["$_id", "$$sid"] } } },
-              { $project: { username: 1, avatar: 1 } },
+              { $match: { $expr: { $eq: ["$_id", "$$sid"] } } }, // khớp với sellerId
+              { $project: { username: 1, avatar: 1 } }, // trả về username và avatar
             ],
-            as: "sellerIdArr",
+            as: "sellerIdArr", // lưu vào mảng sellerIdArr
           },
         },
-        { $unwind: { path: "$sellerIdArr", preserveNullAndEmptyArrays: true } },
-        { $addFields: { sellerId: "$sellerIdArr" } },
+        { $unwind: { path: "$sellerIdArr", preserveNullAndEmptyArrays: true } }, // phân tách mảng sellerIdArr thành các document riêng biệt
+        { $addFields: { sellerId: "$sellerIdArr" } }, // thêm field sellerId vào document
         {
           $lookup: {
             from: Category.collection.name,
@@ -125,6 +132,7 @@ exports.getAllProductsService = async (filters = {}) => {
         { $project: { sellerIdArr: 0, categoryArr: 0 } },
       ];
 
+      // chạy song song lệnh đếm và lệnh tìm
       const [products, countAgg] = await Promise.all([
         Product.aggregate(pipeline),
         Product.aggregate([geoNearStage, { $count: "total" }]),

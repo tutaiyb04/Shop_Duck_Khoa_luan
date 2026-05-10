@@ -88,8 +88,7 @@ exports.getAllProducts = async (req, res) => {
       vipOnly: truthyQueryFlag(req.query.vip),
     };
 
-    const { products, totalPages, currentPage } =
-      await productService.getAllProductsService(filters);
+    const { products, totalPages, currentPage } = await productService.getAllProductsService(filters);
 
     return res.status(200).json({
       message: "Lấy danh sách sản phẩm thành công",
