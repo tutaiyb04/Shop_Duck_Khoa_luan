@@ -13,7 +13,7 @@ exports.getMyRecommendations = async (req, res) => {
 
     const userId = req.user._id || req.user.id; // lấy userId
     const limit = req.query.limit; // lấy limit số sản phẩm gới ý
-    const forceRefresh = truthyQueryFlag(req.query.refresh); // lấy forceRefresh để ghi đè cache
+    const forceRefresh = truthyQueryFlag(req.query.refresh); // bật / tắt chế độ bỏ cache khi gọi API gợi ý - dành cho test
 
     const result = await recommendationService.getRecommendationsForUser(
       userId,

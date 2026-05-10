@@ -1,77 +1,60 @@
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
+import { usePurchaseHistory, formatVnd } from "@/hooks/orderHooks/usePurchaseHistory";
 
-export const ORDER_TABS = [
-  "Tất cả",
-  "Chờ xác nhận",
-  "Đang giao",
-  "Đã giao",
-  "Đã hủy",
-];
+export const ORDER_TABS = ["Tất cả", "Chờ xác nhận", "Đã giao"];
 
-const mockOrders = [
-  {
-    id: "DH12345",
-    productName: "iPhone 12 Pro Max cũ",
-    price: "12.500.000đ",
-    status: "Đã giao",
-    sellerId: "65f1a2b00000000000000001",
-    productId: "111000000000000000000001",
-  },
-  {
-    id: "DH12346",
-    productName: "Bàn phím cơ Keychron",
-    price: "1.200.000đ",
-    status: "Đang giao",
-    sellerId: "65f1a2c0000000000000002",
-    productId: "222000000000000000000002",
-  },
-  {
-    id: "DH12347",
-    productName: "Chuột Logitech G102",
-    price: "350.000đ",
-    status: "Chờ xác nhận",
-    sellerId: "65f1a2d0000000000000003",
-    productId: "333000000000000000000003",
-  },
-  {
-    id: "DH12348",
-    productName: "Màn hình Dell Ultrasharp",
-    price: "4.500.000đ",
-    status: "Đã hủy",
-    sellerId: "65f1a2e000000000000004",
-    productId: "444000000000000000000004",
-  },
-];
+const STATUS_TO_LABEL = {
+  PENDING: "Chờ xác nhận",
+  COMPLETED: "Đã giao",
+};
+
+function orderToTableRow(order) {
+  const pid = order.productId?._id || order.productId;
+  const sid = order.sellerId?._id || order.sellerId;
+  const raw = order.status ? String(order.status).toUpperCase() : "";
+  const label = STATUS_TO_LABEL[raw] || raw || "—";
+  const code = order._id
+    ? String(order._id).slice(-8).toUpperCase()
+    : "—";
+  return {
+    id: `DH${code}`,
+    productName: order.productId?.name ?? "—",
+    price: formatVnd(order.totalAmount),
+    status: label,
+    sellerId: sid ? String(sid) : "",
+    productId: pid ? String(pid) : "",
+  };
+}
 
 export function useOrder() {
   const [activeTab, setActiveTab] = useState("Tất cả");
-  const [isLoadingData, setIsLoadingData] = useState(false);
+  const {
+    orders,
+    total,
+    currentPage,
+    totalPages,
+    isLoading,
+    goToPage,
+    refetch,
+  } = usePurchaseHistory();
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        setIsLoadingData(true);
-        // Giả lập chờ API 1 giây
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      } catch (error) {
-        console.error("Lỗi tải đơn hàng:", error);
-      } finally {
-        setIsLoadingData(false);
-      }
-    };
-    fetchOrders();
-  }, []);
+  const rows = useMemo(() => orders.map(orderToTableRow), [orders]);
 
-  const filteredOrders = mockOrders.filter((order) => {
-    if (activeTab === "Tất cả") return true;
-    return order.status === activeTab;
-  });
+  const filteredOrders = useMemo(() => {
+    if (activeTab === "Tất cả") return rows;
+    return rows.filter((o) => o.status === activeTab);
+  }, [rows, activeTab]);
 
   return {
     tabs: ORDER_TABS,
     activeTab,
     setActiveTab,
     filteredOrders,
-    isLoadingData,
+    isLoadingData: isLoading,
+    total,
+    currentPage,
+    totalPages,
+    goToPage,
+    refetch,
   };
 }

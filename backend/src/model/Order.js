@@ -29,7 +29,7 @@ const orderSchema = new mongoose.Schema(
     totalAmount: { type: Number, required: true, min: 0 },
     status: {
       type: String,
-      enum: ["PENDING", "PAID", "SHIPPING", "COMPLETED", "CANCELLED"],
+      enum: ["PENDING", "COMPLETED"],
       default: "PENDING",
     },
     // Hội thoại chat dẫn tới giao dịch (nếu có)

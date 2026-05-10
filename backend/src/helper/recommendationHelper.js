@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const User = require("../model/User");
 const Category = require("../model/Category");
 
-const POSITIVE_ORDER_STATUSES = ["PAID", "SHIPPING", "COMPLETED"];
+const POSITIVE_ORDER_STATUSES = ["COMPLETED"];
 const POSITIVE_RATING_MIN = 3;  // mức đánh giá tối thiểu để được tính điểm
 const VIP_BOOST = 2; // boost cho user VIP
 const MAX_LIMIT = 48; // số sản phẩm tối đa trả về
@@ -99,13 +99,16 @@ function tokenizeText(str) {
 
 // gom text từ sản phẩm thành các từ khóa cho CBF
 function tokenizeProductText(product) {
-  const chunks = [product.name, product.description];
+  const chunks = [product.name, product.description]; // lấy tên và mô tả sản phẩm đưa vào mảng
+  // lấy các thuộc tính của sản phẩm
   const attrs = product.attributes;
   // Mongoose Map trong lean thường là object thường
   if (attrs) {
+    // nếu là Map thì lấy từng giá trị
     if (typeof attrs.get === "function") {
-      attrs.forEach((v) => chunks.push(String(v)));
-    } else if (typeof attrs === "object" && !Array.isArray(attrs)) {
+      attrs.forEach((v) => chunks.push(String(v))); // đưa từng giá trị vào mảng
+    } 
+    else if (typeof attrs === "object" && !Array.isArray(attrs)) {
       for (const v of Object.values(attrs)) {
         chunks.push(String(v));
       }
@@ -157,8 +160,8 @@ const hydrateRecommendationProducts = async (items) => {
       .maxTimeMS(AGG_MAX_TIME_MS),
   ]);
   
-  const sm = new Map(sellers.map((s) => [String(s._id), s]));
-  const cm = new Map(cats.map((c) => [String(c._id), c]));
+  const sm = new Map(sellers.map((s) => [String(s._id), s])); // gom seller vào map
+  const cm = new Map(cats.map((c) => [String(c._id), c])); // gom category vào map
 
   return items.map((p) => {
     const sid = String(p.sellerId?._id || p.sellerId);
