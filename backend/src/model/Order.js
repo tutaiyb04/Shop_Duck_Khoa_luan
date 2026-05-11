@@ -47,7 +47,7 @@ orderSchema.index({ sellerId: 1, createdAt: -1 });
 orderSchema.index({ productId: 1, status: 1 });
 orderSchema.index({ buyerId: 1, productId: 1, status: 1 });
 orderSchema.index({ buyerId: 1, status: 1, productId: 1 });
-// Nếu DB còn chỉ mục unique cũ (một tin chỉ một đơn COMPLETED), hãy xóa tay:
-// use shop_db → db.orders.dropIndex("productId_1")
+// Nếu DB còn chỉ mục unique cũ (một tin chỉ một đơn), server sẽ tự gỡ lúc khởi động
+// (xem utils/ensureOrderIndexes.js). Hoặc xóa tay: db.orders.dropIndex("productId_1")
 
 module.exports = mongoose.model("Order", orderSchema);

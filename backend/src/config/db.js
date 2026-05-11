@@ -1,4 +1,7 @@
 const mongoose = require("mongoose");
+const {
+  ensureOrderIndexesForPartialSales,
+} = require("../utils/ensureOrderIndexes");
 
 async function ConnectDB() {
   try {
@@ -9,6 +12,7 @@ async function ConnectDB() {
       maxPoolSize: pool,
     });
     console.log("Kết nối DB thành công");
+    await ensureOrderIndexesForPartialSales();
   } catch (error) {
     console.error("Kết nối DB thất bại", error);
     process.exit(1);
